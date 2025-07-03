@@ -1,0 +1,6 @@
+[workspace]
+resolver = "3"
+members = [
+    "diffx-cli",
+    "diffx-core",
+]
