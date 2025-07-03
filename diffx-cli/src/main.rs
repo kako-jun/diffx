@@ -5,15 +5,16 @@ use diffx_core::{diff, value_type_name, DiffResult};
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
+use std::io::{self, Read};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// The first file to compare
+    /// The first file to compare (use '-' for stdin)
     #[arg(value_name = "FILE1")]
     file1: String,
 
-    /// The second file to compare
+    /// The second file to compare (use '-' for stdin)
     #[arg(value_name = "FILE2")]
     file2: String,
 
@@ -43,17 +44,32 @@ enum Format {
 }
 
 fn infer_format_from_path(path: &str) -> Option<Format> {
-    Path::new(path)
-        .extension()
-        .and_then(|ext| ext.to_str())
-        .and_then(|ext_str| {
-            match ext_str.to_lowercase().as_str() {
-                "json" => Some(Format::Json),
-                "yaml" | "yml" => Some(Format::Yaml),
-                "toml" => Some(Format::Toml),
-                _ => None,
-            }
-        })
+    if path == "-" {
+        // Cannot infer format from stdin, user must specify --format
+        None
+    } else {
+        Path::new(path)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .and_then(|ext_str| {
+                match ext_str.to_lowercase().as_str() {
+                    "json" => Some(Format::Json),
+                    "yaml" | "yml" => Some(Format::Yaml),
+                    "toml" => Some(Format::Toml),
+                    _ => None,
+                }
+            })
+    }
+}
+
+fn read_input(file_path: &str) -> Result<String> {
+    if file_path == "-" {
+        let mut buffer = String::new();
+        io::stdin().read_to_string(&mut buffer).context("Failed to read from stdin")?;
+        Ok(buffer)
+    } else {
+        fs::read_to_string(file_path).context(format!("Failed to read file: {}", file_path))
+    }
 }
 
 fn parse_content(content: &str, format: Format) -> Result<Value> {
@@ -117,8 +133,8 @@ fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    let content1 = fs::read_to_string(&args.file1)?;
-    let content2 = fs::read_to_string(&args.file2)?;
+    let content1 = read_input(&args.file1)?;
+    let content2 = read_input(&args.file2)?;
 
     let input_format = if let Some(fmt) = args.format {
         fmt
