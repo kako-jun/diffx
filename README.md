@@ -72,9 +72,13 @@ What does the "x" in diff + x mean?
 diffx/
 ├── diffx-core/      # Diff extraction library (Crate)
 ├── diffx-cli/       # CLI wrapper
-├── examples/        # Usage examples and test data
+├── tests/           # All test-related files
+│   ├── fixtures/    # Test input data
+│   ├── integration/ # CLI integration tests
+│   ├── unit/        # Core library unit tests
+│   └── output/      # Test intermediate files
 ├── docs/            # Documentation and specifications
-└── tests/           # Unit tests for diff verification
+└── ...
 ```
 
 ### Technology Stack

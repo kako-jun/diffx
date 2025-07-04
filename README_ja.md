@@ -72,9 +72,13 @@ diff + x の「x」は何を意味するか？
 diffx/
 ├── diffx-core/      # 差分抽出ライブラリ（Crate）
 ├── diffx-cli/       # CLIラッパー
-├── examples/        # 使用例とテストデータ
+├── tests/           # すべてのテスト関連ファイル
+│   ├── fixtures/    # テスト用入力データ
+│   ├── integration/ # CLI統合テスト
+│   ├── unit/        # コアライブラリユニットテスト
+│   └── output/      # テスト中間ファイル
 ├── docs/            # ドキュメントと仕様書
-└── tests/           # 差分検証用ユニットテスト
+└── ...
 ```
 
 ### 技術スタック
