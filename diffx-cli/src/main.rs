@@ -136,26 +136,40 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
     }
 }
 
-fn print_cli_output(differences: Vec<DiffResult>) {
+fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) {
     if differences.is_empty() {
         println!("No differences found.");
-    } else {
-        for diff in differences {
-            match diff {
-                DiffResult::Added(key, value) => {
-                    println!("{}", format!("+ {}: {}", key, value).blue());
-                }
-                DiffResult::Removed(key, value) => {
-                    println!("{}", format!("- {}: {}", key, value).yellow());
-                }
-                DiffResult::Modified(key, value1, value2) => {
-                    println!("{}", format!("~ {}: {} -> {}", key, value1, value2).cyan());
-                }
-                DiffResult::TypeChanged(key, value1, value2) => {
-                    println!("{}", format!("! {}: {} ({}) -> {} ({})", key, value1, value_type_name(&value1), value2, value_type_name(&value2)).magenta());
-                }
-            }
+        return;
+    }
+
+    let get_key = |d: &DiffResult| -> String {
+        match d {
+            DiffResult::Added(k, _) => k.clone(),
+            DiffResult::Removed(k, _) => k.clone(),
+            DiffResult::Modified(k, _, _) => k.clone(),
+            DiffResult::TypeChanged(k, _, _) => k.clone(),
         }
+    };
+
+    differences.sort_by(|a, b| get_key(a).cmp(&get_key(b)));
+
+    for diff in &differences {
+        let key = get_key(diff);
+        // Indent based on the depth of the key
+        let depth = key.chars().filter(|&c| c == '.' || c == '[').count();
+        let indent = "  ".repeat(depth);
+
+        let diff_str = match diff {
+            DiffResult::Added(k, value) => format!("+ {}: {}", k, value).blue(),
+            DiffResult::Removed(k, value) => format!("- {}: {}", k, value).yellow(),
+            DiffResult::Modified(k, v1, v2) => format!("~ {}: {} -> {}", k, v1, v2).cyan(),
+            DiffResult::TypeChanged(k, v1, v2) => {
+                format!("! {}: {} ({}) -> {} ({})", k, v1, value_type_name(v1), v2, value_type_name(v2))
+                    .magenta()
+            }
+        };
+
+        println!("{}{}", indent, diff_str);
     }
 }
 
@@ -243,7 +257,7 @@ fn main() -> Result<()> {
     }
 
     match output_format {
-        OutputFormat::Cli => print_cli_output(differences),
+        OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
         OutputFormat::Json => print_json_output(differences)?,
         OutputFormat::Yaml => print_yaml_output(differences)?,
         OutputFormat::Toml => {
@@ -328,7 +342,7 @@ fn compare_directories(
                 }
 
                 match output {
-                    OutputFormat::Cli => print_cli_output(differences),
+                    OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
                     OutputFormat::Json => print_json_output(differences)?,
                     OutputFormat::Yaml => print_yaml_output(differences)?,
                     OutputFormat::Toml => {
