@@ -64,7 +64,7 @@ fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn test_basic_xml_diff() -> Result<(), Box<dyn std::error.Error>> {
+fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../examples/file1.xml").arg("../examples/file2.xml");
     cmd.assert()
@@ -178,7 +178,7 @@ fn test_unified_output_format() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../examples/file1.json ").arg("../examples/file2.json ").arg("--ignore-keys-regex ").arg("^age$");
+    cmd.arg("../examples/file1.json").arg("../examples/file2.json").arg("--ignore-keys-regex").arg("^age$");
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("~ age:").not())
@@ -199,7 +199,7 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../examples/users1.json ").arg("../examples/users2.json ").arg("--array-id-key ").arg("id");
+    cmd.arg("../examples/users1.json").arg("../examples/users2.json").arg("--array-id-key").arg("id");
     cmd.assert()
         .success()
         .stdout(predicate::str::contains(r#"~ [id=2].name: "Bob" -> "Robert""#))
