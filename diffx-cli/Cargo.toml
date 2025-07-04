@@ -16,3 +16,11 @@ toml = "0.8.23"
 walkdir = "2.5.0"
 dirs = "5.0.1"
 regex = "1.5.4"
+
+[dev-dependencies]
+assert_cmd = "2.0.14"
+predicates = "3.1.0"
+
+[[test]]
+name = "cli_examples"
+path = "../tests/cli_examples/mod.rs"
