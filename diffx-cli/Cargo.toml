@@ -30,5 +30,9 @@ assert_cmd = "2.0.14"
 predicates = "3.1.0"
 
 [[test]]
-name = "cli_examples"
-path = "../tests/cli_examples/mod.rs"
+name = "integration"
+path = "../tests/integration/mod.rs"
+
+[[test]]
+name = "unit"
+path = "../tests/unit/mod.rs"
