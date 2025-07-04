@@ -78,8 +78,8 @@ We welcome contributions to `diffx`! By following these guidelines, you can help
 
 ## Reporting Bugs
 
-If you find a bug, please open an issue on the [GitHub Issues page](https://github.com/your-org/diffx/issues). Provide a clear description of the bug, steps to reproduce it, and expected behavior.
+If you find a bug, please open an issue on the [GitHub Issues page](https://github.com/kako-jun/diffx/issues). Provide a clear description of the bug, steps to reproduce it, and expected behavior.
 
 ## Feature Requests
 
-If you have an idea for a new feature, please open an issue on the [GitHub Issues page](https://github.com/your-org/diffx/issues) to discuss it. We appreciate your suggestions!
+If you have an idea for a new feature, please open an issue on the [GitHub Issues page](https://github.com/kako-jun/diffx/issues) to discuss it. We appreciate your suggestions!

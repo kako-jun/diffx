@@ -1,7 +1,8 @@
 use anyhow::{Context, Result, bail};
 use clap::{Parser, ValueEnum};
 use colored::*;
-use diffx_core::{diff, value_type_name, DiffResult};
+use diffx_core::{diff, value_type_name, DiffResult, parse_ini, parse_xml, parse_csv};
+use serde::{Deserialize, Serialize};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -97,6 +98,9 @@ enum Format {
     Json,
     Yaml,
     Toml,
+    Ini,
+    Xml,
+    Csv,
 }
 
 fn infer_format_from_path(path: &Path) -> Option<Format> {
@@ -111,6 +115,9 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
                     "json" => Some(Format::Json),
                     "yaml" | "yml" => Some(Format::Yaml),
                     "toml" => Some(Format::Toml),
+                    "ini" => Some(Format::Ini),
+                    "xml" => Some(Format::Xml),
+                    "csv" => Some(Format::Csv),
                     _ => None,
                 }
             })
@@ -132,6 +139,9 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
         Format::Json => serde_json::from_str(content).context("Failed to parse JSON"),
         Format::Yaml => serde_yaml::from_str(content).context("Failed to parse YAML"),
         Format::Toml => toml::from_str(content).context("Failed to parse TOML"),
+        Format::Ini => parse_ini(content).context("Failed to parse INI"),
+        Format::Xml => parse_xml(content).context("Failed to parse XML"),
+        Format::Csv => parse_csv(content).context("Failed to parse CSV"),
     }
 }
 
