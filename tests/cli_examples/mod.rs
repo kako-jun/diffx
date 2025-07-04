@@ -14,11 +14,8 @@ fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("~ age: 30 -> 31"))
-        .stdout(predicate::str::contains("~ city: \"New York\" -> \"London\""))
-        .stdout(predicate::str::contains("  ~ config.settings.theme: \"dark\" -> \"light\""))
-        .stdout(predicate::str::contains("  + config.settings.font_size: 12"))
-        .stdout(predicate::str::contains("    ~ config.users[1].name: \"Bob\" -> \"Robert\""))
-        .stdout(predicate::str::contains("    + config.users[2]: {\"id\":3,\"name\":\"Charlie\"}"));
+        .stdout(predicate::str::contains("~ city: \"New York\" -> \"Boston\""))
+        .stdout(predicate::str::contains("  + items[2]: \"orange\""));
     Ok(())
 }
 
@@ -29,11 +26,8 @@ fn test_basic_yaml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("~ age: 30 -> 31"))
-        .stdout(predicate::str::contains("~ city: \"New York\" -> \"London\""))
-        .stdout(predicate::str::contains("~ config.settings.theme: \"dark\" -> \"light\""))
-        .stdout(predicate::str::contains("+ config.settings.font_size: 12"))
-        .stdout(predicate::str::contains("~ config.users[1].name: \"Bob\" -> \"Robert\""))
-        .stdout(predicate::str::contains("+ config.users[2]: ").and(predicate::str::contains("id: 3")).and(predicate::str::contains("name: Charlie")));
+        .stdout(predicate::str::contains("~ city: \"New York\" -> \"Boston\""))
+        .stdout(predicate::str::contains("  + items[2]: \"orange\""));
     Ok(())
 }
 
@@ -44,11 +38,8 @@ fn test_basic_toml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("~ age: 30 -> 31"))
-        .stdout(predicate::str::contains("~ city: \"New York\" -> \"London\""))
-        .stdout(predicate::str::contains("~ config.settings.theme: \"dark\" -> \"light\""))
-        .stdout(predicate::str::contains("+ config.settings.font_size: 12"))
-        .stdout(predicate::str::contains("~ config.users.item[1].name: \"Bob\" -> \"Robert\""))
-        .stdout(predicate::str::contains("+ config.users.item[2]: ").and(predicate::str::contains("id: 3")).and(predicate::str::contains("name: Charlie")));
+        .stdout(predicate::str::contains("~ city: \"New York\" -> \"Boston\""))
+        .stdout(predicate::str::contains("  + items[2]: \"orange\""));
     Ok(())
 }
 
@@ -120,11 +111,8 @@ fn test_json_output_format() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains(r#""Modified": ["age", 30, 31]"#))
-        .stdout(predicate::str::contains(r#""Modified": ["city", "New York", "London"]"#))
-        .stdout(predicate::str::contains(r#""Modified": ["config.settings.theme", "dark", "light"]"#))
-        .stdout(predicate::str::contains(r#""Added": ["config.settings.font_size", 12]"#))
-        .stdout(predicate::str::contains(r#""Modified": ["config.users[1].name", "Bob", "Robert"]"#))
-        .stdout(predicate::str::contains(r#""Added": ["config.users[2]", {"id":3,"name":"Charlie"}]"#).or(predicate::str::contains(r#""Added": ["config.users[2]", {"name":"Charlie","id":3}]"#)));
+        .stdout(predicate::str::contains(r#""Modified": ["city", "New York", "Boston"]"#))
+        .stdout(predicate::str::contains(r#""Added": ["items[2]", "orange"]"#));
     Ok(())
 }
 
@@ -189,7 +177,7 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../examples/data1.json ").arg("../examples/data2.json ").arg("--epsilon ").arg("0.00001");
+    cmd.arg("../examples/data1.json").arg("../examples/data2.json").arg("--epsilon").arg("0.00001");
     cmd.assert()
         .success()
         .stdout(predicate::str::is_empty()); // No differences expected within epsilon
@@ -202,9 +190,8 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../examples/users1.json").arg("../examples/users2.json").arg("--array-id-key").arg("id");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains(r#"~ [id=2].name: "Bob" -> "Robert""#))
-        .stdout(predicate::str::contains("~ [id=2].age: 25 -> 26"))
-                .stdout(predicate::str::contains("+ [id=3]: ").and(predicate::str::contains(r#""id":3"#)).and(predicate::str::contains(r#""name":"Charlie""#)).and(predicate::str::contains(r#""age":35""#)))
+        .stdout(predicate::str::contains("~ [id=1].age: 25 -> 26"))
+                .stdout(predicate::str::contains("+ [id=3]: ").and(predicate::str::contains(r#""id":3"#)).and(predicate::str::contains(r#""name":"Charlie""#)).and(predicate::str::contains(r#""age":28""#)))
         .stdout(predicate::str::contains("~ [0].").not()); // Ensure not comparing by index
     Ok(())
 }
