@@ -79,7 +79,7 @@ diffx/
 
 ### Technology Stack
 - **Rust** (Fast, safe, cross-platform)
-- `serde_json`, `serde_yaml`, `toml` parsers
+- `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` parsers
 - `clap` (CLI argument parsing)
 - `colored` (CLI output coloring)
 - `similar` (Unified Format output)

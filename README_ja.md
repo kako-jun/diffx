@@ -79,7 +79,7 @@ diffx/
 
 ### 技術スタック
 - **Rust**（高速・安全・クロスプラットフォーム）
-- `serde_json`, `serde_yaml`, `toml` などのパーサー
+- `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` などのパーサー
 - `clap`（CLI引数処理）
 - `colored`（CLI出力の色付け）
 - `similar`（Unified Format出力）

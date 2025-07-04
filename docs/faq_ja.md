@@ -62,7 +62,7 @@ diffx users1.json users2.json --array-id-key "uuid"
 
 ### Q: diffxが使用している基盤技術は何ですか？
 
-A: `diffx` はRustで構築されており、そのパフォーマンス、メモリ安全性、クロスプラットフォーム機能を活用しています。解析には `serde_json`、`serde_yaml`、`toml` を、CLI出力には `colored` を、Unified diff出力には `similar` を使用しています。
+A: `diffx` はRustで構築されており、そのパフォーマンス、メモリ安全性、クロスプラットフォーム機能を活用しています。解析には `serde_json`、`serde_yml`、`toml`、`configparser`、`quick-xml`、`csv` を、CLI出力には `colored` を、Unified diff出力には `similar` を使用しています。
 
 ### Q: なぜTOML出力は完全にサポートされていないのですか？
 
