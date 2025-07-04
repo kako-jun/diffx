@@ -88,7 +88,7 @@ diffx/
 - **pipパッケージ（diffx-bin）**
   - Python環境から diffx CLI を呼び出すラッパー
   - `subprocess.run()` でCLIを実行
-- **❌ 未実装** - 将来的な拡張予定
+- **✅ 実装済み**
 
 ### 実装方法
 - Rustでビルドしたバイナリを含めるか、インストール済みのdiffxを前提にする
@@ -151,7 +151,7 @@ diffx/
 (なし)
 
 ### ❌ 未実装 (Not Implemented)
-1. **他言語ラッパー** - npm/pipパッケージ
+(なし)
 
 ### ✅ 解決済みの問題 (Resolved Issues)
 1. **テスト失敗** - `test_diff_array_id_key_no_id_in_element` ✅ 修正済み
