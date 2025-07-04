@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use diffx_core::diff;
-use serde_json::json;
+use serde_json::{json, Value};
 
 fn criterion_benchmark(c: &mut Criterion) {
     let v1 = json!({
