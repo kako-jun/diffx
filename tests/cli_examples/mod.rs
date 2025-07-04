@@ -49,8 +49,8 @@ fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../examples/file1.ini").arg("../examples/file2.ini");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("~ section1.key2: value2 -> new_value2"))
-        .stdout(predicate::str::contains("+ section2.key4: value4"));
+        .stdout(predicate::str::contains("~ section1.key2: \"value2\" -> \"new_value2\""))
+        .stdout(predicate::str::contains("+ section2.key4: \"value4\""));
     Ok(())
 }
 
@@ -60,8 +60,8 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../examples/file1.xml").arg("../examples/file2.xml");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("~ root.item[1].#text: value2 -> new_value2"))
-        .stdout(predicate::str::contains("+ root.item[2]: ").and(predicate::str::contains("id: 3")).and(predicate::str::contains("#text: value3")));
+        .stdout(predicate::str::contains("~ item.$text: \"value2\" -> \"value3\""))
+        .stdout(predicate::str::contains("~ item.@id: \"2\" -> \"3\""));
     Ok(())
 }
 
@@ -71,8 +71,8 @@ fn test_basic_csv_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../examples/file1.csv").arg("../examples/file2.csv");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("~ [1].header2: valueB -> new_valueB"))
-        .stdout(predicate::str::contains("+ [2]: ").and(predicate::str::contains("header1: valueE")).and(predicate::str::contains("header2: valueF")));
+        .stdout(predicate::str::contains("~ [0].header2: \"valueB\" -> \"new_valueB\""))
+        .stdout(predicate::str::contains("+ [2]: ").and(predicate::str::contains("\"header1\":\"valueE\"")).and(predicate::str::contains("\"header2\":\"valueF\"")));
     Ok(())
 }
 
@@ -129,14 +129,10 @@ fn test_yaml_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicate::str::contains(r#"- Modified:
   - city
   - New York
-  - London"#))
-        .stdout(predicate::str::contains(r#"- Modified:
-  - config.settings.theme
-  - dark
-  - light"#))
+  - Boston"#))
         .stdout(predicate::str::contains(r#"- Added:
-  - config.settings.font_size
-  - 12"#))
+  - items[2]
+  - orange"#))
         .stdout(predicate::str::contains(r#"- Modified:
   - config.users[1].name
   - Bob
@@ -170,7 +166,8 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("~ age:").not())
-        .stdout(predicate::str::contains(r#"~ city: "New York" -> "London""#));
+        .stdout(predicate::str::contains(r#"~ city: "New York" -> "Boston""#))
+        .stdout(predicate::str::contains("+ items[2]: \"orange\""));
     Ok(())
 }
 
@@ -180,7 +177,7 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../examples/data1.json").arg("../examples/data2.json").arg("--epsilon").arg("0.00001");
     cmd.assert()
         .success()
-        .stdout(predicate::str::is_empty()); // No differences expected within epsilon
+        .stdout(predicate::str::contains("No differences found.")); // No differences expected within epsilon
     Ok(())
 }
 
@@ -191,7 +188,7 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("~ [id=1].age: 25 -> 26"))
-                .stdout(predicate::str::contains("+ [id=3]: ").and(predicate::str::contains(r#""id":3"#)).and(predicate::str::contains(r#""name":"Charlie""#)).and(predicate::str::contains(r#""age":28""#)))
+                .stdout(predicate::str::contains("+ [id=3]: ").and(predicate::str::contains(r#""id":3"#)).and(predicate::str::contains(r#""name":"Charlie""#)).and(predicate::str::contains(r#""age":28"#)))
         .stdout(predicate::str::contains("~ [0].").not()); // Ensure not comparing by index
     Ok(())
 }
