@@ -3,6 +3,13 @@ name = "diffx-core"
 version = "0.2.0"
 edition = "2021"
 authors = ["kako-jun"]
+description = "Core library for structured data diffing (JSON, YAML, TOML, XML, INI, CSV)"
+license = "MIT"
+repository = "https://github.com/kako-jun/diffx"
+homepage = "https://github.com/kako-jun/diffx"
+documentation = "https://docs.rs/diffx-core"
+keywords = ["diff", "json", "yaml", "toml", "structured-data"]
+categories = ["command-line-utilities", "data-structures", "parsing"]
 
 [dependencies]
 anyhow = "1.0.98"
