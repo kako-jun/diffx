@@ -1,14 +1,21 @@
 [package]
-name = "diffx-cli"
-version = "0.1.0"
+name = "diffx"
+version = "0.2.0"
 edition = "2021"
 authors = ["kako-jun"]
+description = "Command-line tool for structured data diffing (JSON, YAML, TOML, XML, INI, CSV)"
+license = "MIT"
+repository = "https://github.com/kako-jun/diffx"
+homepage = "https://github.com/kako-jun/diffx"
+documentation = "https://docs.rs/diffx"
+keywords = ["diff", "cli", "json", "yaml", "toml"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 anyhow = "1.0.98"
 clap = { version = "4.5.40", features = ["derive"] }
 colored = "3.0.0"
-diffx-core = { path = "../diffx-core" }
+diffx-core = { path = "../diffx-core", version = "0.2.0" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 serde_yml = "0.0.12"
