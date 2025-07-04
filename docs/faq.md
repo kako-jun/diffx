@@ -62,7 +62,7 @@ diffx users1.json users2.json --array-id-key "uuid"
 
 ### Q: What is the underlying technology used by diffx?
 
-A: `diffx` is built with Rust, leveraging its performance, memory safety, and cross-platform capabilities. It uses `serde_json`, `serde_yaml`, and `toml` for parsing, and `colored` for CLI output, and `similar` for unified diff output.
+A: `diffx` is built with Rust, leveraging its performance, memory safety, and cross-platform capabilities. It uses `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, and `csv` for parsing, `colored` for CLI output, and `similar` for unified diff output.
 
 ### Q: Why is TOML output not fully supported?
 

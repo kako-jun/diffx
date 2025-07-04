@@ -136,7 +136,7 @@ fn read_input(file_path: &Path) -> Result<String> {
 fn parse_content(content: &str, format: Format) -> Result<Value> {
     match format {
         Format::Json => serde_json::from_str(content).context("Failed to parse JSON"),
-        Format::Yaml => serde_yaml::from_str(content).context("Failed to parse YAML"),
+        Format::Yaml => serde_yml::from_str(content).context("Failed to parse YAML"),
         Format::Toml => toml::from_str(content).context("Failed to parse TOML"),
         Format::Ini => parse_ini(content).context("Failed to parse INI"),
         Format::Xml => parse_xml(content).context("Failed to parse XML"),
@@ -187,7 +187,7 @@ fn print_json_output(differences: Vec<DiffResult>) -> Result<()> {
 }
 
 fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
-    println!("{}", serde_yaml::to_string(&differences)?);
+    println!("{}", serde_yml::to_string(&differences)?);
     Ok(())
 }
 
