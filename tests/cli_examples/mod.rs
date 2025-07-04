@@ -2,9 +2,9 @@ use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
 
-// Helper function to get the diffx-cli command
+// Helper function to get the diffx command
 fn diffx_cmd() -> Command {
-    Command::cargo_bin("diffx-cli").expect("Failed to find diffx-cli binary")
+    Command::cargo_bin("diffx").expect("Failed to find diffx binary")
 }
 
 #[test]
