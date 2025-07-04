@@ -2,6 +2,10 @@ use serde::Serialize;
 use serde_json::Value;
 use regex::Regex;
 use std::collections::HashMap;
+use ini::Ini;
+use anyhow::{Result, anyhow};
+use quick_xml::de::from_str;
+use csv::ReaderBuilder;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum DiffResult {
@@ -289,6 +293,60 @@ pub fn value_type_name(value: &Value) -> &str {
         Value::Array(_) => "Array",
         Value::Object(_) => "Object",
     }
+}
+
+pub fn parse_ini(content: &str) -> Result<Value> {
+    let ini = Ini::read_from_string(content)?;
+    let mut root_map = serde_json::Map::new();
+
+    for (section, properties) in ini.iter() {
+        let mut section_map = serde_json::Map::new();
+        for (key, value) in properties.iter() {
+            section_map.insert(key.clone(), Value::String(value.clone()));
+        }
+        if let Some(s) = section {
+            root_map.insert(s.clone(), Value::Object(section_map));
+        } else {
+            // Global properties (no section)
+            for (key, value) in section_map {
+                root_map.insert(key, value);
+            }
+        }
+    }
+    Ok(Value::Object(root_map))
+}
+
+pub fn parse_xml(content: &str) -> Result<Value> {
+    let value: Value = from_str(content)?;
+    Ok(value)
+}
+
+pub fn parse_csv(content: &str) -> Result<Value> {
+    let mut reader = ReaderBuilder::new().from_reader(content.as_bytes());
+    let mut records = Vec::new();
+
+    let headers = reader.headers()?.clone();
+    let has_headers = !headers.is_empty();
+
+    for result in reader.into_records() {
+        let record = result?;
+        if has_headers {
+            let mut obj = serde_json::Map::new();
+            for (i, header) in headers.iter().enumerate() {
+                if let Some(value) = record.get(i) {
+                    obj.insert(header.to_string(), Value::String(value.to_string()));
+                }
+            }
+            records.push(Value::Object(obj));
+        } else {
+            let mut arr = Vec::new();
+            for field in record.iter() {
+                arr.push(Value::String(field.to_string()));
+            }
+            records.push(Value::Array(arr));
+        }
+    }
+    Ok(Value::Array(records))
 }
 
 #[cfg(test)]

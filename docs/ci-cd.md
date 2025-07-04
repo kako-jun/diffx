@@ -48,7 +48,7 @@ jobs:
         # Replace <LATEST_VERSION> with the actual latest release version (e.g., v0.1.0)
         # You might want to fetch this dynamically or hardcode it for stability
         DIFFX_VERSION="v0.1.0" # Example version, update this to your latest release
-        DOWNLOAD_URL="https://github.com/your-org/diffx/releases/download/${DIFFX_VERSION}/${BINARY_NAME}.${ARCHIVE_EXT}"
+        DOWNLOAD_URL="https://github.com/kako-jun/diffx/releases/download/${DIFFX_VERSION}/${BINARY_NAME}.${ARCHIVE_EXT}"
 
         echo "Downloading diffx from: ${DOWNLOAD_URL}"
         curl -L "${DOWNLOAD_URL}" -o "diffx.${ARCHIVE_EXT}"
@@ -94,7 +94,7 @@ jobs:
 
 - **`on: pull_request`**: This workflow triggers whenever a pull request is opened or updated targeting the `main` branch, specifically if files in the `config/` directory with a `.json` extension are changed.
 - **`actions/checkout@v4`**: Checks out your repository code.
-- **`Download and setup diffx`**: This step downloads the pre-built `diffx` binary from GitHub Releases based on the runner's operating system and adds it to the system's PATH. Remember to replace `<LATEST_VERSION>` and `your-org/diffx` with your actual release version and repository path.
+- **`Download and setup diffx`**: This step downloads the pre-built `diffx` binary from GitHub Releases based on the runner's operating system and adds it to the system's PATH. Remember to replace `<LATEST_VERSION>` and `kako-jun/diffx` with your actual release version and repository path.
 - **`Create dummy config files`**: (For demonstration purposes) Creates two sample JSON files to compare. In a real scenario, these would be your actual configuration files.
 - **`Run diffx check`**: Executes the `diffx` command. 
   - `config/base.json config/new.json`: The two files being compared.

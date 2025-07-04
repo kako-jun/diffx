@@ -78,8 +78,8 @@
 
 ## バグの報告
 
-バグを見つけた場合は、[GitHub Issuesページ](https://github.com/your-org/diffx/issues) でissueを開いてください。バグの明確な説明、再現手順、期待される動作を提供してください。
+バグを見つけた場合は、[GitHub Issuesページ](https://github.com/kako-jun/diffx/issues) でissueを開いてください。バグの明確な説明、再現手順、期待される動作を提供してください。
 
 ## 機能リクエスト
 
-新しい機能のアイデアがある場合は、[GitHub Issuesページ](https://github.com/your-org/diffx/issues) でissueを開いて議論してください。ご提案をお待ちしております！
+新しい機能のアイデアがある場合は、[GitHub Issuesページ](https://github.com/kako-jun/diffx/issues) でissueを開いて議論してください。ご提案をお待ちしております！
