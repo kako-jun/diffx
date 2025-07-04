@@ -2,12 +2,47 @@ use anyhow::{Context, Result, bail};
 use clap::{Parser, ValueEnum};
 use colored::*;
 use diffx_core::{diff, value_type_name, DiffResult};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::io::{self, Read};
 use walkdir::WalkDir;
+use regex::Regex;
+
+#[derive(Debug, Deserialize, Default)]
+struct Config {
+    #[serde(default)]
+    output: Option<OutputFormat>,
+    #[serde(default)]
+    format: Option<Format>,
+}
+
+fn load_config() -> Config {
+    let config_path = dirs::config_dir()
+        .map(|p| p.join("diffx").join("config.toml"))
+        .or_else(|| {
+            // Fallback for systems without a standard config directory
+            Some(PathBuf::from(".diffx.toml"))
+        });
+
+    if let Some(path) = config_path {
+        if path.exists() {
+            match fs::read_to_string(&path) {
+                Ok(content) => {
+                    match toml::from_str(&content) {
+                        Ok(config) => return config,
+                        Err(e) => eprintln!("Warning: Could not parse config file {}: {}", path.display(), e),
+                    }
+                }
+                Err(e) => eprintln!("Warning: Could not read config file {}: {}", path.display(), e),
+            }
+        }
+    }
+    Config::default()
+}
+
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -25,15 +60,31 @@ struct Args {
     format: Option<Format>,
 
     /// Output format
-    #[arg(short, long, value_enum, default_value_t = OutputFormat::Cli)]
-    output: OutputFormat,
+    #[arg(short, long, value_enum)]
+    output: Option<OutputFormat>,
 
     /// Compare directories recursively
     #[arg(short, long)]
     recursive: bool,
+
+    /// Filter differences by a specific path (e.g., "config.users[0].name")
+    #[arg(long)]
+    path: Option<String>,
+
+    /// Ignore keys matching a regular expression (e.g., "^id$")
+    #[arg(long)]
+    ignore_keys_regex: Option<String>,
+
+    /// Tolerance for float comparisons (e.g., "0.001")
+    #[arg(long)]
+    epsilon: Option<f64>,
+
+    /// Key to use for identifying array elements (e.g., "id")
+    #[arg(long)]
+    array_id_key: Option<String>,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
 enum OutputFormat {
     Cli,
     Json,
@@ -42,7 +93,7 @@ enum OutputFormat {
     Unified,
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
 enum Format {
     Json,
     Yaml,
@@ -137,13 +188,26 @@ fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+    let config = load_config();
+
+    let output_format = args.output.or(config.output).unwrap_or(OutputFormat::Cli);
+    let input_format_from_config = config.format;
+
+    let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
+        Some(Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?)
+    } else {
+        None
+    };
+
+    let epsilon = args.epsilon;
+    let array_id_key = args.array_id_key.as_deref();
 
     // Handle directory comparison
     if args.recursive {
         if !args.input1.is_dir() || !args.input2.is_dir() {
             bail!("Both inputs must be directories for recursive comparison.");
         }
-        compare_directories(&args.input1, &args.input2, args.format, args.output)?;
+        compare_directories(&args.input1, &args.input2, args.format.or(input_format_from_config), output_format, args.path, ignore_keys_regex.as_ref(), epsilon, array_id_key)?;
         return Ok(());
     }
 
@@ -153,18 +217,32 @@ fn main() -> Result<()> {
 
     let input_format = if let Some(fmt) = args.format {
         fmt
+    } else if let Some(fmt) = input_format_from_config {
+        fmt
     } else {
         infer_format_from_path(&args.input1)
             .or_else(|| infer_format_from_path(&args.input2))
-            .context("Could not infer format from file extensions. Please specify --format.")?
+            .context("Could not infer format from file extensions. Please specify --format or configure in diffx.toml.")?
     };
 
     let v1: Value = parse_content(&content1, input_format)?;
     let v2: Value = parse_content(&content2, input_format)?;
 
-    let differences = diff(&v1, &v2);
+    let mut differences = diff(&v1, &v2, ignore_keys_regex.as_ref(), epsilon, array_id_key);
 
-    match args.output {
+    if let Some(filter_path) = args.path {
+        differences.retain(|d| {
+            let key = match d {
+                DiffResult::Added(k, _) => k,
+                DiffResult::Removed(k, _) => k,
+                DiffResult::Modified(k, _, _) => k,
+                DiffResult::TypeChanged(k, _, _) => k,
+            };
+            key.starts_with(&filter_path)
+        });
+    }
+
+    match output_format {
         OutputFormat::Cli => print_cli_output(differences),
         OutputFormat::Json => print_json_output(differences)?,
         OutputFormat::Yaml => print_yaml_output(differences)?,
@@ -183,8 +261,12 @@ fn main() -> Result<()> {
 fn compare_directories(
     dir1: &Path,
     dir2: &Path,
-    format: Option<Format>,
+    format_option: Option<Format>,
     output: OutputFormat,
+    filter_path: Option<String>,
+    ignore_keys_regex: Option<&Regex>,
+    epsilon: Option<f64>,
+    array_id_key: Option<&str>,
 ) -> Result<()> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
     for entry in WalkDir::new(dir1).into_iter().filter_map(|e| e.ok()) {
@@ -220,18 +302,30 @@ fn compare_directories(
                 let content1 = read_input(path1)?;
                 let content2 = read_input(path2)?;
 
-                let input_format = if let Some(fmt) = format {
+                let input_format = if let Some(fmt) = format_option {
                     fmt
                 } else {
                     infer_format_from_path(path1)
                         .or_else(|| infer_format_from_path(path2))
-                        .context(format!("Could not infer format for {}. Please specify --format.", relative_path.display()))?
+                        .context(format!("Could not infer format for {}. Please specify --format or configure in diffx.toml.", relative_path.display()))?
                 };
 
                 let v1: Value = parse_content(&content1, input_format)?;
                 let v2: Value = parse_content(&content2, input_format)?;
 
-                let differences = diff(&v1, &v2);
+                let mut differences = diff(&v1, &v2, ignore_keys_regex, epsilon, array_id_key);
+
+                if let Some(filter_path_str) = &filter_path {
+                    differences.retain(|d| {
+                        let key = match d {
+                            DiffResult::Added(k, _) => k,
+                            DiffResult::Removed(k, _) => k,
+                            DiffResult::Modified(k, _, _) => k,
+                            DiffResult::TypeChanged(k, _, _) => k,
+                        };
+                        key.starts_with(filter_path_str)
+                    });
+                }
 
                 match output {
                     OutputFormat::Cli => print_cli_output(differences),
