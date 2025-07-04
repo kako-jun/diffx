@@ -8,4 +8,5 @@ This section will contain more in-depth guides, API references, and development 
 
 - [Getting Started (CLI Usage)](./cli-usage.md)
 - [Core Library (diffx-core)](./core-library.md)
+- [CI/CD Integration Examples](./ci-cd.md)
 - [Contributing Guide](./contributing.md)
