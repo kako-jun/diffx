@@ -26,13 +26,41 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
+    - name: Download and setup diffx
+      run: |
+        # Determine the appropriate binary name and archive extension based on OS
+        if [[ "${{ runner.os }}" == "Linux" ]]; then
+          ARCHIVE_EXT="tar.gz"
+          BINARY_NAME="diffx-x86_64-unknown-linux-gnu"
+        elif [[ "${{ runner.os }}" == "macOS" ]]; then
+          ARCHIVE_EXT="tar.gz"
+          # For macOS, you might need to detect architecture (x86_64 or aarch64)
+          # For simplicity, we'll assume x86_64 for now, or you can add logic here
+          BINARY_NAME="diffx-x86_64-apple-darwin"
+        elif [[ "${{ runner.os }}" == "Windows" ]]; then
+          ARCHIVE_EXT="zip"
+          BINARY_NAME="diffx-x86_64-pc-windows-msvc"
+        else
+          echo "Unsupported OS: ${{ runner.os }}"
+          exit 1
+        fi
 
-    - name: Install diffx
-      run: cargo install --path .
+        # Replace <LATEST_VERSION> with the actual latest release version (e.g., v0.1.0)
+        # You might want to fetch this dynamically or hardcode it for stability
+        DIFFX_VERSION="v0.1.0" # Example version, update this to your latest release
+        DOWNLOAD_URL="https://github.com/your-org/diffx/releases/download/${DIFFX_VERSION}/${BINARY_NAME}.${ARCHIVE_EXT}"
+
+        echo "Downloading diffx from: ${DOWNLOAD_URL}"
+        curl -L "${DOWNLOAD_URL}" -o "diffx.${ARCHIVE_EXT}"
+
+        mkdir -p diffx_bin
+        if [[ "${ARCHIVE_EXT}" == "tar.gz" ]]; then
+          tar -xzf "diffx.${ARCHIVE_EXT}" -C diffx_bin
+        else
+          unzip "diffx.${ARCHIVE_EXT}" -d diffx_bin
+        fi
+
+        echo "${PWD}/diffx_bin" >> $GITHUB_PATH
 
     - name: Create dummy config files (for demonstration)
       run: |
@@ -66,8 +94,7 @@ jobs:
 
 - **`on: pull_request`**: This workflow triggers whenever a pull request is opened or updated targeting the `main` branch, specifically if files in the `config/` directory with a `.json` extension are changed.
 - **`actions/checkout@v4`**: Checks out your repository code.
-- **`dtolnay/rust-toolchain@stable`**: Installs the Rust toolchain required to build `diffx`.
-- **`cargo install --path .`**: Installs `diffx` from the current repository path.
+- **`Download and setup diffx`**: This step downloads the pre-built `diffx` binary from GitHub Releases based on the runner's operating system and adds it to the system's PATH. Remember to replace `<LATEST_VERSION>` and `your-org/diffx` with your actual release version and repository path.
 - **`Create dummy config files`**: (For demonstration purposes) Creates two sample JSON files to compare. In a real scenario, these would be your actual configuration files.
 - **`Run diffx check`**: Executes the `diffx` command. 
   - `config/base.json config/new.json`: The two files being compared.
