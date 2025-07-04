@@ -14,5 +14,5 @@ thumbs.db
 Cargo.lock
 
 # Test intermediate files (generated during tests)
-/test_output/
+/tests/output/
 **/diff_report_v*.json
