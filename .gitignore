@@ -13,7 +13,6 @@ thumbs.db
 # Cargo
 Cargo.lock
 
-# Examples/Tests specific
-/examples/*.json
-/examples/*.yaml
-/examples/*.toml
+# Test intermediate files (generated during tests)
+/test_output/
+**/diff_report_v*.json
