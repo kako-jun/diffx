@@ -3,7 +3,6 @@ use clap::{Parser, ValueEnum};
 use colored::*;
 use diffx_core::{diff, value_type_name, DiffResult, parse_ini, parse_xml, parse_csv};
 use serde::{Deserialize, Serialize};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;

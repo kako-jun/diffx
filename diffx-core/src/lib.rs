@@ -2,7 +2,7 @@ use serde::Serialize;
 use serde_json::Value;
 use regex::Regex;
 use std::collections::HashMap;
-use ini::Ini;
+// use ini::Ini;
 use anyhow::{Result, anyhow};
 use quick_xml::de::from_str;
 use csv::ReaderBuilder;
@@ -296,23 +296,30 @@ pub fn value_type_name(value: &Value) -> &str {
 }
 
 pub fn parse_ini(content: &str) -> Result<Value> {
-    let ini = Ini::read_from_string(content)?;
+    use configparser::ini::Ini;
+    
+    let mut ini = Ini::new();
+    ini.read(content.to_string())
+        .map_err(|e| anyhow!("Failed to parse INI: {}", e))?;
+    
     let mut root_map = serde_json::Map::new();
 
-    for (section, properties) in ini.iter() {
+    for section_name in ini.sections() {
         let mut section_map = serde_json::Map::new();
-        for (key, value) in properties.iter() {
-            section_map.insert(key.clone(), Value::String(value.clone()));
-        }
-        if let Some(s) = section {
-            root_map.insert(s.clone(), Value::Object(section_map));
-        } else {
-            // Global properties (no section)
-            for (key, value) in section_map {
-                root_map.insert(key, value);
+        
+        if let Some(section) = ini.get_map_ref().get(&section_name) {
+            for (key, value) in section {
+                if let Some(v) = value {
+                    section_map.insert(key.clone(), Value::String(v.clone()));
+                } else {
+                    section_map.insert(key.clone(), Value::Null);
+                }
             }
         }
+        
+        root_map.insert(section_name, Value::Object(section_map));
     }
+
     Ok(Value::Object(root_map))
 }
 
