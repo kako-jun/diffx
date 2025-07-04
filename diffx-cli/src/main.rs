@@ -338,10 +338,6 @@ fn compare_directories(
                     OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
                     OutputFormat::Json => print_json_output(differences)?,
                     OutputFormat::Yaml => print_yaml_output(differences)?,
-                    OutputFormat::Toml => {
-                        eprintln!("Error: TOML output is not supported for structured diff results.");
-                        bail!("TOML output not supported");
-                    }
                     OutputFormat::Unified => print_unified_output(&v1, &v2)?,
                 }
                 compared_files += 1;
