@@ -1,117 +1,117 @@
-# diffx: 構造化データ差分ツール
+# diffx: Structured Data Diff Tool
 
-## 開発の動機（Motivation）
+## Motivation
 
-現代のソフトウェア開発において、設定ファイル、APIレスポンス、データ構造など、JSON、YAML、TOMLといった構造化データが果たす役割は増大しています。しかし、これらのデータの変更を追跡する既存のツール（例えば、伝統的な`diff`コマンド）は、テキストベースであるため、データの「構造」や「意味」を理解できませんでした。
+In modern software development, structured data such as JSON, YAML, and TOML play an increasingly important role in configuration files, API responses, and data structures. However, existing tools for tracking changes in these data (e.g., the traditional `diff` command) are text-based and cannot understand the "structure" or "meaning" of the data.
 
-これにより、開発者は以下のような非効率な問題に直面してきました。
+This has led to developers facing inefficient problems such as:
 
-*   **表面的な差分に消耗する**: キーの順序、空白、末尾のカンマなど、意味のないフォーマット上の違いが「差分」として表示され、本質的な変更を見落としがちでした。
-*   **手動での確認の限界**: 複雑にネストされた構造や大規模なデータの場合、手動での差分確認は困難を極め、エラーの原因となっていました。
-*   **機械処理の困難さ**: テキストベースの差分は、プログラムによる自動解析やAIによる理解には不向きでした。
+*   **Exhaustion from superficial differences**: Formatting differences such as key order, whitespace, and trailing commas are displayed as "differences," making it easy to overlook essential changes.
+*   **Limitations of manual verification**: For complex nested structures or large-scale data, manual diff verification is extremely difficult and can lead to errors.
+*   **Difficulty in machine processing**: Text-based diffs are unsuitable for automated analysis by programs or understanding by AI.
 
-`diffx`は、これらの課題を解決するために誕生しました。私たちは、構造化データの差分比較において、単なるテキストの変更ではなく、**データの「意味的な変更」**に焦点を当てるべきだと考えます。これにより、開発者は無駄な消耗から解放され、より本質的な作業に集中できるようになります。
+`diffx` was born to solve these problems. We believe that in structured data diff comparison, we should focus on **"semantic changes"** rather than mere text changes. This frees developers from unnecessary exhaustion and allows them to concentrate on more essential tasks.
 
-## 思想（Philosophy）
+## Philosophy
 
-**「構造化された差分を、誰でも、どこでも、簡単に。」**
+**"Structured diffs, for everyone, everywhere, easily."**
 
-従来の `diff` コマンドはテキストベースであり、データの構造を理解できません。`diffx` は JSON、YAML、TOMLなどの構造化データに特化した差分抽出ツールです。人間にもAIにもわかりやすい出力を提供し、設定ファイル、構成ファイル、データの変更を明確に可視化します。
+Traditional `diff` commands are text-based and cannot understand the structure of data. `diffx` is a diff extraction tool specialized in structured data such such as JSON, YAML, and TOML. It provides output that is easy for both humans and AI to understand, clearly visualizing changes in configuration files, data, and other structured files.
 
-`diffx` は、単なるテキストの変更ではなく、データの**意味的な変更**を検出することを目指します。例えば、JSONのキーの順序や空白の変更は、`diffx` では差分として検出しません。これにより、本質的な変更に集中し、無駄な消耗を避けることができます。
+`diffx` aims to detect **semantic changes** in data, not just text changes. For example, `diffx` does not detect changes in JSON key order or whitespace as differences. This allows you to focus on essential changes and avoid unnecessary exhaustion.
 
-### 名前「diffx」に込めた意味
-diff + x の「x」は何を意味するか？
+### Meaning of the name "diffx"
+What does the "x" in diff + x mean?
 
-*   **extended**: 拡張された差分（構造化、意味的）
-*   **exact**: 正確な差分抽出
-*   **flexible**: 柔軟なフォーマット対応
-*   **indexed**: 差分にインデックスを付けて追跡可能
-*   **next-gen**: 次世代の差分ツール
+*   **extended**: Extended diff (structured, semantic)
+*   **exact**: Accurate diff extraction
+*   **flexible**: Flexible format support
+*   **indexed**: Trackable diffs with indexes
+*   **next-gen**: Next-generation diff tool
 
-## 仕様（Specification）
+## Specification
 
-### 対応フォーマット
+### Supported Formats
 - JSON
 - YAML
 - TOML
-- *将来的に：XML, INI, CSV*
+- *Future: XML, INI, CSV*
 
-### 差分の種類
-- キーの追加・削除
-- 値の変更
-- 配列の挿入・削除・変更
-- ネスト構造の差分
-- 値の型変更
+### Types of Differences
+- Key addition/deletion
+- Value change
+- Array insertion/deletion/modification
+- Nested structure differences
+- Value type change
 
-### 出力形式
-`diffx`は、構造化データの差分を最も豊かに表現できる独自のCLI表示形式を推奨しますが、特定のユースケースや既存ツールとの連携のために、以下の代替出力形式もサポートします。
+### Output Formats
+`diffx` recommends its own CLI display format that can most richly express structured data differences, but also supports the following alternative output formats for specific use cases and integration with existing tools:
 
-- **推奨CLI表示 (デフォルト)**
-    *   構造的な差分（追加、変更、削除、型変更など）を人間が理解しやすいように、ユニバーサルデザインに配慮した色分けや記号、インデントを用いて明確に表示する独自形式です。
-    *   `+` (追加), `-` (削除), `~` (変更), `!` (型変更) の記号と、青、黄、シアン、マゼンタの色で差分を表現します。
-    *   **特徴**: データの意味的な変更に焦点を当て、キーの順序や空白の変更は無視します。これが `diffx` の核となる価値です。
+- **Recommended CLI Display (Default)**
+    *   A unique format that clearly displays structural differences (additions, changes, deletions, type changes, etc.) using universal design considerations such as color coding, symbols, and indentation, making it easy for humans to understand.
+    *   Differences are represented by `+` (addition), `-` (deletion), `~` (change), `!` (type change) symbols and colors: blue, yellow, cyan, and magenta.
+    *   **Feature**: Focuses on semantic changes in data, ignoring changes in key order or whitespace. This is the core value of `diffx`.
 
-- **JSON形式**
-    *   機械可読な形式です。CI/CDや他のプログラムとの連携に利用します。
-    *   `diffx` の検出した差分がJSON配列として出力されます。
+- **JSON Format**
+    *   Machine-readable format. Used for CI/CD and integration with other programs.
+    *   Differences detected by `diffx` are output as a JSON array.
 
-- **YAML形式**
-    *   機械可読な形式です。JSONと同様にプログラムとの連携に利用します。
-    *   `diffx` の検出した差分がYAML配列として出力されます。
+- **YAML Format**
+    *   Machine-readable format. Used for CI/CD and integration with other programs, similar to JSON.
+    *   Differences detected by `diffx` are output as a YAML array.
 
-- **diff互換形式 (Unified Format)**
-    *   `--output unified` オプションで提供されます。
-    *   `git` や既存のマージツールとの連携を目的としています。
-    *   **注意点**: この形式は、`diffx` が内部で検出した「意味的な差分」を、元のファイルの整形済みテキストの行ベースの差分として表現します。そのため、`diffx` が意味的な差分ではないと判断した変更（例：キーの順序変更、空白の変更）も、テキスト表現上変更があれば `+`/`-` で表示される可能性があります。あくまで互換性のための補助的な位置づけであり、**`diffx` の意味的な差分とは異なる**点にご注意ください。
+- **diff-compatible Format (Unified Format)**
+    *   Provided with the `--output unified` option.
+    *   Intended for integration with `git` and existing merge tools.
+    *   **Note**: This format expresses the "semantic differences" detected internally by `diffx` as line-based differences of the formatted text of the original files. Therefore, changes that `diffx` determines are not semantic differences (e.g., changes in key order, whitespace changes) may still be displayed with `+`/`-` if there are changes in the text representation. This is purely for compatibility and **differs from `diffx`'s semantic differences**.
 
-## アーキテクチャ（Architecture）
+## Architecture
 
-### 構成案
+### Proposed Structure
 ```
 diffx/
-├── diffx-core/      # 差分抽出ライブラリ（Crate）
-├── diffx-cli/       # CLIラッパー
-├── examples/        # 使用例とテストデータ
-├── docs/            # ドキュメントと仕様書
-└── tests/           # 差分検証用ユニットテスト
+├── diffx-core/      # Diff extraction library (Crate)
+├── diffx-cli/       # CLI wrapper
+├── examples/        # Usage examples and test data
+├── docs/            # Documentation and specifications
+└── tests/           # Unit tests for diff verification
 ```
 
-### 技術スタック
-- **Rust**（高速・安全・クロスプラットフォーム）
-- `serde_json`, `serde_yaml`, `toml` などのパーサー
-- `clap`（CLI引数処理）
-- `colored`（CLI出力の色付け）
-- `similar`（Unified Format出力）
+### Technology Stack
+- **Rust** (Fast, safe, cross-platform)
+- `serde_json`, `serde_yaml`, `toml` parsers
+- `clap` (CLI argument parsing)
+- `colored` (CLI output coloring)
+- `similar` (Unified Format output)
 
-## 将来的な展望
-- **差分レポートの差分 (Meta-chaining)**: `diffx`の出力をYAML/TOML形式で保存し、それを再び`diffx`の入力として比較することで、「差分レポートの差分」を検出する。これにより、設定変更の履歴管理や監査、デプロイメントの追跡など、高度な運用が可能になる。
-- **インタラクティブTUI (`diffx-tui`)**: `diffx`の力を示すためのサンプル兼高機能ビューア。左右に並べたデータと、それと連動する差分リストを表示し、「フォーマットの揺れに惑わされない、本質的な差分理解」という体験を提供する。
-- GitHub Actionsでの差分チェック
-- AIエージェントとの連携（差分要約・説明）
+## Future Prospects
+- **Diff Report Diffs (Meta-chaining)**: Save `diffx` output in YAML/TOML format and compare it again as `diffx` input to detect "diffs of diff reports." This enables advanced operations such as change history management, auditing, and deployment tracking for configuration changes.
+- **Interactive TUI (`diffx-tui`)**: A sample and high-performance viewer to demonstrate the power of `diffx`. It displays data side-by-side with a linked diff list, providing the experience of "understanding essential differences without being confused by formatting variations."
+- Diff checking with GitHub Actions
+- Integration with AI agents (diff summarization/explanation)
 
-## 提供形態（Overall Distribution）
+## Overall Distribution
 
-### 1. Rust Crate（diffx-core）
-- 構造化差分抽出のロジックをライブラリとして提供
-- 他のRustアプリやCLIツールに組み込み可能
-- 高速・型安全・拡張性あり
+### 1. Rust Crate (diffx-core)
+- Provides diff extraction logic as a library
+- Can be embedded in other Rust applications and CLI tools
+- Fast, type-safe, extensible
 
-### 2. CLIツール（diffx）
-- ユーザーが直接使えるコマンドラインツール
-- AIやCI/CDツールからも呼び出しやすい
-- `cargo install diffx` で導入可能
+### 2. CLI Tool (diffx)
+- Command-line tool directly usable by users
+- Easy to call from AI and CI/CD tools
+- Installable with `cargo install diffx`
 
-### 3. 他言語向けラッパー（npm/pip）
-- **npmパッケージ（diffx-bin）**
-  - Node.js環境から diffx CLI を呼び出すラッパー
-  - `child_process.spawn()` でCLIを実行
-- **pipパッケージ（diffx-bin）**
-  - Python環境から diffx CLI を呼び出すラッパー
-  - `subprocess.run()` でCLIを実行
+### 3. Wrappers for Other Languages (npm/pip)
+- **npm package (diffx-bin)**
+  - Wrapper to call diffx CLI from Node.js environment
+  - Executes CLI using `child_process.spawn()`
+- **pip package (diffx-bin)**
+  - Wrapper to call diffx CLI from Python environment
+  - Executes CLI using `subprocess.run()`
 
-### なぜこの構成が有効か？
-- **AIとの親和性**: CLIがあることで、言語を問わずAIが操作可能
-- **開発者の再利用性**: Rust Crateで他ツールに組み込みやすい
-- **言語圏の拡張**: npm/pipでJS/Pythonユーザーにも届く
-- **メンテナンス性**: CLIが主で、ラッパーは薄く保てる
+### Why this structure is effective?
+- **AI Affinity**: CLI allows AI to operate regardless of language
+- **Developer Reusability**: Rust Crate makes it easy to integrate into other tools
+- **Language Ecosystem Expansion**: npm/pip reaches JS/Python users
+- **Maintainability**: CLI is primary, wrappers can be kept thin
