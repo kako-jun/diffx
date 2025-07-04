@@ -187,7 +187,25 @@ fn print_json_output(differences: Vec<DiffResult>) -> Result<()> {
 }
 
 fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
-    println!("{}", serde_yml::to_string(&differences)?);
+    // Convert DiffResult to a more standard YAML format
+    let yaml_data: Vec<serde_json::Value> = differences.into_iter().map(|diff| {
+        match diff {
+            DiffResult::Added(key, value) => serde_json::json!({
+                "Added": [key, value]
+            }),
+            DiffResult::Removed(key, value) => serde_json::json!({
+                "Removed": [key, value]
+            }),
+            DiffResult::Modified(key, old_value, new_value) => serde_json::json!({
+                "Modified": [key, old_value, new_value]
+            }),
+            DiffResult::TypeChanged(key, old_value, new_value) => serde_json::json!({
+                "TypeChanged": [key, old_value, new_value]
+            }),
+        }
+    }).collect();
+    
+    println!("{}", serde_yml::to_string(&yaml_data)?);
     Ok(())
 }
 
