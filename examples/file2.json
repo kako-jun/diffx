@@ -1,0 +1,6 @@
+{
+  "name": "John",
+  "age": 31,
+  "city": "Boston",
+  "items": ["apple", "banana", "orange"]
+}

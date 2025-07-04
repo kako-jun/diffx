@@ -1,0 +1,9 @@
+{
+  "app": {
+    "version": "1.0",
+    "settings": {
+      "log_level": "info"
+    }
+  },
+  "features": ["logging", "metrics"]
+}
