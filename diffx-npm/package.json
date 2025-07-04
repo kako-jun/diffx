@@ -1,0 +1,15 @@
+{
+  "name": "diffx-bin",
+  "version": "0.1.0",
+  "description": "A CLI tool for structured diffing of JSON, YAML, and TOML files.",
+  "keywords": ["diff", "json", "yaml", "toml", "cli", "structured", "configuration"],
+  "main": "index.js",
+  "bin": {
+    "diffx": "./index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}
