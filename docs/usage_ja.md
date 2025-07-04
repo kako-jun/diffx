@@ -22,6 +22,24 @@ diffx file1.yaml file2.yaml
 diffx file1.toml file2.toml
 ```
 
+2つのINIファイルを比較する:
+
+```bash
+diffx file1.ini file2.ini
+```
+
+2つのXMLファイルを比較する:
+
+```bash
+diffx file1.xml file2.xml
+```
+
+2つのCSVファイルを比較する:
+
+```bash
+diffx file1.csv file2.csv
+```
+
 ## 入力フォーマットの指定
 
 ファイル拡張子から `diffx` がフォーマットを推測できない場合（例：標準入力を使用する場合やカスタムファイル拡張子の場合）、`--format` オプションを使って明示的にフォーマットを指定できます。
