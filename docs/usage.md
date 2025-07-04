@@ -22,6 +22,24 @@ Compare two TOML files:
 diffx file1.toml file2.toml
 ```
 
+Compare two INI files:
+
+```bash
+diffx file1.ini file2.ini
+```
+
+Compare two XML files:
+
+```bash
+diffx file1.xml file2.xml
+```
+
+Compare two CSV files:
+
+```bash
+diffx file1.csv file2.csv
+```
+
 ## Specifying Input Format
 
 If `diffx` cannot infer the format from the file extension (e.g., when using standard input or custom file extensions), you can explicitly specify the format using the `--format` option:

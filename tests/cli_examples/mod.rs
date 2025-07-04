@@ -53,6 +53,39 @@ fn test_basic_toml_diff() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../examples/file1.ini").arg("../examples/file2.ini");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("~ section1.key2: value2 -> new_value2"))
+        .stdout(predicate::str::contains("+ section2.key4: value4"));
+    Ok(())
+}
+
+#[test]
+fn test_basic_xml_diff() -> Result<(), Box<dyn std::error.Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../examples/file1.xml").arg("../examples/file2.xml");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("~ root.item[1].#text: value2 -> new_value2"))
+        .stdout(predicate::str::contains("+ root.item[2]: ").and(predicate::str::contains("id: 3")).and(predicate::str::contains("#text: value3")));
+    Ok(())
+}
+
+#[test]
+fn test_basic_csv_diff() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../examples/file1.csv").arg("../examples/file2.csv");
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("~ [1].header2: valueB -> new_valueB"))
+        .stdout(predicate::str::contains("+ [2]: ").and(predicate::str::contains("header1: valueE")).and(predicate::str::contains("header2: valueF")));
+    Ok(())
+}
+
+#[test]
 fn test_specify_input_format() -> Result<(), Box<dyn std::error::Error>> {
     use std::io::Write;
 
