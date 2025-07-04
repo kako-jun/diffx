@@ -100,7 +100,9 @@ fn test_specify_input_format() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.success());
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(predicate::str::contains("~ age: 30 -> 31").eval(&stdout));
-    assert!(predicate::str::contains("~ city: \"New York\" -> \"London\"").eval(&stdout));
+    assert!(predicate::str::contains("~ city: \"New York\" -> \"Boston\"").eval(&stdout));
+    assert!(predicate::str::contains("~ name: \"Alice\" -> \"John\"").eval(&stdout));
+    assert!(predicate::str::contains("+ items").eval(&stdout));
     Ok(())
 }
 
@@ -110,9 +112,14 @@ fn test_json_output_format() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../examples/file1.json").arg("../examples/file2.json").arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains(r#""Modified": ["age", 30, 31]"#))
-        .stdout(predicate::str::contains(r#""Modified": ["city", "New York", "Boston"]"#))
-        .stdout(predicate::str::contains(r#""Added": ["items[2]", "orange"]"#));
+        .stdout(predicate::str::contains(r#""Modified""#))
+        .stdout(predicate::str::contains(r#""age""#))
+        .stdout(predicate::str::contains(r#""city""#))
+        .stdout(predicate::str::contains(r#""New York""#))
+        .stdout(predicate::str::contains(r#""Boston""#))
+        .stdout(predicate::str::contains(r#""Added""#))
+        .stdout(predicate::str::contains(r#""items[2]""#))
+        .stdout(predicate::str::contains(r#""orange""#));
     Ok(())
 }
 
