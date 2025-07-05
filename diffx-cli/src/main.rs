@@ -190,21 +190,18 @@ fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) 
         let indent = "  ".repeat(depth);
 
         let diff_str = match diff {
-            DiffResult::Added(k, value) => format!("+ {}: {}", k, value).blue(),
-            DiffResult::Removed(k, value) => format!("- {}: {}", k, value).yellow(),
-            DiffResult::Modified(k, v1, v2) => format!("~ {}: {} -> {}", k, v1, v2).cyan(),
+            DiffResult::Added(k, value) => format!("+ {k}: {value}").blue(),
+            DiffResult::Removed(k, value) => format!("- {k}: {value}").yellow(),
+            DiffResult::Modified(k, v1, v2) => format!("~ {k}: {v1} -> {v2}").cyan(),
             DiffResult::TypeChanged(k, v1, v2) => format!(
-                "! {}: {} ({}) -> {} ({})",
-                k,
-                v1,
+                "! {k}: {v1} ({}) -> {v2} ({})",
                 value_type_name(v1),
-                v2,
                 value_type_name(v2)
             )
             .magenta(),
         };
 
-        println!("{}{}", indent, diff_str);
+        println!("{indent}{diff_str}");
     }
 }
 
@@ -249,7 +246,7 @@ fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
             similar::ChangeTag::Insert => "+",
             similar::ChangeTag::Equal => " ",
         };
-        print!("{}{}", sign, change);
+        print!("{sign}{change}");
     }
     Ok(())
 }
