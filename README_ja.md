@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
-[![Documentation](https://docs.rs/diffx/badge.svg)](https://docs.rs/diffx)
+[![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 データの**構造**と**意味**を理解する次世代diffツール。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
@@ -96,7 +96,7 @@ diffx:      ~0.005秒（クリーンな意味的出力）
 - **diff互換形式 (Unified Format)**
     *   `--output unified` オプションで提供されます。
     *   `git` や既存のマージツールとの連携を目的としています。
-    *   **注意点**: この形式は、`diffx` が内部で検出した「意味的な差分」を、元のファイルの整形済みテキストの行ベースの差分として表現します。そのため、`diffx` が意味的な差分ではないと判断した変更（例：キーの順序変更、空白の変更）も、テキスト表現上変更があれば `+`/`-` で表示される可能性があります。あくまで互換性のための補助的な位置づけであり、**`diffx` の意味的な差分とは異なる**点にご注意ください。
+    *   **注意点**: この形式は、`diffx` が検出した意味的な差分のみを従来のdiff形式で表現します。意味的な差分ではない変更（キーの順序変更、空白の変更など）は表示されません。あくまで既存ツールとの互換性のための補助的な位置づけです。
 
 ## アーキテクチャ（Architecture）
 
@@ -129,6 +129,8 @@ diffx/
 # CLIツールをインストール
 cargo install diffx
 ```
+
+詳細な使い方とサンプルは [GitHubドキュメント](https://github.com/kako-jun/diffx/tree/main/docs) をご確認ください。
 
 ### 基本的な使い方
 
