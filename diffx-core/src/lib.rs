@@ -1,11 +1,11 @@
+use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
-use regex::Regex;
 use std::collections::HashMap;
 // use ini::Ini;
-use anyhow::{Result, anyhow};
-use quick_xml::de::from_str;
+use anyhow::{anyhow, Result};
 use csv::ReaderBuilder;
+use quick_xml::de::from_str;
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum DiffResult {
@@ -26,23 +26,35 @@ pub fn diff(
 
     // Handle root level type or value change first
     if !values_are_equal(v1, v2, epsilon) {
-        let type_match = match (v1, v2) {
-            (Value::Null, Value::Null) => true,
-            (Value::Bool(_), Value::Bool(_)) => true,
-            (Value::Number(_), Value::Number(_)) => true,
-            (Value::String(_), Value::String(_)) => true,
-            (Value::Array(_), Value::Array(_)) => true,
-            (Value::Object(_), Value::Object(_)) => true,
-            _ => false,
-        };
+        let type_match = matches!((v1, v2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
 
         if !type_match {
-            results.push(DiffResult::TypeChanged("".to_string(), v1.clone(), v2.clone()));
+            results.push(DiffResult::TypeChanged(
+                "".to_string(),
+                v1.clone(),
+                v2.clone(),
+            ));
             return results; // If root type changed, no further diffing needed
         } else if v1.is_object() && v2.is_object() {
-            diff_objects("", v1.as_object().unwrap(), v2.as_object().unwrap(), &mut results, ignore_keys_regex, epsilon, array_id_key);
+            diff_objects(
+                "",
+                v1.as_object().unwrap(),
+                v2.as_object().unwrap(),
+                &mut results,
+                ignore_keys_regex,
+                epsilon,
+                array_id_key,
+            );
         } else if v1.is_array() && v2.is_array() {
-            diff_arrays("", v1.as_array().unwrap(), v2.as_array().unwrap(), &mut results, ignore_keys_regex, epsilon, array_id_key);
+            diff_arrays(
+                "",
+                v1.as_array().unwrap(),
+                v2.as_array().unwrap(),
+                &mut results,
+                ignore_keys_regex,
+                epsilon,
+                array_id_key,
+            );
         } else {
             // Simple value modification at root
             results.push(DiffResult::Modified("".to_string(), v1.clone(), v2.clone()));
@@ -64,10 +76,26 @@ fn diff_recursive(
 ) {
     match (v1, v2) {
         (Value::Object(map1), Value::Object(map2)) => {
-            diff_objects(path, map1, map2, results, ignore_keys_regex, epsilon, array_id_key);
+            diff_objects(
+                path,
+                map1,
+                map2,
+                results,
+                ignore_keys_regex,
+                epsilon,
+                array_id_key,
+            );
         }
         (Value::Array(arr1), Value::Array(arr2)) => {
-            diff_arrays(path, arr1, arr2, results, ignore_keys_regex, epsilon, array_id_key);
+            diff_arrays(
+                path,
+                arr1,
+                arr2,
+                results,
+                ignore_keys_regex,
+                epsilon,
+                array_id_key,
+            );
         }
         _ => { /* Should not happen if called correctly from diff_objects/diff_arrays */ }
     }
@@ -84,7 +112,11 @@ fn diff_objects(
 ) {
     // Check for modified or removed keys
     for (key, value1) in map1 {
-        let current_path = if path.is_empty() { key.clone() } else { format!("{}.{}", path, key) };
+        let current_path = if path.is_empty() {
+            key.clone()
+        } else {
+            format!("{}.{}", path, key)
+        };
         if let Some(regex) = ignore_keys_regex {
             if regex.is_match(key) {
                 continue;
@@ -93,23 +125,33 @@ fn diff_objects(
         match map2.get(key) {
             Some(value2) => {
                 // Recurse for nested objects/arrays
-                if value1.is_object() && value2.is_object() || value1.is_array() && value2.is_array() {
-                    diff_recursive(&current_path, value1, value2, results, ignore_keys_regex, epsilon, array_id_key);
+                if value1.is_object() && value2.is_object()
+                    || value1.is_array() && value2.is_array()
+                {
+                    diff_recursive(
+                        &current_path,
+                        value1,
+                        value2,
+                        results,
+                        ignore_keys_regex,
+                        epsilon,
+                        array_id_key,
+                    );
                 } else if !values_are_equal(value1, value2, epsilon) {
-                    let type_match = match (value1, value2) {
-                        (Value::Null, Value::Null) => true,
-                        (Value::Bool(_), Value::Bool(_)) => true,
-                        (Value::Number(_), Value::Number(_)) => true,
-                        (Value::String(_), Value::String(_)) => true,
-                        (Value::Array(_), Value::Array(_)) => true,
-                        (Value::Object(_), Value::Object(_)) => true,
-                        _ => false,
-                    };
+                    let type_match = matches!((value1, value2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
 
                     if !type_match {
-                        results.push(DiffResult::TypeChanged(current_path, value1.clone(), value2.clone()));
+                        results.push(DiffResult::TypeChanged(
+                            current_path,
+                            value1.clone(),
+                            value2.clone(),
+                        ));
                     } else {
-                        results.push(DiffResult::Modified(current_path, value1.clone(), value2.clone()));
+                        results.push(DiffResult::Modified(
+                            current_path,
+                            value1.clone(),
+                            value2.clone(),
+                        ));
                     }
                 }
             }
@@ -122,7 +164,11 @@ fn diff_objects(
     // Check for added keys
     for (key, value2) in map2 {
         if !map1.contains_key(key) {
-            let current_path = if path.is_empty() { key.clone() } else { format!("{}.{}", path, key) };
+            let current_path = if path.is_empty() {
+                key.clone()
+            } else {
+                format!("{}.{}", path, key)
+            };
             results.push(DiffResult::Added(current_path, value2.clone()));
         }
     }
@@ -130,8 +176,8 @@ fn diff_objects(
 
 fn diff_arrays(
     path: &str,
-    arr1: &Vec<Value>,
-    arr2: &Vec<Value>,
+    arr1: &[Value],
+    arr2: &[Value],
     results: &mut Vec<DiffResult>,
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
@@ -161,26 +207,34 @@ fn diff_arrays(
         // Check for modified or removed elements
         for (id_val, val1) in &map1 {
             let current_path = format!("{}[{}={}]", path, id_key, id_val);
-            match map2.get(&id_val) {
+            match map2.get(id_val) {
                 Some(val2) => {
                     // Recurse for nested objects/arrays
                     if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
-                        diff_recursive(&current_path, val1, val2, results, ignore_keys_regex, epsilon, array_id_key);
+                        diff_recursive(
+                            &current_path,
+                            val1,
+                            val2,
+                            results,
+                            ignore_keys_regex,
+                            epsilon,
+                            array_id_key,
+                        );
                     } else if !values_are_equal(val1, val2, epsilon) {
-                        let type_match = match (val1, val2) {
-                            (Value::Null, Value::Null) => true,
-                            (Value::Bool(_), Value::Bool(_)) => true,
-                            (Value::Number(_), Value::Number(_)) => true,
-                            (Value::String(_), Value::String(_)) => true,
-                            (Value::Array(_), Value::Array(_)) => true,
-                            (Value::Object(_), Value::Object(_)) => true,
-                            _ => false,
-                        };
+                        let type_match = matches!((val1, val2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
 
                         if !type_match {
-                            results.push(DiffResult::TypeChanged(current_path, (*val1).clone(), (*val2).clone()));
+                            results.push(DiffResult::TypeChanged(
+                                current_path,
+                                (*val1).clone(),
+                                (*val2).clone(),
+                            ));
                         } else {
-                            results.push(DiffResult::Modified(current_path, (*val1).clone(), (*val2).clone()));
+                            results.push(DiffResult::Modified(
+                                current_path,
+                                (*val1).clone(),
+                                (*val2).clone(),
+                            ));
                         }
                     }
                 }
@@ -205,22 +259,30 @@ fn diff_arrays(
                 (Some((idx1, val1)), Some((_idx2, val2))) => {
                     let current_path = format!("{}[{}]", path, idx1);
                     if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
-                        diff_recursive(&current_path, val1, val2, results, ignore_keys_regex, epsilon, array_id_key);
+                        diff_recursive(
+                            &current_path,
+                            val1,
+                            val2,
+                            results,
+                            ignore_keys_regex,
+                            epsilon,
+                            array_id_key,
+                        );
                     } else if !values_are_equal(val1, val2, epsilon) {
-                        let type_match = match (val1, val2) {
-                            (Value::Null, Value::Null) => true,
-                            (Value::Bool(_), Value::Bool(_)) => true,
-                            (Value::Number(_), Value::Number(_)) => true,
-                            (Value::String(_), Value::String(_)) => true,
-                            (Value::Array(_), Value::Array(_)) => true,
-                            (Value::Object(_), Value::Object(_)) => true,
-                            _ => false,
-                        };
+                        let type_match = matches!((val1, val2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
 
                         if !type_match {
-                            results.push(DiffResult::TypeChanged(current_path, (*val1).clone(), (*val2).clone()));
+                            results.push(DiffResult::TypeChanged(
+                                current_path,
+                                (*val1).clone(),
+                                (*val2).clone(),
+                            ));
                         } else {
-                            results.push(DiffResult::Modified(current_path, (*val1).clone(), (*val2).clone()));
+                            results.push(DiffResult::Modified(
+                                current_path,
+                                (*val1).clone(),
+                                (*val2).clone(),
+                            ));
                         }
                     }
                 }
@@ -244,22 +306,30 @@ fn diff_arrays(
                 (Some(val1), Some(val2)) => {
                     // Recurse for nested objects/arrays within arrays
                     if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
-                        diff_recursive(&current_path, val1, val2, results, ignore_keys_regex, epsilon, array_id_key);
+                        diff_recursive(
+                            &current_path,
+                            val1,
+                            val2,
+                            results,
+                            ignore_keys_regex,
+                            epsilon,
+                            array_id_key,
+                        );
                     } else if !values_are_equal(val1, val2, epsilon) {
-                        let type_match = match (val1, val2) {
-                            (Value::Null, Value::Null) => true,
-                            (Value::Bool(_), Value::Bool(_)) => true,
-                            (Value::Number(_), Value::Number(_)) => true,
-                            (Value::String(_), Value::String(_)) => true,
-                            (Value::Array(_), Value::Array(_)) => true,
-                            (Value::Object(_), Value::Object(_)) => true,
-                            _ => false,
-                        };
+                        let type_match = matches!((val1, val2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
 
                         if !type_match {
-                            results.push(DiffResult::TypeChanged(current_path, val1.clone(), val2.clone()));
+                            results.push(DiffResult::TypeChanged(
+                                current_path,
+                                val1.clone(),
+                                val2.clone(),
+                            ));
                         } else {
-                            results.push(DiffResult::Modified(current_path, val1.clone(), val2.clone()));
+                            results.push(DiffResult::Modified(
+                                current_path,
+                                val1.clone(),
+                                val2.clone(),
+                            ));
                         }
                     }
                 }
@@ -297,16 +367,16 @@ pub fn value_type_name(value: &Value) -> &str {
 
 pub fn parse_ini(content: &str) -> Result<Value> {
     use configparser::ini::Ini;
-    
+
     let mut ini = Ini::new();
     ini.read(content.to_string())
         .map_err(|e| anyhow!("Failed to parse INI: {}", e))?;
-    
+
     let mut root_map = serde_json::Map::new();
 
     for section_name in ini.sections() {
         let mut section_map = serde_json::Map::new();
-        
+
         if let Some(section) = ini.get_map_ref().get(&section_name) {
             for (key, value) in section {
                 if let Some(v) = value {
@@ -316,7 +386,7 @@ pub fn parse_ini(content: &str) -> Result<Value> {
                 }
             }
         }
-        
+
         root_map.insert(section_name, Value::Object(section_map));
     }
 
@@ -355,4 +425,3 @@ pub fn parse_csv(content: &str) -> Result<Value> {
     }
     Ok(Value::Array(records))
 }
-
