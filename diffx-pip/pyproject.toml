@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "diffx-py"
+name = "diffx"
 version = "0.2.0"
 description = "Python wrapper for diffx - semantic diff for structured data"
 readme = "README.md"
@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Text Processing",
     "Topic :: Utilities"
@@ -53,14 +54,32 @@ dev = [
     "black",
     "isort",
     "mypy",
-    "flake8"
+    "ruff"
 ]
 
+[project.scripts]
+diffx-download-binary = "diffx.installer:main"
+
 [tool.hatch.build.targets.wheel]
-packages = ["src/diffx_py"]
+packages = ["src/diffx"]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "/src",
+    "/scripts",
     "/README.md"
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "YTT", "ANN", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "ISC", "ICN", "G", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SIM", "TID", "TCH", "ARG", "PTH", "ERA", "PGH", "PL", "TRY", "NPY", "RUF"]
+ignore = ["ANN101", "ANN102", "COM812", "ISC001"]
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

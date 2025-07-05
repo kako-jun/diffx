@@ -16,3 +16,35 @@ Cargo.lock
 # Test intermediate files (generated during tests)
 /tests/output/
 **/diff_report_v*.json
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+**/dist/
+**/build/
+
+# Python
+__pycache__/
+*.py[cod]
+*~
+*.so
+.Python
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Binary downloads
+**/packages/*/bin/
+**/packages/*/temp/

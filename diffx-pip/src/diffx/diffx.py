@@ -6,6 +6,7 @@ import json
 import subprocess
 import tempfile
 import os
+import platform
 from pathlib import Path
 from typing import Union, List, Dict, Any, Optional, Literal
 from dataclasses import dataclass
@@ -65,11 +66,27 @@ class DiffError(Exception):
         self.stderr = stderr
 
 
+def _get_diffx_binary_path() -> str:
+    """Get the path to the diffx binary"""
+    # Check if local binary exists (installed via postinstall)
+    package_dir = Path(__file__).parent.parent.parent
+    binary_name = "diffx.exe" if platform.system() == "Windows" else "diffx"
+    local_binary_path = package_dir / "bin" / binary_name
+    
+    if local_binary_path.exists():
+        return str(local_binary_path)
+    
+    # Fall back to system PATH
+    return "diffx"
+
+
 def _execute_diffx(args: List[str]) -> tuple[str, str]:
     """Execute diffx command and return stdout, stderr"""
+    diffx_path = _get_diffx_binary_path()
+    
     try:
         result = subprocess.run(
-            ["diffx"] + args,
+            [diffx_path] + args,
             capture_output=True,
             text=True,
             check=True
