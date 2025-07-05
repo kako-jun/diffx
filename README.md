@@ -81,13 +81,13 @@ Traditional `diff` tools show you formatting noise. `diffx` shows you what actua
 
 ### Output Formats
 
-`diffx` recommends its own CLI display format that can most richly express structured data differences, but also supports the following alternative output formats for specific use cases and integration with existing tools:
+`diffx` outputs differences in the **diffx format** by default - a semantic diff representation designed specifically for structured data. The diffx format provides the richest expression of structural differences and can be complemented with machine-readable formats for integration:
 
-- **Recommended CLI Display (Default)**
+- **diffx Format (Default)**
 
-  - A unique format that clearly displays structural differences (additions, changes, deletions, type changes, etc.) using universal design considerations such as color coding, symbols, and indentation, making it easy for humans to understand.
-  - Differences are represented by `+` (addition), `-` (deletion), `~` (change), `!` (type change) symbols and colors: blue, yellow, cyan, and magenta.
-  - **Feature**: Focuses on semantic changes in data, ignoring changes in key order or whitespace. This is the core value of `diffx`.
+  - The **diffx format** is a human-readable, semantic diff representation that clearly displays structural differences (additions, changes, deletions, type changes, etc.) using intuitive symbols and hierarchical paths.
+  - Differences are represented by `+` (addition), `-` (deletion), `~` (change), `!` (type change) symbols with full path context (e.g., `database.connection.host`).
+  - **Core Feature**: Focuses on semantic changes in data, ignoring changes in key order, whitespace, and formatting. This semantic focus is the fundamental value of both the tool and the diffx format.
 
 - **JSON Format**
 
