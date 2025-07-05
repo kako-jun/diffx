@@ -1,0 +1,49 @@
+name: Generate Changelog
+
+on:
+  workflow_dispatch:
+    inputs:
+      update_changelog:
+        description: 'Update CHANGELOG.md automatically'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.update_changelog == 'true' || github.event.inputs.update_changelog == true }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install git-cliff
+      uses: taiki-e/install-action@v2
+      with:
+        tool: git-cliff
+
+    - name: Generate changelog
+      run: |
+        # Generate full changelog from all commits
+        git-cliff > CHANGELOG.md
+
+    - name: Commit changelog
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email 'github-actions[bot]@users.noreply.github.com'
+        git add CHANGELOG.md
+        if git diff --staged --quiet; then
+          echo "チェンジログに変更はありませんでした"
+        else
+          git commit -m "docs: Update CHANGELOG.md
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+          git push
+        fi
