@@ -32,11 +32,17 @@ This guide covers performance characteristics, benchmarks, and optimization stra
 
 ## Benchmarks
 
-All benchmarks performed on:
-- **CPU**: AMD Ryzen 7 5800X (8 cores, 16 threads, 3.8GHz base)
-- **Memory**: 32GB DDR4-3600
-- **Storage**: NVMe SSD
-- **OS**: Linux 6.15.4-arch2-1
+**Latest benchmarks** (January 2025, GitHub Actions CI environment):
+- **CPU**: AMD EPYC 7763 (or equivalent)
+- **Memory**: 7GB available
+- **Storage**: SSD (CI environment)
+- **OS**: Ubuntu 22.04
+
+**Core Performance**:
+- Small JSON (~200 bytes): **1.3µs**
+- Large JSON (~25KB): **281µs**
+
+See [detailed benchmarks](performance_benchmarks.md) for comprehensive analysis.
 
 ### File Size Performance
 
