@@ -10,18 +10,22 @@ version = "0.2.0"
 edition = "2021"
 authors = ["kako-jun <kako.jun.42@gmail.com>"]
 license = "MIT"
-description = "Command-line tool for structured data diffing with international support"
+description = "Semantic diff tool for structured data - understands JSON, YAML, TOML, XML, INI, CSV"
 homepage = "https://github.com/kako-jun/diffx"
 repository = "https://github.com/kako-jun/diffx"
-documentation = "https://docs.rs/diffx-core"
+documentation = "https://docs.rs/diffx"
 readme = "README.md"
-keywords = ["diff", "cli", "json", "yaml", "toml"]
-categories = ["command-line-utilities", "data-structures", "parsing"]
+keywords = ["diff", "semantic", "json", "yaml", "structured-data"]
+categories = ["command-line-utilities", "development-tools", "text-processing"]
 exclude = [
     ".github/",
     "target/"
 ]
 rust-version = "1.75"
+
+[workspace.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [workspace.dependencies]
 anyhow = "1.0"

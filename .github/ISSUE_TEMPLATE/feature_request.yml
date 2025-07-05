@@ -1,0 +1,147 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature for diffx! 
+        This helps us understand what our users need most.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A brief, clear description of the feature you'd like to see
+      placeholder: Add support for comparing binary files...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: |
+        As a DevOps engineer, I need to compare binary configuration files because...
+        Currently, I have to... which is problematic because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work? Be as specific as possible.
+      placeholder: |
+        I would like diffx to:
+        1. Detect binary files automatically
+        2. Provide a --binary flag for explicit binary comparison
+        3. Output differences in hexadecimal format
+        
+        Example usage:
+        ```bash
+        diffx binary1.dat binary2.dat --binary
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Usage Examples
+      description: Provide concrete examples of how this feature would be used
+      placeholder: |
+        ```bash
+        # Example 1: Basic usage
+        diffx config.bin config_new.bin --binary
+        
+        # Example 2: With existing options
+        diffx data.db data_backup.db --binary --output json
+        ```
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would significantly improve my workflow
+        - High - Critical for my use case
+        - Urgent - Blocking my project
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What type of enhancement is this?
+      options:
+        - New data format support
+        - CLI option/flag
+        - Output format
+        - Performance improvement
+        - Developer experience
+        - Integration/API
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: |
+        Have you considered any alternative solutions or workarounds?
+        Are there existing tools that provide similar functionality?
+      placeholder: |
+        I've tried using tool X, but it doesn't handle...
+        Another approach could be..., but that has the limitation of...
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas (Optional)
+      description: |
+        If you have ideas about how this could be implemented, please share them.
+        This is optional but helpful for contributors.
+      placeholder: |
+        This could potentially be implemented by:
+        1. Adding a new enum variant to Format
+        2. Creating a binary file detector in the CLI
+        3. Implementing a binary diff algorithm...
+
+  - type: textarea
+    id: breaking_changes
+    attributes:
+      label: Backward Compatibility
+      description: |
+        Would this feature require any breaking changes to existing functionality?
+        How could we maintain backward compatibility?
+      placeholder: |
+        This should not break existing functionality because...
+        We could maintain compatibility by...
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context, screenshots, links, or examples that would help us understand this request better.
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to avoid creating duplicates
+          required: true
+        - label: I have provided a clear description of the problem and solution
+          required: true
+        - label: This feature would benefit other users, not just my specific use case
+          required: true

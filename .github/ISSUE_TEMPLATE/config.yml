@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/kako-jun/diffx/discussions
+    about: Ask questions, share ideas, or discuss diffx with the community
+  - name: 📖 Documentation
+    url: https://github.com/kako-jun/diffx/tree/main/docs
+    about: Check our comprehensive documentation for usage guides and examples
+  - name: 🚀 Quick Start Guide
+    url: https://github.com/kako-jun/diffx/blob/main/docs/user-guide/getting-started.md
+    about: New to diffx? Start here for installation and basic usage
