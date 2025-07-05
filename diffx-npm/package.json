@@ -1,6 +1,6 @@
 {
-  "name": "diffx-bin",
-  "version": "0.1.0",
+  "name": "diffx-js",
+  "version": "0.3.0",
   "description": "A CLI tool for structured diffing of JSON, YAML, and TOML files.",
   "keywords": ["diff", "json", "yaml", "toml", "cli", "structured", "configuration"],
   "main": "index.js",
@@ -8,6 +8,7 @@
     "diffx": "./index.js"
   },
   "scripts": {
+    "postinstall": "node scripts/download-binary.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

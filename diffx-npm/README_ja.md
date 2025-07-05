@@ -5,7 +5,7 @@
 ## インストール
 
 ```bash
-npm install diffx-npm
+npm install diffx-js
 ```
 
 これにより、GitHub Releasesからお使いのシステムに適した `diffx` バイナリが自動的にダウンロードされます。

@@ -12,7 +12,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-DIFFX_VERSION = "0.2.0"
+DIFFX_VERSION = "0.3.0"
 
 
 def get_platform_info():

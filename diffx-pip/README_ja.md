@@ -5,7 +5,7 @@
 ## インストール
 
 ```bash
-pip install diffx-python
+pip install diffx-py
 ```
 
 これにより、GitHub Releasesからお使いのシステムに適した `diffx` バイナリが自動的にダウンロードされます。

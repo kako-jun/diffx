@@ -5,7 +5,7 @@ A Node.js wrapper for the `diffx` CLI tool.
 ## Installation
 
 ```bash
-npm install diffx-npm
+npm install diffx-js
 ```
 
 This will automatically download the appropriate `diffx` binary for your system from GitHub Releases.

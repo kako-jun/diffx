@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "diffx"
-version = "0.2.0"
+name = "diffx-py"
+version = "0.3.0"
 description = "Python wrapper for diffx - semantic diff for structured data"
 readme = "README.md"
 license = "MIT"

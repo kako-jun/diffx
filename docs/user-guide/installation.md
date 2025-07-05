@@ -169,15 +169,15 @@ docker run --rm -v $(pwd):/workspace diffx /workspace/file1.json /workspace/file
 
 ```bash
 # Coming soon
-npm install -g @diffx/cli
-npx @diffx/cli file1.json file2.json
+npm install diffx-js
+npx diffx-js file1.json file2.json
 ```
 
 ### Python Ecosystem
 
 ```bash
 # Coming soon
-pip install diffx-cli
+pip install diffx-py
 diffx file1.json file2.json
 ```
 
