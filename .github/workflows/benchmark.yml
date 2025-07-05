@@ -44,24 +44,43 @@ jobs:
         cat benchmark_results.txt
         echo "=========================="
         
-        # Simple approach: just extract the middle value from criterion output
-        # Format: "time:   [969.75 ns 970.33 ns 971.10 ns]" - we want the middle value
+        # Extract criterion benchmark results more carefully
         SMALL_LINE=$(grep "diff_small_json" benchmark_results.txt -A 1 | grep "time:" | head -1)
         LARGE_LINE=$(grep "diff_large_json" benchmark_results.txt -A 1 | grep "time:" | head -1)
         
         echo "Small line: $SMALL_LINE"
         echo "Large line: $LARGE_LINE"
         
-        # Extract middle value and convert all to nanoseconds for consistent comparison
-        SMALL_MIDDLE=$(echo "$SMALL_LINE" | awk '{print $4}' | tr -d '[]')
-        LARGE_MIDDLE=$(echo "$LARGE_LINE" | awk '{print $4}' | tr -d '[]')
+        # Extract middle value and unit from criterion format like "[951.50 ns 953.19 ns 955.44 ns]"
+        SMALL_TIME=$(echo "$SMALL_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\3/p')
+        SMALL_UNIT=$(echo "$SMALL_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\4/p')
         
-        echo "Small middle: $SMALL_MIDDLE"
-        echo "Large middle: $LARGE_MIDDLE"
+        LARGE_TIME=$(echo "$LARGE_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\3/p')
+        LARGE_UNIT=$(echo "$LARGE_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\4/p')
         
-        # Convert to microseconds (assuming input is nanoseconds from criterion)
-        SMALL_TIME_US=$(echo "scale=3; $SMALL_MIDDLE / 1000" | bc -l)
-        LARGE_TIME_US=$(echo "scale=3; $LARGE_MIDDLE / 1000" | bc -l)
+        echo "Small: $SMALL_TIME ${SMALL_UNIT}s"
+        echo "Large: $LARGE_TIME ${LARGE_UNIT}s"
+        
+        # Convert to microseconds
+        if [ "$SMALL_UNIT" = "n" ]; then
+          SMALL_TIME_US=$(echo "scale=3; $SMALL_TIME / 1000" | bc -l)
+        elif [ "$SMALL_UNIT" = "µ" ] || [ "$SMALL_UNIT" = "u" ]; then
+          SMALL_TIME_US=$SMALL_TIME
+        elif [ "$SMALL_UNIT" = "m" ]; then
+          SMALL_TIME_US=$(echo "scale=3; $SMALL_TIME * 1000" | bc -l)
+        else
+          SMALL_TIME_US=$SMALL_TIME
+        fi
+        
+        if [ "$LARGE_UNIT" = "n" ]; then
+          LARGE_TIME_US=$(echo "scale=3; $LARGE_TIME / 1000" | bc -l)
+        elif [ "$LARGE_UNIT" = "µ" ] || [ "$LARGE_UNIT" = "u" ]; then
+          LARGE_TIME_US=$LARGE_TIME
+        elif [ "$LARGE_UNIT" = "m" ]; then
+          LARGE_TIME_US=$(echo "scale=3; $LARGE_TIME * 1000" | bc -l)
+        else
+          LARGE_TIME_US=$LARGE_TIME
+        fi
         
         echo "Small JSON diff time: ${SMALL_TIME_US}µs"
         echo "Large JSON diff time: ${LARGE_TIME_US}µs"
@@ -132,15 +151,36 @@ jobs:
         echo "- Large JSON diff: < 1000µs" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        # Extract and report current performance using same logic as main job
+        # Extract performance using same logic as main job
         SMALL_LINE=$(grep "diff_small_json" pr_benchmark.txt -A 1 | grep "time:" | head -1)
         LARGE_LINE=$(grep "diff_large_json" pr_benchmark.txt -A 1 | grep "time:" | head -1)
         
-        SMALL_MIDDLE=$(echo "$SMALL_LINE" | awk '{print $4}' | tr -d '[]')
-        LARGE_MIDDLE=$(echo "$LARGE_LINE" | awk '{print $4}' | tr -d '[]')
+        SMALL_TIME=$(echo "$SMALL_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\3/p')
+        SMALL_UNIT=$(echo "$SMALL_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\4/p')
         
-        SMALL_TIME_US=$(echo "scale=3; $SMALL_MIDDLE / 1000" | bc -l)
-        LARGE_TIME_US=$(echo "scale=3; $LARGE_MIDDLE / 1000" | bc -l)
+        LARGE_TIME=$(echo "$LARGE_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\3/p')
+        LARGE_UNIT=$(echo "$LARGE_LINE" | sed -n 's/.*\[\([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s \([0-9.]*\) \([a-z]*\)s\].*/\4/p')
+        
+        # Convert to microseconds
+        if [ "$SMALL_UNIT" = "n" ]; then
+          SMALL_TIME_US=$(echo "scale=3; $SMALL_TIME / 1000" | bc -l)
+        elif [ "$SMALL_UNIT" = "µ" ] || [ "$SMALL_UNIT" = "u" ]; then
+          SMALL_TIME_US=$SMALL_TIME
+        elif [ "$SMALL_UNIT" = "m" ]; then
+          SMALL_TIME_US=$(echo "scale=3; $SMALL_TIME * 1000" | bc -l)
+        else
+          SMALL_TIME_US=$SMALL_TIME
+        fi
+        
+        if [ "$LARGE_UNIT" = "n" ]; then
+          LARGE_TIME_US=$(echo "scale=3; $LARGE_TIME / 1000" | bc -l)
+        elif [ "$LARGE_UNIT" = "µ" ] || [ "$LARGE_UNIT" = "u" ]; then
+          LARGE_TIME_US=$LARGE_TIME
+        elif [ "$LARGE_UNIT" = "m" ]; then
+          LARGE_TIME_US=$(echo "scale=3; $LARGE_TIME * 1000" | bc -l)
+        else
+          LARGE_TIME_US=$LARGE_TIME
+        fi
         
         echo "### Current Performance" >> $GITHUB_STEP_SUMMARY
         echo "- Small JSON: ${SMALL_TIME_US}µs" >> $GITHUB_STEP_SUMMARY
