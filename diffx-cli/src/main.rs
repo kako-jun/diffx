@@ -1,15 +1,15 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use clap::{Parser, ValueEnum};
 use colored::*;
-use diffx_core::{diff, value_type_name, DiffResult, parse_ini, parse_xml, parse_csv};
+use diffx_core::{diff, parse_csv, parse_ini, parse_xml, value_type_name, DiffResult};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
-use std::path::{Path, PathBuf};
 use std::io::{self, Read};
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
-use regex::Regex;
 
 #[derive(Debug, Deserialize, Default)]
 struct Config {
@@ -30,19 +30,24 @@ fn load_config() -> Config {
     if let Some(path) = config_path {
         if path.exists() {
             match fs::read_to_string(&path) {
-                Ok(content) => {
-                    match toml::from_str(&content) {
-                        Ok(config) => return config,
-                        Err(e) => eprintln!("Warning: Could not parse config file {}: {}", path.display(), e),
-                    }
-                }
-                Err(e) => eprintln!("Warning: Could not read config file {}: {}", path.display(), e),
+                Ok(content) => match toml::from_str(&content) {
+                    Ok(config) => return config,
+                    Err(e) => eprintln!(
+                        "Warning: Could not parse config file {}: {}",
+                        path.display(),
+                        e
+                    ),
+                },
+                Err(e) => eprintln!(
+                    "Warning: Could not read config file {}: {}",
+                    path.display(),
+                    e
+                ),
             }
         }
     }
     Config::default()
 }
-
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -109,16 +114,14 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
     } else {
         path.extension()
             .and_then(|ext| ext.to_str())
-            .and_then(|ext_str| {
-                match ext_str.to_lowercase().as_str() {
-                    "json" => Some(Format::Json),
-                    "yaml" | "yml" => Some(Format::Yaml),
-                    "toml" => Some(Format::Toml),
-                    "ini" => Some(Format::Ini),
-                    "xml" => Some(Format::Xml),
-                    "csv" => Some(Format::Csv),
-                    _ => None,
-                }
+            .and_then(|ext_str| match ext_str.to_lowercase().as_str() {
+                "json" => Some(Format::Json),
+                "yaml" | "yml" => Some(Format::Yaml),
+                "toml" => Some(Format::Toml),
+                "ini" => Some(Format::Ini),
+                "xml" => Some(Format::Xml),
+                "csv" => Some(Format::Csv),
+                _ => None,
             })
     }
 }
@@ -126,10 +129,13 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
 fn read_input(file_path: &Path) -> Result<String> {
     if file_path.to_str() == Some("-") {
         let mut buffer = String::new();
-        io::stdin().read_to_string(&mut buffer).context("Failed to read from stdin")?;
+        io::stdin()
+            .read_to_string(&mut buffer)
+            .context("Failed to read from stdin")?;
         Ok(buffer)
     } else {
-        fs::read_to_string(file_path).context(format!("Failed to read file: {}", file_path.display()))
+        fs::read_to_string(file_path)
+            .context(format!("Failed to read file: {}", file_path.display()))
     }
 }
 
@@ -159,7 +165,7 @@ fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) 
         }
     };
 
-    differences.sort_by(|a, b| get_key(a).cmp(&get_key(b)));
+    differences.sort_by_key(get_key);
 
     for diff in &differences {
         let key = get_key(diff);
@@ -171,10 +177,15 @@ fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) 
             DiffResult::Added(k, value) => format!("+ {}: {}", k, value).blue(),
             DiffResult::Removed(k, value) => format!("- {}: {}", k, value).yellow(),
             DiffResult::Modified(k, v1, v2) => format!("~ {}: {} -> {}", k, v1, v2).cyan(),
-            DiffResult::TypeChanged(k, v1, v2) => {
-                format!("! {}: {} ({}) -> {} ({})", k, v1, value_type_name(v1), v2, value_type_name(v2))
-                    .magenta()
-            }
+            DiffResult::TypeChanged(k, v1, v2) => format!(
+                "! {}: {} ({}) -> {} ({})",
+                k,
+                v1,
+                value_type_name(v1),
+                v2,
+                value_type_name(v2)
+            )
+            .magenta(),
         };
 
         println!("{}{}", indent, diff_str);
@@ -188,8 +199,9 @@ fn print_json_output(differences: Vec<DiffResult>) -> Result<()> {
 
 fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
     // Convert DiffResult to a more standard YAML format
-    let yaml_data: Vec<serde_json::Value> = differences.into_iter().map(|diff| {
-        match diff {
+    let yaml_data: Vec<serde_json::Value> = differences
+        .into_iter()
+        .map(|diff| match diff {
             DiffResult::Added(key, value) => serde_json::json!({
                 "Added": [key, value]
             }),
@@ -202,9 +214,9 @@ fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
             DiffResult::TypeChanged(key, old_value, new_value) => serde_json::json!({
                 "TypeChanged": [key, old_value, new_value]
             }),
-        }
-    }).collect();
-    
+        })
+        .collect();
+
     println!("{}", serde_yml::to_string(&yaml_data)?);
     Ok(())
 }
@@ -247,7 +259,16 @@ fn main() -> Result<()> {
         if !args.input1.is_dir() || !args.input2.is_dir() {
             bail!("Both inputs must be directories for recursive comparison.");
         }
-        compare_directories(&args.input1, &args.input2, args.format.or(input_format_from_config), output_format, args.path, ignore_keys_regex.as_ref(), epsilon, array_id_key)?;
+        compare_directories(
+            &args.input1,
+            &args.input2,
+            args.format.or(input_format_from_config),
+            output_format,
+            args.path,
+            ignore_keys_regex.as_ref(),
+            epsilon,
+            array_id_key,
+        )?;
         return Ok(());
     }
 
@@ -292,6 +313,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn compare_directories(
     dir1: &Path,
     dir2: &Path,
@@ -320,7 +342,8 @@ fn compare_directories(
         }
     }
 
-    let mut all_relative_paths: std::collections::HashSet<PathBuf> = files1.keys().cloned().collect();
+    let mut all_relative_paths: std::collections::HashSet<PathBuf> =
+        files1.keys().cloned().collect();
     all_relative_paths.extend(files2.keys().cloned());
 
     let mut compared_files = 0;
@@ -331,8 +354,11 @@ fn compare_directories(
 
         match (path1_option, path2_option) {
             (Some(path1), Some(path2)) => {
-                println!("
---- Comparing {} ---", relative_path.display());
+                println!(
+                    "
+--- Comparing {} ---",
+                    relative_path.display()
+                );
                 let content1 = read_input(path1)?;
                 let content2 = read_input(path2)?;
 
@@ -368,15 +394,23 @@ fn compare_directories(
                     OutputFormat::Unified => print_unified_output(&v1, &v2)?,
                 }
                 compared_files += 1;
-            },
+            }
             (Some(_), None) => {
-                println!("
---- Only in {}: {} ---", dir1.display(), relative_path.display());
-            },
+                println!(
+                    "
+--- Only in {}: {} ---",
+                    dir1.display(),
+                    relative_path.display()
+                );
+            }
             (None, Some(_)) => {
-                println!("
---- Only in {}: {} ---", dir2.display(), relative_path.display());
-            },
+                println!(
+                    "
+--- Only in {}: {} ---",
+                    dir2.display(),
+                    relative_path.display()
+                );
+            }
             (None, None) => { /* Should not happen */ }
         }
     }

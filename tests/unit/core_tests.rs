@@ -1,6 +1,6 @@
 use diffx_core::*;
-use serde_json::json;
 use regex::Regex;
+use serde_json::json;
 
 #[test]
 fn test_diff_no_changes() {
@@ -16,7 +16,10 @@ fn test_diff_value_modified() {
     let v2 = json!({ "a": 1, "b": 3 });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Modified("b".to_string(), json!(2), json!(3)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Modified("b".to_string(), json!(2), json!(3))
+    );
 }
 
 #[test]
@@ -34,7 +37,10 @@ fn test_diff_key_removed() {
     let v2 = json!({ "a": 1 });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Removed("b".to_string(), json!(2)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Removed("b".to_string(), json!(2))
+    );
 }
 
 #[test]
@@ -43,7 +49,10 @@ fn test_diff_type_changed() {
     let v2 = json!({ "a": "1" });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::TypeChanged("a".to_string(), json!(1), json!("1")));
+    assert_eq!(
+        differences[0],
+        DiffResult::TypeChanged("a".to_string(), json!(1), json!("1"))
+    );
 }
 
 #[test]
@@ -52,7 +61,10 @@ fn test_diff_nested_object_modified() {
     let v2 = json!({ "a": { "b": 2 } });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Modified("a.b".to_string(), json!(1), json!(2)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Modified("a.b".to_string(), json!(1), json!(2))
+    );
 }
 
 #[test]
@@ -61,7 +73,10 @@ fn test_diff_array_element_added() {
     let v2 = json!([1, 2, 3]);
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Added("[2]".to_string(), json!(3)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Added("[2]".to_string(), json!(3))
+    );
 }
 
 #[test]
@@ -70,7 +85,10 @@ fn test_diff_array_element_removed() {
     let v2 = json!([1, 2]);
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Removed("[2]".to_string(), json!(3)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Removed("[2]".to_string(), json!(3))
+    );
 }
 
 #[test]
@@ -79,7 +97,10 @@ fn test_diff_array_element_modified() {
     let v2 = json!([1, 2, 4]);
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Modified("[2]".to_string(), json!(3), json!(4)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Modified("[2]".to_string(), json!(3), json!(4))
+    );
 }
 
 #[test]
@@ -88,7 +109,10 @@ fn test_diff_nested_array_element_modified() {
     let v2 = json!({ "a": [1, 2, 4] });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Modified("a[2]".to_string(), json!(3), json!(4)));
+    assert_eq!(
+        differences[0],
+        DiffResult::Modified("a[2]".to_string(), json!(3), json!(4))
+    );
 }
 
 #[test]
@@ -97,7 +121,10 @@ fn test_diff_root_type_changed() {
     let v2 = json!("1");
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::TypeChanged("".to_string(), json!(1), json!("1")));
+    assert_eq!(
+        differences[0],
+        DiffResult::TypeChanged("".to_string(), json!(1), json!("1"))
+    );
 }
 
 #[test]
@@ -123,10 +150,24 @@ fn test_diff_nested_object_and_array() {
     });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 4);
-    assert!(differences.contains(&DiffResult::Modified("config.users[1].name".to_string(), json!("Bob"), json!("Robert"))));
-    assert!(differences.contains(&DiffResult::Added("config.users[2]".to_string(), json!({"id": 3, "name": "Charlie"}))));
-    assert!(differences.contains(&DiffResult::Modified("config.settings.theme".to_string(), json!("dark"), json!("light"))));
-    assert!(differences.contains(&DiffResult::Added("config.settings.font_size".to_string(), json!(12))));
+    assert!(differences.contains(&DiffResult::Modified(
+        "config.users[1].name".to_string(),
+        json!("Bob"),
+        json!("Robert")
+    )));
+    assert!(differences.contains(&DiffResult::Added(
+        "config.users[2]".to_string(),
+        json!({"id": 3, "name": "Charlie"})
+    )));
+    assert!(differences.contains(&DiffResult::Modified(
+        "config.settings.theme".to_string(),
+        json!("dark"),
+        json!("light")
+    )));
+    assert!(differences.contains(&DiffResult::Added(
+        "config.settings.font_size".to_string(),
+        json!(12)
+    )));
 }
 
 #[test]
@@ -143,7 +184,10 @@ fn test_diff_empty_objects_and_arrays() {
     });
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::Modified("data".to_string(), json!("value"), json!("new_value")));
+    assert_eq!(
+        differences[0],
+        DiffResult::Modified("data".to_string(), json!("value"), json!("new_value"))
+    );
 }
 
 #[test]
@@ -159,7 +203,11 @@ fn test_diff_root_array_changes() {
     ]);
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 2);
-    assert!(differences.contains(&DiffResult::Modified("[1].id".to_string(), json!(2), json!(3))));
+    assert!(differences.contains(&DiffResult::Modified(
+        "[1].id".to_string(),
+        json!(2),
+        json!(3)
+    )));
     assert!(differences.contains(&DiffResult::Added("[2]".to_string(), json!({"id": 4}))));
 }
 
@@ -177,7 +225,11 @@ fn test_diff_ignore_keys_regex() {
     let regex_name = Regex::new(r"^name$").unwrap();
     let differences_name = diff(&v3, &v4, Some(&regex_name), None, None);
     assert_eq!(differences_name.len(), 1);
-    assert!(differences_name.contains(&DiffResult::Modified("version".to_string(), json!("1.0"), json!("1.1"))));
+    assert!(differences_name.contains(&DiffResult::Modified(
+        "version".to_string(),
+        json!("1.0"),
+        json!("1.1")
+    )));
 }
 
 #[test]
@@ -187,7 +239,11 @@ fn test_diff_ignore_keys_regex_nested() {
     let regex = Regex::new(r"^_.*").unwrap();
     let differences = diff(&v1, &v2, Some(&regex), None, None);
     assert_eq!(differences.len(), 1);
-    assert!(differences.contains(&DiffResult::Modified("data.id".to_string(), json!(1), json!(2))));
+    assert!(differences.contains(&DiffResult::Modified(
+        "data.id".to_string(),
+        json!(1),
+        json!(2)
+    )));
 }
 
 #[test]
@@ -203,7 +259,10 @@ fn test_diff_epsilon_comparison() {
     let epsilon_large = Some(0.00001);
     let differences_large = diff(&v3, &v4, None, epsilon_large, None);
     assert_eq!(differences_large.len(), 1);
-    assert_eq!(differences_large[0], DiffResult::Modified("b".to_string(), json!(2.00001), json!(2.00003)));
+    assert_eq!(
+        differences_large[0],
+        DiffResult::Modified("b".to_string(), json!(2.00001), json!(2.00003))
+    );
 }
 
 #[test]
@@ -213,7 +272,10 @@ fn test_diff_epsilon_comparison_type_mismatch() {
     let epsilon = Some(0.00001);
     let differences = diff(&v1, &v2, None, epsilon, None);
     assert_eq!(differences.len(), 1);
-    assert_eq!(differences[0], DiffResult::TypeChanged("a".to_string(), json!(1.0), json!("1.0")));
+    assert_eq!(
+        differences[0],
+        DiffResult::TypeChanged("a".to_string(), json!(1.0), json!("1.0"))
+    );
 }
 
 #[test]
@@ -228,7 +290,11 @@ fn test_diff_array_id_key_modified() {
     ]);
     let differences = diff(&v1, &v2, None, None, Some("id"));
     assert_eq!(differences.len(), 1);
-    assert!(differences.contains(&DiffResult::Modified("[id=2].value".to_string(), json!("b"), json!("c"))));
+    assert!(differences.contains(&DiffResult::Modified(
+        "[id=2].value".to_string(),
+        json!("b"),
+        json!("c")
+    )));
 }
 
 #[test]
@@ -243,8 +309,14 @@ fn test_diff_array_id_key_added_removed() {
     ]);
     let differences = diff(&v1, &v2, None, None, Some("id"));
     assert_eq!(differences.len(), 2);
-    assert!(differences.contains(&DiffResult::Removed("[id=2]".to_string(), json!({"id": 2, "value": "b"}))));
-    assert!(differences.contains(&DiffResult::Added("[id=3]".to_string(), json!({"id": 3, "value": "c"}))));
+    assert!(differences.contains(&DiffResult::Removed(
+        "[id=2]".to_string(),
+        json!({"id": 2, "value": "b"})
+    )));
+    assert!(differences.contains(&DiffResult::Added(
+        "[id=3]".to_string(),
+        json!({"id": 3, "value": "c"})
+    )));
 }
 
 #[test]
@@ -259,7 +331,11 @@ fn test_diff_array_id_key_nested_change() {
     ]);
     let differences = diff(&v1, &v2, None, None, Some("id"));
     assert_eq!(differences.len(), 1);
-    assert!(differences.contains(&DiffResult::Modified("[id=2].data.name".to_string(), json!("B"), json!("C"))));
+    assert!(differences.contains(&DiffResult::Modified(
+        "[id=2].data.name".to_string(),
+        json!("B"),
+        json!("C")
+    )));
 }
 
 #[test]
@@ -275,7 +351,11 @@ fn test_diff_array_id_key_no_id_in_element() {
     // Elements without the id_key should be compared by index
     let differences = diff(&v1, &v2, None, None, Some("id"));
     assert_eq!(differences.len(), 1);
-    assert!(differences.contains(&DiffResult::Modified("[1].value".to_string(), json!("b"), json!("c"))));
+    assert!(differences.contains(&DiffResult::Modified(
+        "[1].value".to_string(),
+        json!("b"),
+        json!("c")
+    )));
 }
 
 #[test]
