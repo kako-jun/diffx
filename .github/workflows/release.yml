@@ -48,7 +48,7 @@ jobs:
         key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Build release binary
-      run: cargo build --package diffx-cli --release --target ${{ matrix.target }}
+      run: cargo build --package diffx --release --target ${{ matrix.target }}
 
     - name: Create archive (Unix)
       if: matrix.os != 'windows-latest'
