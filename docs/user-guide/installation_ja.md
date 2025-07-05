@@ -191,7 +191,7 @@ Add-MpPreference -ExclusionPath "C:\Users\%USERNAME%\.cargo\bin\diffx.exe"
 cargo install diffx
 
 # 特定バージョンのインストール
-cargo install diffx --version 0.2.0
+cargo install diffx --version 0.3.0
 
 # 強制再インストール
 cargo install diffx --force
@@ -216,6 +216,22 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 
 # diffx追加（将来的に対応予定）
 # choco install diffx
+```
+
+### Node.jsエコシステム
+
+```bash
+# 近日対応予定
+npm install diffx-js
+npx diffx-js file1.json file2.json
+```
+
+### Pythonエコシステム
+
+```bash
+# 近日対応予定
+pip install diffx-py
+diffx file1.json file2.json
 ```
 
 ## ソースからのビルド
