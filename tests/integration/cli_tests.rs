@@ -208,8 +208,8 @@ fn test_directory_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_meta_chaining() -> Result<(), Box<dyn std::error::Error>> {
-    // Ensure test_output directory exists
-    std::fs::create_dir_all("../test_output")?;
+    // Ensure test output directory exists
+    std::fs::create_dir_all("../tests/output")?;
     
     // Step 1: Generate diff_report_v1.json
     let mut cmd1 = diffx_cmd();

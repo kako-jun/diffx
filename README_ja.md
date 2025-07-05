@@ -1,4 +1,38 @@
-# diffx: 構造化データ差分ツール
+# diffx
+
+> **🚀 構造化データの意味的差分 - フォーマットではなく本質に集中**
+
+[![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
+[![Documentation](https://docs.rs/diffx/badge.svg)](https://docs.rs/diffx)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+データの**構造**と**意味**を理解する次世代diffツール。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
+
+```bash
+# 従来のdiffはフォーマットのノイズを表示
+$ diff config_v1.json config_v2.json
+< {
+<   "name": "myapp",
+<   "version": "1.0"
+< }
+> {
+>   "version": "1.1",
+>   "name": "myapp"
+> }
+
+# diffxは意味的な変更のみを表示
+$ diffx config_v1.json config_v2.json
+~ version: "1.0" -> "1.1"
+```
+
+## ✨ 主な特徴
+
+- **🎯 意味的認識**: フォーマット、キー順序、空白を無視
+- **🔧 多様なフォーマット**: JSON、YAML、TOML、XML、INI、CSV対応
+- **🤖 AI対応**: 自動化やAI分析に最適なクリーンな出力
+- **⚡ 高速**: Rustで構築された最大限のパフォーマンス
+- **🔗 メタチェイン**: 差分レポートを比較して変更の進化を追跡
 
 ## 開発の動機（Motivation）
 
