@@ -26,7 +26,15 @@ pub fn diff(
 
     // Handle root level type or value change first
     if !values_are_equal(v1, v2, epsilon) {
-        let type_match = matches!((v1, v2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
+        let type_match = matches!(
+            (v1, v2),
+            (Value::Null, Value::Null)
+                | (Value::Bool(_), Value::Bool(_))
+                | (Value::Number(_), Value::Number(_))
+                | (Value::String(_), Value::String(_))
+                | (Value::Array(_), Value::Array(_))
+                | (Value::Object(_), Value::Object(_))
+        );
 
         if !type_match {
             results.push(DiffResult::TypeChanged(
@@ -138,7 +146,15 @@ fn diff_objects(
                         array_id_key,
                     );
                 } else if !values_are_equal(value1, value2, epsilon) {
-                    let type_match = matches!((value1, value2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
+                    let type_match = matches!(
+                        (value1, value2),
+                        (Value::Null, Value::Null)
+                            | (Value::Bool(_), Value::Bool(_))
+                            | (Value::Number(_), Value::Number(_))
+                            | (Value::String(_), Value::String(_))
+                            | (Value::Array(_), Value::Array(_))
+                            | (Value::Object(_), Value::Object(_))
+                    );
 
                     if !type_match {
                         results.push(DiffResult::TypeChanged(
@@ -221,7 +237,15 @@ fn diff_arrays(
                             array_id_key,
                         );
                     } else if !values_are_equal(val1, val2, epsilon) {
-                        let type_match = matches!((val1, val2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
+                        let type_match = matches!(
+                            (val1, val2),
+                            (Value::Null, Value::Null)
+                                | (Value::Bool(_), Value::Bool(_))
+                                | (Value::Number(_), Value::Number(_))
+                                | (Value::String(_), Value::String(_))
+                                | (Value::Array(_), Value::Array(_))
+                                | (Value::Object(_), Value::Object(_))
+                        );
 
                         if !type_match {
                             results.push(DiffResult::TypeChanged(
@@ -269,7 +293,15 @@ fn diff_arrays(
                             array_id_key,
                         );
                     } else if !values_are_equal(val1, val2, epsilon) {
-                        let type_match = matches!((val1, val2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
+                        let type_match = matches!(
+                            (val1, val2),
+                            (Value::Null, Value::Null)
+                                | (Value::Bool(_), Value::Bool(_))
+                                | (Value::Number(_), Value::Number(_))
+                                | (Value::String(_), Value::String(_))
+                                | (Value::Array(_), Value::Array(_))
+                                | (Value::Object(_), Value::Object(_))
+                        );
 
                         if !type_match {
                             results.push(DiffResult::TypeChanged(
@@ -316,7 +348,15 @@ fn diff_arrays(
                             array_id_key,
                         );
                     } else if !values_are_equal(val1, val2, epsilon) {
-                        let type_match = matches!((val1, val2), (Value::Null, Value::Null) | (Value::Bool(_), Value::Bool(_)) | (Value::Number(_), Value::Number(_)) | (Value::String(_), Value::String(_)) | (Value::Array(_), Value::Array(_)) | (Value::Object(_), Value::Object(_)));
+                        let type_match = matches!(
+                            (val1, val2),
+                            (Value::Null, Value::Null)
+                                | (Value::Bool(_), Value::Bool(_))
+                                | (Value::Number(_), Value::Number(_))
+                                | (Value::String(_), Value::String(_))
+                                | (Value::Array(_), Value::Array(_))
+                                | (Value::Object(_), Value::Object(_))
+                        );
 
                         if !type_match {
                             results.push(DiffResult::TypeChanged(
