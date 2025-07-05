@@ -123,7 +123,7 @@ fn diff_objects(
         let current_path = if path.is_empty() {
             key.clone()
         } else {
-            format!("{}.{}", path, key)
+            format!("{path}.{key}")
         };
         if let Some(regex) = ignore_keys_regex {
             if regex.is_match(key) {
@@ -183,7 +183,7 @@ fn diff_objects(
             let current_path = if path.is_empty() {
                 key.clone()
             } else {
-                format!("{}.{}", path, key)
+                format!("{path}.{key}")
             };
             results.push(DiffResult::Added(current_path, value2.clone()));
         }
@@ -222,7 +222,7 @@ fn diff_arrays(
 
         // Check for modified or removed elements
         for (id_val, val1) in &map1 {
-            let current_path = format!("{}[{}={}]", path, id_key, id_val);
+            let current_path = format!("{path}[{id_key}={id_val}]");
             match map2.get(id_val) {
                 Some(val2) => {
                     // Recurse for nested objects/arrays
@@ -271,7 +271,7 @@ fn diff_arrays(
         // Check for added elements with ID
         for (id_val, val2) in map2 {
             if !map1.contains_key(&id_val) {
-                let current_path = format!("{}[{}={}]", path, id_key, id_val);
+                let current_path = format!("{path}[{id_key}={id_val}]");
                 results.push(DiffResult::Added(current_path, val2.clone()));
             }
         }
@@ -281,7 +281,7 @@ fn diff_arrays(
         for i in 0..max_len {
             match (no_id_elements1.get(i), no_id_elements2.get(i)) {
                 (Some((idx1, val1)), Some((_idx2, val2))) => {
-                    let current_path = format!("{}[{}]", path, idx1);
+                    let current_path = format!("{path}[{idx1}]");
                     if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
                         diff_recursive(
                             &current_path,
@@ -319,11 +319,11 @@ fn diff_arrays(
                     }
                 }
                 (Some((idx1, val1)), None) => {
-                    let current_path = format!("{}[{}]", path, idx1);
+                    let current_path = format!("{path}[{idx1}]");
                     results.push(DiffResult::Removed(current_path, (*val1).clone()));
                 }
                 (None, Some((idx2, val2))) => {
-                    let current_path = format!("{}[{}]", path, idx2);
+                    let current_path = format!("{path}[{idx2}]");
                     results.push(DiffResult::Added(current_path, (*val2).clone()));
                 }
                 (None, None) => break,
@@ -333,7 +333,7 @@ fn diff_arrays(
         // Fallback to index-based comparison if no id_key is provided
         let max_len = arr1.len().max(arr2.len());
         for i in 0..max_len {
-            let current_path = format!("{}[{}]", path, i);
+            let current_path = format!("{path}[{i}]");
             match (arr1.get(i), arr2.get(i)) {
                 (Some(val1), Some(val2)) => {
                     // Recurse for nested objects/arrays within arrays
