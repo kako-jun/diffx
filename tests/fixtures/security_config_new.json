@@ -1,0 +1,29 @@
+{
+  "application": {
+    "name": "secure-app",
+    "version": "1.1.0"
+  },
+  "security": {
+    "host": "prod-server.example.com",
+    "port": 8443,
+    "password": "newsecret456",
+    "secret_key": "xyz789abc",
+    "secret_token": "newtoken789"
+  },
+  "database": {
+    "connection_string": "postgres://user:newpass@prod-db.example.com/db",
+    "credentials": {
+      "username": "produser",
+      "password": "prodpass"
+    }
+  },
+  "monitoring": {
+    "timestamp": "2024-01-02T12:00:00Z",
+    "build_id": "build-456",
+    "deploy_time": "2024-01-02T13:00:00Z",
+    "metrics": {
+      "cpu": 52.1,
+      "memory": 82.3
+    }
+  }
+}
