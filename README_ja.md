@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
-[![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs)
+[![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 データの**構造**と**意味**を理解する次世代diffツール。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
@@ -130,7 +130,15 @@ diffx/
 cargo install diffx
 ```
 
-詳細な使い方とサンプルは [GitHubドキュメント](https://github.com/kako-jun/diffx/tree/main/docs) をご確認ください。
+詳細な使い方とサンプルは [ドキュメント](docs/index_ja.md) をご確認ください。
+
+### クイックドキュメントリンク
+
+- **[はじめに](docs/user-guide/getting-started.md)** - 基本を学ぶ
+- **[インストールガイド](docs/user-guide/installation.md)** - プラットフォーム別セットアップ
+- **[CLI リファレンス](docs/reference/cli-reference.md)** - 完全なコマンドリファレンス
+- **[実用例](docs/user-guide/examples.md)** - 業界別使用例
+- **[統合ガイド](docs/guides/integrations.md)** - CI/CD と自動化
 
 ### 基本的な使い方
 

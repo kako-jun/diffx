@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
-[![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs)
+[![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs/index.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A next-generation diff tool that understands the **structure** and **meaning** of your data, not just text changes. Perfect for JSON, YAML, TOML, XML, INI, and CSV files.
@@ -191,7 +191,15 @@ $ diffx report1.json report2.json  # Compare the changes themselves!
 cargo install diffx
 ```
 
-For detailed usage and examples, see the [GitHub documentation](https://github.com/kako-jun/diffx/tree/main/docs).
+For detailed usage and examples, see the [documentation](docs/index.md).
+
+### Quick Documentation Links
+
+- **[Getting Started](docs/user-guide/getting-started.md)** - Learn the basics
+- **[Installation Guide](docs/user-guide/installation.md)** - Platform-specific setup
+- **[CLI Reference](docs/reference/cli-reference.md)** - Complete command reference
+- **[Real-World Examples](docs/user-guide/examples.md)** - Industry use cases
+- **[Integration Guide](docs/guides/integrations.md)** - CI/CD and automation
 
 ### Basic Usage
 

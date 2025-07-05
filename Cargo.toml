@@ -1,6 +1,49 @@
 [workspace]
-resolver = "3"
+resolver = "2"
 members = [
-    "diffx-cli",
     "diffx-core",
+    "diffx-cli"
 ]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+authors = ["kako-jun <kako.jun.42@gmail.com>"]
+license = "MIT"
+description = "Command-line tool for structured data diffing with international support"
+homepage = "https://github.com/kako-jun/diffx"
+repository = "https://github.com/kako-jun/diffx"
+documentation = "https://docs.rs/diffx-core"
+readme = "README.md"
+keywords = ["diff", "cli", "json", "yaml", "toml"]
+categories = ["command-line-utilities", "data-structures", "parsing"]
+exclude = [
+    ".github/",
+    "target/"
+]
+rust-version = "1.75"
+
+[workspace.dependencies]
+anyhow = "1.0"
+clap = { version = "4.0", features = ["derive", "cargo"] }
+colored = "3.0"
+csv = "1.3"
+configparser = "3.0"
+quick-xml = { version = "0.31", features = ["serialize"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yml = "0.0.12"
+toml = "0.8"
+walkdir = "2.5"
+dirs = "5.0"
+regex = "1.0"
+similar = "2.7"
+tempfile = "3.0"
+assert_cmd = "2.0"
+predicates = "3.1"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
