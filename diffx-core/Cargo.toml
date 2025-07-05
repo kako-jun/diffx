@@ -4,13 +4,13 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Core library for structured data diffing (JSON, YAML, TOML, XML, INI, CSV)"
+description = "Semantic diff library for structured data - JSON, YAML, TOML, XML, INI, CSV support"
 homepage.workspace = true
 repository.workspace = true
 documentation.workspace = true
 readme = "../README.md"
-keywords.workspace = true
-categories.workspace = true
+keywords = ["diff", "semantic", "json", "yaml", "data-structures"]
+categories = ["data-structures", "parsing", "algorithms"]
 exclude.workspace = true
 rust-version.workspace = true
 

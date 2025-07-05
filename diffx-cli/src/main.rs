@@ -17,11 +17,21 @@ struct Config {
     output: Option<OutputFormat>,
     #[serde(default)]
     format: Option<Format>,
+    #[serde(default)]
+    ignore_keys_regex: Option<String>,
+    #[serde(default)]
+    epsilon: Option<f64>,
 }
 
 fn load_config() -> Config {
-    let config_path = dirs::config_dir()
-        .map(|p| p.join("diffx").join("config.toml"))
+    // Check for environment variable first (for testing and manual override)
+    let config_path = std::env::var("DIFFX_CONFIG_PATH")
+        .ok()
+        .map(PathBuf::from)
+        .or_else(|| {
+            // Use standard config directory
+            dirs::config_dir().map(|p| p.join("diffx").join("config.toml"))
+        })
         .or_else(|| {
             // Fallback for systems without a standard config directory
             Some(PathBuf::from(".diffx.toml"))
@@ -91,9 +101,13 @@ struct Args {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
 enum OutputFormat {
+    #[serde(rename = "cli")]
     Cli,
+    #[serde(rename = "json")]
     Json,
+    #[serde(rename = "yaml")]
     Yaml,
+    #[serde(rename = "unified")]
     Unified,
 }
 
@@ -247,11 +261,13 @@ fn main() -> Result<()> {
 
     let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
         Some(Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?)
+    } else if let Some(regex_str) = &config.ignore_keys_regex {
+        Some(Regex::new(regex_str).context("Invalid regex from config file")?)
     } else {
         None
     };
 
-    let epsilon = args.epsilon;
+    let epsilon = args.epsilon.or(config.epsilon);
     let array_id_key = args.array_id_key.as_deref();
 
     // Handle directory comparison

@@ -536,12 +536,12 @@ fn test_config_file_integration() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
         .success()
-        // Currently outputs CLI format until config integration is implemented
-        .stdout(predicate::str::contains("~ age: 30 -> 31"))
-        .stdout(predicate::str::contains(
-            "~ city: \"New York\" -> \"Boston\"",
-        ))
-        .stdout(predicate::str::contains("+ items[2]: \"orange\""));
+        // Config file specifies output = "json", so expect JSON format
+        .stdout(predicate::str::contains(r#""Modified""#))
+        .stdout(predicate::str::contains(r#""age""#))
+        .stdout(predicate::str::contains(r#""city""#))
+        .stdout(predicate::str::contains(r#""Added""#))
+        .stdout(predicate::str::contains(r#""items[2]""#));
     Ok(())
 }
 
