@@ -652,9 +652,12 @@ fn test_environment_config_comparison() -> Result<(), Box<dyn std::error::Error>
 fn test_array_id_key_from_config() -> Result<(), Box<dyn std::error::Error>> {
     // Test that array_id_key configuration is properly loaded from config file
     let mut cmd = diffx_cmd();
-    cmd.env("DIFFX_CONFIG_PATH", "../tests/fixtures/array_id_config.toml")
-        .arg("../tests/fixtures/users_v1.json")
-        .arg("../tests/fixtures/users_v2.json");
+    cmd.env(
+        "DIFFX_CONFIG_PATH",
+        "../tests/fixtures/array_id_config.toml",
+    )
+    .arg("../tests/fixtures/users_v1.json")
+    .arg("../tests/fixtures/users_v2.json");
     cmd.assert()
         .success()
         // Config specifies array_id_key = "id" and output = "json"
