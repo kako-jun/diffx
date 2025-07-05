@@ -39,8 +39,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut large_v2 = serde_json::Map::new();
 
     for i in 0..1000 {
-        large_v1.insert(format!("key{}", i), json!(format!("value{}", i)));
-        large_v2.insert(format!("key{}", i), json!(format!("value{}", i)));
+        large_v1.insert(format!("key{i}"), json!(format!("value{i}")));
+        large_v2.insert(format!("key{i}"), json!(format!("value{i}")));
     }
     large_v2.insert("key500".to_string(), json!("value500_changed"));
     large_v2.insert("new_key".to_string(), json!("new_value"));
