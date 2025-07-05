@@ -21,6 +21,8 @@ struct Config {
     ignore_keys_regex: Option<String>,
     #[serde(default)]
     epsilon: Option<f64>,
+    #[serde(default)]
+    array_id_key: Option<String>,
 }
 
 fn load_config() -> Config {
@@ -268,7 +270,7 @@ fn main() -> Result<()> {
     };
 
     let epsilon = args.epsilon.or(config.epsilon);
-    let array_id_key = args.array_id_key.as_deref();
+    let array_id_key = args.array_id_key.as_deref().or(config.array_id_key.as_deref());
 
     // Handle directory comparison
     if args.recursive {

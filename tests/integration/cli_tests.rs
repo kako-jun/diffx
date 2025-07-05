@@ -647,3 +647,23 @@ fn test_environment_config_comparison() -> Result<(), Box<dyn std::error::Error>
         .stdout(predicate::str::contains("port").not());
     Ok(())
 }
+
+#[test]
+fn test_array_id_key_from_config() -> Result<(), Box<dyn std::error::Error>> {
+    // Test that array_id_key configuration is properly loaded from config file
+    let mut cmd = diffx_cmd();
+    cmd.env("DIFFX_CONFIG_PATH", "../tests/fixtures/array_id_config.toml")
+        .arg("../tests/fixtures/users_v1.json")
+        .arg("../tests/fixtures/users_v2.json");
+    cmd.assert()
+        .success()
+        // Config specifies array_id_key = "id" and output = "json"
+        // Should identify array elements by ID and show semantic changes
+        .stdout(predicate::str::contains(r#""Modified""#))
+        .stdout(predicate::str::contains(r#""[id=2].role""#))
+        .stdout(predicate::str::contains(r#""user""#))
+        .stdout(predicate::str::contains(r#""moderator""#))
+        .stdout(predicate::str::contains(r#""Added""#))
+        .stdout(predicate::str::contains(r#""[id=3]""#));
+    Ok(())
+}
