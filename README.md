@@ -24,16 +24,16 @@ $ diff config_v1.json config_v2.json
 > }
 
 # diffx shows only semantic changes
-$ diffx config_v1.json config_v2.json  
+$ diffx config_v1.json config_v2.json
 ~ version: "1.0" -> "1.1"
 ```
 
 ## ✨ Key Features
 
-- **🎯 Semantic Awareness**: Ignores formatting, key order, whitespace, and trailing commas (ケツカンマ)
+- **🎯 Semantic Awareness**: Ignores formatting, key order, whitespace, and trailing commas
 - **🔧 Multiple Formats**: JSON, YAML, TOML, XML, INI, CSV support
 - **🤖 AI-Friendly**: Clean CLI output perfect for automation and AI analysis
-- **⚡ Fast**: Built in Rust for maximum performance  
+- **⚡ Fast**: Built in Rust for maximum performance
 - **🔗 Meta-Chaining**: Compare diff reports to track change evolution
 
 ## 📊 Performance
@@ -52,7 +52,6 @@ diffx:           ~0.005s (clean semantic output)
 
 **Why CLI matters for the AI era**: As AI tools become essential in development workflows, having structured, machine-readable diff output becomes crucial. `diffx` provides clean, parseable results that AI can understand and reason about, making it perfect for automated code review, configuration management, and intelligent deployment pipelines.
 
-
 ## Why diffx?
 
 Traditional `diff` tools show you formatting noise. `diffx` shows you what actually changed.
@@ -64,12 +63,16 @@ Traditional `diff` tools show you formatting noise. `diffx` shows you what actua
 ## Specification
 
 ### Supported Formats
+
 - JSON
 - YAML
 - TOML
-- *Future: XML, INI, CSV*
+- XML
+- INI
+- CSV
 
 ### Types of Differences
+
 - Key addition/deletion
 - Value change
 - Array insertion/deletion/modification
@@ -77,25 +80,29 @@ Traditional `diff` tools show you formatting noise. `diffx` shows you what actua
 - Value type change
 
 ### Output Formats
+
 `diffx` recommends its own CLI display format that can most richly express structured data differences, but also supports the following alternative output formats for specific use cases and integration with existing tools:
 
 - **Recommended CLI Display (Default)**
-    *   A unique format that clearly displays structural differences (additions, changes, deletions, type changes, etc.) using universal design considerations such as color coding, symbols, and indentation, making it easy for humans to understand.
-    *   Differences are represented by `+` (addition), `-` (deletion), `~` (change), `!` (type change) symbols and colors: blue, yellow, cyan, and magenta.
-    *   **Feature**: Focuses on semantic changes in data, ignoring changes in key order or whitespace. This is the core value of `diffx`.
+
+  - A unique format that clearly displays structural differences (additions, changes, deletions, type changes, etc.) using universal design considerations such as color coding, symbols, and indentation, making it easy for humans to understand.
+  - Differences are represented by `+` (addition), `-` (deletion), `~` (change), `!` (type change) symbols and colors: blue, yellow, cyan, and magenta.
+  - **Feature**: Focuses on semantic changes in data, ignoring changes in key order or whitespace. This is the core value of `diffx`.
 
 - **JSON Format**
-    *   Machine-readable format. Used for CI/CD and integration with other programs.
-    *   Differences detected by `diffx` are output as a JSON array.
+
+  - Machine-readable format. Used for CI/CD and integration with other programs.
+  - Differences detected by `diffx` are output as a JSON array.
 
 - **YAML Format**
-    *   Machine-readable format. Used for CI/CD and integration with other programs, similar to JSON.
-    *   Differences detected by `diffx` are output as a YAML array.
+
+  - Machine-readable format. Used for CI/CD and integration with other programs, similar to JSON.
+  - Differences detected by `diffx` are output as a YAML array.
 
 - **diff-compatible Format (Unified Format)**
-    *   Provided with the `--output unified` option.
-    *   Intended for integration with `git` and existing merge tools.
-    *   **Note**: This format expresses the "semantic differences" detected internally by `diffx` as line-based differences of the formatted text of the original files. Therefore, changes that `diffx` determines are not semantic differences (e.g., changes in key order, whitespace changes) may still be displayed with `+`/`-` if there are changes in the text representation. This is purely for compatibility and **differs from `diffx`'s semantic differences**.
+  - Provided with the `--output unified` option.
+  - Intended for integration with `git` and existing merge tools.
+  - **Note**: This format expresses the "semantic differences" detected internally by `diffx` as line-based differences of the formatted text of the original files. Therefore, changes that `diffx` determines are not semantic differences (e.g., changes in key order, whitespace changes) may still be displayed with `+`/`-` if there are changes in the text representation. This is purely for compatibility and **differs from `diffx`'s semantic differences**.
 
 ## 🏗️ Architecture
 
@@ -109,18 +116,18 @@ graph TB
         D[Output Formatters]
         B --> C --> D
     end
-    
+
     E[CLI Tool] --> Core
     F[NPM Package] --> E
     G[Python Package] --> E
-    
+
     H[JSON] --> B
     I[YAML] --> B
     J[TOML] --> B
     K[XML] --> B
     L[INI] --> B
     M[CSV] --> B
-    
+
     D --> N[CLI Display]
     D --> O[JSON Output]
     D --> P[YAML Output]
@@ -128,6 +135,7 @@ graph TB
 ```
 
 ### Project Structure
+
 ```
 diffx/
 ├── diffx-core/      # Diff extraction library (Crate)
@@ -142,6 +150,7 @@ diffx/
 ```
 
 ### Technology Stack
+
 - **Rust** (Fast, safe, cross-platform)
 - `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` parsers
 - `clap` (CLI argument parsing)
@@ -157,11 +166,11 @@ graph LR
     A[config_v1.json] --> D1[diffx]
     B[config_v2.json] --> D1
     D1 --> R1[diff_report_v1.json]
-    
+
     B --> D2[diffx]
     C[config_v3.json] --> D2
     D2 --> R2[diff_report_v2.json]
-    
+
     R1 --> D3[diffx]
     R2 --> D3
     D3 --> M[Meta-Diff Report]
@@ -173,7 +182,6 @@ $ diffx config_v2.json config_v3.json --output json > report2.json
 $ diffx report1.json report2.json  # Compare the changes themselves!
 ```
 
-
 ## 🚀 Quick Start
 
 ### Installation
@@ -181,12 +189,6 @@ $ diffx report1.json report2.json  # Compare the changes themselves!
 ```bash
 # Install CLI tool
 cargo install diffx
-
-# Use in Node.js projects (coming soon)
-npm install diffx-npm
-
-# Use in Python projects (coming soon)  
-pip install diffx-python
 ```
 
 ### Basic Usage
@@ -216,6 +218,7 @@ diffx diff1.json diff2.json  # Compare the changes themselves!
 ### Integration Examples
 
 **CI/CD Pipeline:**
+
 ```yaml
 - name: Check configuration changes
   run: |
@@ -224,6 +227,7 @@ diffx diff1.json diff2.json  # Compare the changes themselves!
 ```
 
 **Git Hook:**
+
 ```bash
 #!/bin/bash
 # pre-commit hook
@@ -232,6 +236,14 @@ if diffx package.json HEAD~1:package.json --output json | jq -e '.[] | select(.A
 fi
 ```
 
+## 🔮 Future Plans
+
+- **Interactive TUI (`diffx-tui`)**: A powerful viewer showcasing diffx capabilities with side-by-side data display
+- **Language wrappers**: Node.js and Python packages for calling diffx CLI
+- **GitHub Actions integration**: Built-in diff checking workflows
+- **AI agent integration**: Automated diff summarization and explanation
+- **Web UI version** (`diffx-web`)
+- **VSCode extension** (`diffx-vscode`)
 
 ## 🤝 Contributing
 
