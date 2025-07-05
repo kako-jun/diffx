@@ -1,0 +1,29 @@
+{
+  "application": {
+    "name": "secure-app",
+    "version": "1.0.0"
+  },
+  "security": {
+    "host": "localhost",
+    "port": 8443,
+    "password": "secret123",
+    "secret_key": "abc123xyz",
+    "secret_token": "token456"
+  },
+  "database": {
+    "connection_string": "postgres://user:pass@localhost/db",
+    "credentials": {
+      "username": "dbuser",
+      "password": "dbpass"
+    }
+  },
+  "monitoring": {
+    "timestamp": "2024-01-01T12:00:00Z",
+    "build_id": "build-123",
+    "deploy_time": "2024-01-01T13:00:00Z",
+    "metrics": {
+      "cpu": 45.2,
+      "memory": 78.9
+    }
+  }
+}

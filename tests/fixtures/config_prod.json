@@ -1,0 +1,24 @@
+{
+  "application": {
+    "name": "myapp",
+    "version": "1.0.0",
+    "debug": false,
+    "environment": "production"
+  },
+  "database": {
+    "host": "prod-db.example.com",
+    "port": 5432,
+    "name": "myapp_prod",
+    "timeout": 60
+  },
+  "services": {
+    "auth": {
+      "enabled": true,
+      "url": "https://auth.example.com"
+    },
+    "cache": {
+      "enabled": true,
+      "url": "redis://cache.example.com:6379"
+    }
+  }
+}
