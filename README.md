@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
-[![Documentation](https://docs.rs/diffx/badge.svg)](https://docs.rs/diffx)
+[![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A next-generation diff tool that understands the **structure** and **meaning** of your data, not just text changes. Perfect for JSON, YAML, TOML, XML, INI, and CSV files.
@@ -102,7 +102,7 @@ Traditional `diff` tools show you formatting noise. `diffx` shows you what actua
 - **diff-compatible Format (Unified Format)**
   - Provided with the `--output unified` option.
   - Intended for integration with `git` and existing merge tools.
-  - **Note**: This format expresses the "semantic differences" detected internally by `diffx` as line-based differences of the formatted text of the original files. Therefore, changes that `diffx` determines are not semantic differences (e.g., changes in key order, whitespace changes) may still be displayed with `+`/`-` if there are changes in the text representation. This is purely for compatibility and **differs from `diffx`'s semantic differences**.
+  - **Note**: This format only shows the semantic differences detected by `diffx` in traditional diff format. Changes that are not semantic differences (e.g., key order changes, whitespace changes) are not displayed. This is purely for compatibility with existing tools.
 
 ## 🏗️ Architecture
 
@@ -190,6 +190,8 @@ $ diffx report1.json report2.json  # Compare the changes themselves!
 # Install CLI tool
 cargo install diffx
 ```
+
+For detailed usage and examples, see the [GitHub documentation](https://github.com/kako-jun/diffx/tree/main/docs).
 
 ### Basic Usage
 
