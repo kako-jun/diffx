@@ -34,42 +34,14 @@ $ diffx config_v1.json config_v2.json
 - **⚡ Fast**: Built in Rust for maximum performance
 - **🔗 Meta-Chaining**: Compare diff reports to track change evolution
 
-## 📊 Performance
 
-```bash
-# Benchmark on 1MB JSON file
-Traditional diff:  ~50ms (with noise)
-diffx:            ~12ms (clean semantic diff)
-```
+## Why diffx?
 
-## Motivation
+Traditional `diff` tools show you formatting noise. `diffx` shows you what actually changed.
 
-In modern software development, structured data such as JSON, YAML, and TOML play an increasingly important role in configuration files, API responses, and data structures. However, existing tools for tracking changes in these data (e.g., the traditional `diff` command) are text-based and cannot understand the "structure" or "meaning" of the data.
-
-This has led to developers facing inefficient problems such as:
-
-*   **Exhaustion from superficial differences**: Formatting differences such as key order, whitespace, and trailing commas are displayed as "differences," making it easy to overlook essential changes.
-*   **Limitations of manual verification**: For complex nested structures or large-scale data, manual diff verification is extremely difficult and can lead to errors.
-*   **Difficulty in machine processing**: Text-based diffs are unsuitable for automated analysis by programs or understanding by AI.
-
-`diffx` was born to solve these problems. We believe that in structured data diff comparison, we should focus on **"semantic changes"** rather than mere text changes. This frees developers from unnecessary exhaustion and allows them to concentrate on more essential tasks.
-
-## Philosophy
-
-**"Structured diffs, for everyone, everywhere, easily."**
-
-Traditional `diff` commands are text-based and cannot understand the structure of data. `diffx` is a diff extraction tool specialized in structured data such such as JSON, YAML, and TOML. It provides output that is easy for both humans and AI to understand, clearly visualizing changes in configuration files, data, and other structured files.
-
-`diffx` aims to detect **semantic changes** in data, not just text changes. For example, `diffx` does not detect changes in JSON key order or whitespace as differences. This allows you to focus on essential changes and avoid unnecessary exhaustion.
-
-### Meaning of the name "diffx"
-What does the "x" in diff + x mean?
-
-*   **extended**: Extended diff (structured, semantic)
-*   **exact**: Accurate diff extraction
-*   **flexible**: Flexible format support
-*   **indexed**: Trackable diffs with indexes
-*   **next-gen**: Next-generation diff tool
+- **Focus on meaning**: Ignores key order, whitespace, and formatting
+- **Multiple formats**: Works with JSON, YAML, TOML, XML, INI, CSV
+- **Clean output**: Perfect for humans, scripts, and AI analysis
 
 ## Specification
 
@@ -113,33 +85,28 @@ What does the "x" in diff + x mean?
 
 ```mermaid
 graph TB
-    subgraph "Core Engine"
-        A[diffx-core] --> B[Format Parsers]
-        B --> C[Semantic Diff Engine]
-        C --> D[Output Formatters]
+    subgraph Core["diffx-core"]
+        B[Format Parsers]
+        C[Semantic Diff Engine]
+        D[Output Formatters]
+        B --> C --> D
     end
     
-    subgraph "Interfaces"
-        E[CLI Tool] --> A
-        F[NPM Package] --> E
-        G[Python Package] --> E
-    end
+    E[CLI Tool] --> Core
+    F[NPM Package] --> E
+    G[Python Package] --> E
     
-    subgraph "Formats"
-        H[JSON] --> B
-        I[YAML] --> B
-        J[TOML] --> B
-        K[XML] --> B
-        L[INI] --> B
-        M[CSV] --> B
-    end
+    H[JSON] --> B
+    I[YAML] --> B
+    J[TOML] --> B
+    K[XML] --> B
+    L[INI] --> B
+    M[CSV] --> B
     
-    subgraph "Output"
-        D --> N[CLI Display]
-        D --> O[JSON]
-        D --> P[YAML]
-        D --> Q[Unified Diff]
-    end
+    D --> N[CLI Display]
+    D --> O[JSON Output]
+    D --> P[YAML Output]
+    D --> Q[Unified Diff]
 ```
 
 ### Project Structure
@@ -163,9 +130,9 @@ diffx/
 - `colored` (CLI output coloring)
 - `similar` (Unified Format output)
 
-## 🔗 Meta-Chaining: Advanced Diff Tracking
+## 🔗 Meta-Chaining
 
-One of `diffx`'s unique features is **meta-chaining** - the ability to compare diff reports themselves, enabling sophisticated change tracking and auditing workflows.
+Compare diff reports to track how changes evolve over time:
 
 ```mermaid
 graph LR
@@ -180,76 +147,28 @@ graph LR
     R1 --> D3[diffx]
     R2 --> D3
     D3 --> M[Meta-Diff Report]
-    
-    M --> |"Track change evolution"| T1[Deployment Tracking]
-    M --> |"Change pattern analysis"| T2[Audit Trail]
-    M --> |"Configuration drift"| T3[Compliance Monitoring]
 ```
-
-### Meta-Chaining Example
 
 ```bash
-# Step 1: Generate first diff report
-$ diffx config_v1.json config_v2.json --output json > diff_v1_v2.json
-
-# Step 2: Generate second diff report  
-$ diffx config_v2.json config_v3.json --output json > diff_v2_v3.json
-
-# Step 3: Compare the diff reports (meta-chaining)
-$ diffx diff_v1_v2.json diff_v2_v3.json
-~ [0].Modified[2]: "1.0" -> "1.1"  # Version changed in both comparisons
-+ [1]: {"Added": ["new_feature", true]}  # New change introduced
+$ diffx config_v1.json config_v2.json --output json > report1.json
+$ diffx config_v2.json config_v3.json --output json > report2.json
+$ diffx report1.json report2.json  # Compare the changes themselves!
 ```
 
-This enables advanced use cases like:
-- **Change Evolution Tracking**: See how modifications progress over time
-- **Deployment Auditing**: Compare pre/post deployment configuration changes
-- **Configuration Drift Detection**: Monitor how systems deviate from baseline
-
-## Future Prospects
-- **Interactive TUI (`diffx-tui`)**: A sample and high-performance viewer to demonstrate the power of `diffx`. It displays data side-by-side with a linked diff list, providing the experience of "understanding essential differences without being confused by formatting variations."
-- Diff checking with GitHub Actions
-- Integration with AI agents (diff summarization/explanation)
-
-## Overall Distribution
-
-### 1. Rust Crate (diffx-core)
-- Provides diff extraction logic as a library
-- Can be embedded in other Rust applications and CLI tools
-- Fast, type-safe, extensible
-
-### 2. CLI Tool (diffx)
-- Command-line tool directly usable by users
-- Easy to call from AI and CI/CD tools
-- Installable with `cargo install diffx`
-
-### 3. Wrappers for Other Languages (npm/pip)
-- **npm package (diffx-bin)**
-  - Wrapper to call diffx CLI from Node.js environment
-  - Executes CLI using `child_process.spawn()`
-- **pip package (diffx-bin)**
-  - Wrapper to call diffx CLI from Python environment
-  - Executes CLI using `subprocess.run()`
-
-### Why this structure is effective?
-- **AI Affinity**: CLI allows AI to operate regardless of language
-- **Developer Reusability**: Rust Crate makes it easy to integrate into other tools
-- **Language Ecosystem Expansion**: npm/pip reaches JS/Python users
-- **Maintainability**: CLI is primary, wrappers can be kept thin
 
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-# Install from crates.io
+# Install CLI tool
 cargo install diffx
 
-# Or use from npm (requires Rust/Cargo)
-npm install -g diffx-bin
+# Use in Node.js projects (coming soon)
+npm install diffx-npm
 
-# Or use from pip (requires Rust/Cargo)
-pip install diffx-bin
+# Use in Python projects (coming soon)  
+pip install diffx-python
 ```
 
 ### Basic Usage
@@ -295,18 +214,6 @@ if diffx package.json HEAD~1:package.json --output json | jq -e '.[] | select(.A
 fi
 ```
 
-## 📈 Benchmarks
-
-Performance comparison on various file sizes:
-
-| File Size | Traditional diff | diffx | Improvement |
-|-----------|------------------|-------|-------------|
-| 10KB      | 5ms             | 2ms   | 2.5x faster |
-| 100KB     | 25ms            | 8ms   | 3.1x faster |
-| 1MB       | 180ms           | 45ms  | 4x faster   |
-| 10MB      | 2.1s            | 520ms | 4x faster   |
-
-*Benchmarks run on JSON files with nested structures. Results may vary based on data complexity.*
 
 ## 🤝 Contributing
 
