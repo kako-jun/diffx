@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "diffx-py"
+version = "0.2.0"
+description = "Python wrapper for diffx - semantic diff for structured data"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "kako-jun", email = "kako.jun.42@gmail.com" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing",
+    "Topic :: Utilities"
+]
+keywords = [
+    "diff",
+    "semantic",
+    "json",
+    "yaml",
+    "toml",
+    "xml",
+    "ini",
+    "csv",
+    "structured-data",
+    "comparison"
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/kako-jun/diffx"
+Repository = "https://github.com/kako-jun/diffx"
+Issues = "https://github.com/kako-jun/diffx/issues"
+Documentation = "https://github.com/kako-jun/diffx/tree/main/docs"
+
+[project.optional-dependencies]
+dev = [
+    "pytest >= 6.0",
+    "pytest-cov",
+    "black",
+    "isort",
+    "mypy",
+    "flake8"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/diffx_py"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md"
+]

@@ -1,0 +1,49 @@
+{
+  "name": "diffx-js",
+  "version": "0.2.0",
+  "description": "JavaScript/TypeScript wrapper for diffx - semantic diff for structured data",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "jest"
+  },
+  "keywords": [
+    "diff",
+    "semantic",
+    "json",
+    "yaml",
+    "toml",
+    "xml",
+    "ini",
+    "csv",
+    "structured-data",
+    "comparison"
+  ],
+  "author": "kako-jun <kako.jun.42@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/kako-jun/diffx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kako-jun/diffx.git",
+    "directory": "packages/diffx-js"
+  },
+  "bugs": {
+    "url": "https://github.com/kako-jun/diffx/issues"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0"
+  },
+  "peerDependencies": {},
+  "dependencies": {}
+}
