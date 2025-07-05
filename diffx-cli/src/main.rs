@@ -67,7 +67,7 @@ struct Args {
     #[arg(short, long)]
     recursive: bool,
 
-    /// Filter differences by a specific path (e.g., "config.users[0].name")
+    /// Filter differences by a specific path (e.g., "config.users\[0\].name")
     #[arg(long)]
     path: Option<String>,
 

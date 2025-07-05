@@ -66,7 +66,9 @@ diffx:      ~0.005秒（クリーンな意味的出力）
 - JSON
 - YAML
 - TOML
-- *将来的に：XML, INI, CSV*
+- XML
+- INI
+- CSV
 
 ### 差分の種類
 - キーの追加・削除
@@ -119,34 +121,52 @@ diffx/
 - `colored`（CLI出力の色付け）
 - `similar`（Unified Format出力）
 
+## 🚀 インストールと使い方
+
+### インストール
+
+```bash
+# CLIツールをインストール
+cargo install diffx
+```
+
+### 基本的な使い方
+
+```bash
+# JSONファイルを比較
+diffx file1.json file2.json
+
+# 異なる出力形式で比較
+diffx config.yaml config_new.yaml --output json
+diffx data.toml data_updated.toml --output yaml
+
+# 高度なオプション
+diffx large.json large_v2.json --ignore-keys-regex "^timestamp$|^_.*"
+diffx users.json users_v2.json --array-id-key "id"
+diffx metrics.json metrics_v2.json --epsilon 0.001
+
+# ディレクトリ比較
+diffx config_dir1/ config_dir2/ --recursive
+
+# メタチェイニング（変更の追跡）
+diffx config_v1.json config_v2.json --output json > diff1.json
+diffx config_v2.json config_v3.json --output json > diff2.json
+diffx diff1.json diff2.json  # 変更の変更を比較！
+```
+
 ## 将来的な展望
-- **差分レポートの差分 (Meta-chaining)**: `diffx`の出力をYAML/TOML形式で保存し、それを再び`diffx`の入力として比較することで、「差分レポートの差分」を検出する。これにより、設定変更の履歴管理や監査、デプロイメントの追跡など、高度な運用が可能になる。
+
 - **インタラクティブTUI (`diffx-tui`)**: `diffx`の力を示すためのサンプル兼高機能ビューア。左右に並べたデータと、それと連動する差分リストを表示し、「フォーマットの揺れに惑わされない、本質的な差分理解」という体験を提供する。
+- **他言語向けラッパー**: Node.js/Python環境からdiffx CLIを呼び出すラッパーパッケージ
 - GitHub Actionsでの差分チェック
 - AIエージェントとの連携（差分要約・説明）
+- Web UI版（diffx-web）
+- VSCode拡張（diffx-vscode）
 
-## 提供形態（Overall Distribution）
+## 🤝 コントリビューション
 
-### 1. Rust Crate（diffx-core）
-- 構造化差分抽出のロジックをライブラリとして提供
-- 他のRustアプリやCLIツールに組み込み可能
-- 高速・型安全・拡張性あり
+コントリビューションを歓迎します！詳細は [CONTRIBUTING.md](CONTRIBUTING.md) をご確認ください。
 
-### 2. CLIツール（diffx）
-- ユーザーが直接使えるコマンドラインツール
-- AIやCI/CDツールからも呼び出しやすい
-- `cargo install diffx` で導入可能
+## 📄 ライセンス
 
-### 3. 他言語向けラッパー（npm/pip）
-- **npmパッケージ（diffx-bin）**
-  - Node.js環境から diffx CLI を呼び出すラッパー
-  - `child_process.spawn()` でCLIを実行
-- **pipパッケージ（diffx-bin）**
-  - Python環境から diffx CLI を呼び出すラッパー
-  - `subprocess.run()` でCLIを実行
-
-### なぜこの構成が有効か？
-- **AIとの親和性**: CLIがあることで、言語を問わずAIが操作可能
-- **開発者の再利用性**: Rust Crateで他ツールに組み込みやすい
-- **言語圏の拡張**: npm/pipでJS/Pythonユーザーにも届く
-- **メンテナンス性**: CLIが主で、ラッパーは薄く保てる
+MIT License - 詳細は [LICENSE](LICENSE) をご確認ください。
