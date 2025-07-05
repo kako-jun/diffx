@@ -14,7 +14,7 @@ A: A regular `diff` command performs a line-by-line comparison of text files. Th
 
 ### Q: What structured data formats does diffx support?
 
-A: Currently, `diffx` supports JSON, YAML, and TOML. We plan to extend support to other formats like XML and INI in the future.
+A: `diffx` supports JSON, YAML, TOML, XML, INI, and CSV formats.
 
 ### Q: Does diffx support comparing directories?
 
