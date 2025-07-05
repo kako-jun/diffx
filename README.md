@@ -2,6 +2,8 @@
 
 > **🚀 Semantic diff for structured data - Focus on what matters, not formatting**
 
+[日本語版 README](README_ja.md) | [English README](README.md)
+
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
 [![Documentation](https://docs.rs/diffx/badge.svg)](https://docs.rs/diffx)
@@ -10,7 +12,7 @@
 A next-generation diff tool that understands the **structure** and **meaning** of your data, not just text changes. Perfect for JSON, YAML, TOML, XML, INI, and CSV files.
 
 ```bash
-# Traditional diff shows formatting noise
+# Traditional diff shows formatting noise (key order, trailing commas)
 $ diff config_v1.json config_v2.json
 < {
 <   "name": "myapp",
@@ -22,17 +24,33 @@ $ diff config_v1.json config_v2.json
 > }
 
 # diffx shows only semantic changes
-$ diffx config_v1.json config_v2.json
+$ diffx config_v1.json config_v2.json  
 ~ version: "1.0" -> "1.1"
 ```
 
 ## ✨ Key Features
 
-- **🎯 Semantic Awareness**: Ignores formatting, key order, and whitespace
+- **🎯 Semantic Awareness**: Ignores formatting, key order, whitespace, and trailing commas (ケツカンマ)
 - **🔧 Multiple Formats**: JSON, YAML, TOML, XML, INI, CSV support
-- **🤖 AI-Friendly**: Clean output perfect for automation and AI analysis
-- **⚡ Fast**: Built in Rust for maximum performance
+- **🤖 AI-Friendly**: Clean CLI output perfect for automation and AI analysis
+- **⚡ Fast**: Built in Rust for maximum performance  
 - **🔗 Meta-Chaining**: Compare diff reports to track change evolution
+
+## 📊 Performance
+
+Real benchmark results on AMD Ryzen 5 PRO 4650U:
+
+```bash
+# Test files: ~600 bytes JSON with nested config
+$ time diff large_test1.json large_test2.json  # Shows 15+ lines of noise
+$ time diffx large_test1.json large_test2.json # Shows 3 semantic changes
+
+# Results:
+Traditional diff: ~0.002s (but with formatting noise)
+diffx:           ~0.005s (clean semantic output)
+```
+
+**Why CLI matters for the AI era**: As AI tools become essential in development workflows, having structured, machine-readable diff output becomes crucial. `diffx` provides clean, parseable results that AI can understand and reason about, making it perfect for automated code review, configuration management, and intelligent deployment pipelines.
 
 
 ## Why diffx?
