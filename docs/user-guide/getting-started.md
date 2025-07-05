@@ -48,16 +48,16 @@ diffx database.ini database.prod.ini
 diffx users.csv users_updated.csv
 ```
 
-### Understanding the Output
+### Understanding the diffx Format
 
-`diffx` uses intuitive symbols to show different types of changes:
+By default, `diffx` outputs differences in the **diffx format** - a human-readable, structured representation designed specifically for semantic data comparison. The diffx format uses intuitive symbols to show different types of changes:
 
 - `+` **Added**: New keys or values
 - `-` **Removed**: Deleted keys or values  
 - `~` **Modified**: Changed values
 - `!` **Type Changed**: Value type conversion (e.g., string to number)
 
-Example output:
+Example diffx format output:
 ```
 + database.port: 5432
 - cache.ttl: 3600
@@ -175,9 +175,18 @@ diffx app.json app.new.json --path "microservices.auth.database.connection"
 
 ## Output Formats
 
-### Default CLI Output
+### The diffx Format (Default)
 
-The default output is optimized for human readability:
+The **diffx format** is the default output format, designed to be both human-readable and semantically precise. Unlike traditional text-based diffs, the diffx format focuses on data structure and meaning:
+
+**Key Features of diffx Format:**
+- **Semantic Focus**: Shows logical changes, not textual differences
+- **Path Clarity**: Full path notation (e.g., `database.connection.host`)
+- **Type Awareness**: Distinguishes between value changes and type changes
+- **Hierarchical Structure**: Maintains data relationship context
+- **Universal Symbols**: Consistent `+`, `-`, `~`, `!` notation across all data formats
+
+**Standard diffx format output:**
 
 ```bash
 diffx config.json config.new.json

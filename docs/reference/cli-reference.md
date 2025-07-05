@@ -67,11 +67,11 @@ diffx -f yaml config1 config2
 
 #### `-o, --output <FORMAT>`
 - **Type**: String
-- **Default**: `cli`
-- **Values**: `cli`, `json`, `yaml`, `unified`
+- **Default**: `diffx` (human-readable diffx format)
+- **Values**: `diffx`, `json`, `yaml`, `unified`
 - **Description**: Output format for differences
 
-**CLI Output (default):**
+**diffx Format (default):**
 ```bash
 diffx config.json config.new.json
 # Output:

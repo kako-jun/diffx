@@ -25,6 +25,7 @@ Welcome to the comprehensive `diffx` documentation!
 ### 📖 Reference
 *Complete technical reference documentation*
 
+- **[diffx Format Specification](reference/diffx-format.md)** - Complete specification of the diffx format
 - **[CLI Reference](reference/cli-reference.md)** - Complete command-line interface documentation
 - **[API Reference](reference/api-reference.md)** - Rust crate API documentation
 - **[Tool Comparison](reference/comparison.md)** - How diffx compares to other tools
