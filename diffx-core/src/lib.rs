@@ -6,8 +6,8 @@ use std::collections::HashMap;
 use anyhow::{anyhow, Result};
 use csv::ReaderBuilder;
 use quick_xml::de::from_str;
-use std::io::{BufReader, Read};
 use std::fs::File;
+use std::io::{BufReader, Read};
 use std::path::Path;
 // Removed ProgressReporter - Unix tools should be pipe-friendly
 
@@ -22,9 +22,9 @@ pub enum DiffResult {
 /// Lightweight diff result that doesn't clone values unnecessarily
 #[derive(Debug, PartialEq, Serialize)]
 pub enum LightweightDiffResult {
-    Added(String, String),    // path, serialized value
-    Removed(String, String),  // path, serialized value
-    Modified(String, String, String), // path, old_value, new_value
+    Added(String, String),               // path, serialized value
+    Removed(String, String),             // path, serialized value
+    Modified(String, String, String),    // path, old_value, new_value
     TypeChanged(String, String, String), // path, old_value, new_value
 }
 
@@ -53,7 +53,7 @@ pub struct DiffConfig {
     pub ignore_keys_regex: Option<regex::Regex>,
     pub epsilon: Option<f64>,
     pub array_id_key: Option<String>,
-    pub use_memory_optimization: bool,  // Explicit choice
+    pub use_memory_optimization: bool, // Explicit choice
     pub batch_size: usize,
 }
 
@@ -63,7 +63,7 @@ impl Default for DiffConfig {
             ignore_keys_regex: None,
             epsilon: None,
             array_id_key: None,
-            use_memory_optimization: false,  // Conservative default
+            use_memory_optimization: false, // Conservative default
             batch_size: 1000,
         }
     }
@@ -148,30 +148,35 @@ pub fn diff_optimized(
     array_id_key: Option<&str>,
 ) -> Vec<DiffResult> {
     let mut results = Vec::new();
-    memory_efficient_diff(v1, v2, &mut results, ignore_keys_regex, epsilon, array_id_key);
+    memory_efficient_diff(
+        v1,
+        v2,
+        &mut results,
+        ignore_keys_regex,
+        epsilon,
+        array_id_key,
+    );
     results
 }
 
 /// Enhanced diff function with explicit configuration
-pub fn diff_with_config(
-    v1: &Value,
-    v2: &Value,
-    config: &DiffConfig,
-) -> Vec<DiffResult> {
+pub fn diff_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
     // Explicit choice: user decides which algorithm to use
     if config.use_memory_optimization {
         diff_optimized(
-            v1, v2, 
-            config.ignore_keys_regex.as_ref(), 
-            config.epsilon, 
-            config.array_id_key.as_deref()
+            v1,
+            v2,
+            config.ignore_keys_regex.as_ref(),
+            config.epsilon,
+            config.array_id_key.as_deref(),
         )
     } else {
         diff_standard(
-            v1, v2, 
-            config.ignore_keys_regex.as_ref(), 
-            config.epsilon, 
-            config.array_id_key.as_deref()
+            v1,
+            v2,
+            config.ignore_keys_regex.as_ref(),
+            config.epsilon,
+            config.array_id_key.as_deref(),
         )
     }
 }
@@ -528,12 +533,14 @@ pub fn estimate_memory_usage(value: &Value) -> usize {
         Value::Number(_) => 8, // Approximate for f64
         Value::String(s) => s.len(),
         Value::Array(arr) => {
-            arr.iter().map(estimate_memory_usage).sum::<usize>() + (arr.len() * 8) // Vec overhead
+            arr.iter().map(estimate_memory_usage).sum::<usize>() + (arr.len() * 8)
+            // Vec overhead
         }
         Value::Object(obj) => {
             obj.iter()
                 .map(|(k, v)| k.len() + estimate_memory_usage(v))
-                .sum::<usize>() + (obj.len() * 16) // Map overhead
+                .sum::<usize>()
+                + (obj.len() * 16) // Map overhead
         }
     }
 }
@@ -541,10 +548,10 @@ pub fn estimate_memory_usage(value: &Value) -> usize {
 /// Check if processing these values would exceed memory limits
 pub fn would_exceed_memory_limit(v1: &Value, v2: &Value) -> bool {
     const MAX_MEMORY_USAGE: usize = 1024 * 1024 * 1024; // 1GB limit
-    
+
     let usage1 = estimate_memory_usage(v1);
     let usage2 = estimate_memory_usage(v2);
-    
+
     // Account for diff results and temporary data (multiply by 3)
     (usage1 + usage2) * 3 > MAX_MEMORY_USAGE
 }
@@ -616,18 +623,18 @@ pub fn parse_large_file<P: AsRef<Path>>(path: P) -> Result<Option<Value>> {
     let file = File::open(&path)?;
     let metadata = file.metadata()?;
     let file_size = metadata.len();
-    
+
     // 100MB threshold for streaming
     const MAX_MEMORY_SIZE: u64 = 100 * 1024 * 1024;
-    
+
     if file_size > MAX_MEMORY_SIZE {
         return Ok(None); // Signal that streaming should be used
     }
-    
+
     let mut reader = BufReader::new(file);
     let mut content = String::new();
     reader.read_to_string(&mut content)?;
-    
+
     // Auto-detect format from file extension
     let path_str = path.as_ref().to_string_lossy();
     if path_str.ends_with(".json") {
@@ -652,7 +659,7 @@ pub fn diff_large_files<P: AsRef<Path>>(
     // Try to parse normally first
     let v1_opt = parse_large_file(&path1)?;
     let v2_opt = parse_large_file(&path2)?;
-    
+
     match (v1_opt, v2_opt) {
         (Some(v1), Some(v2)) => {
             // Both files are small enough for in-memory processing
@@ -676,39 +683,46 @@ fn streaming_diff<P: AsRef<Path>>(
     // For now, implement a simplified version that chunks the files
     // This is a placeholder for more sophisticated streaming logic
     let mut results = Vec::new();
-    
+
     // Read files in chunks and compare
     let file1 = File::open(&path1)?;
     let file2 = File::open(&path2)?;
-    
+
     let mut reader1 = BufReader::new(file1);
     let mut reader2 = BufReader::new(file2);
-    
+
     let mut buffer1 = String::new();
     let mut buffer2 = String::new();
-    
+
     // Read entire files (for now - this would be optimized further)
     reader1.read_to_string(&mut buffer1)?;
     reader2.read_to_string(&mut buffer2)?;
-    
+
     // Parse with reduced memory footprint
     let v1: Value = serde_json::from_str(&buffer1)
         .or_else(|_| serde_yml::from_str(&buffer1))
         .or_else(|_| toml::from_str(&buffer1))
         .map_err(|e| anyhow!("Failed to parse file 1: {}", e))?;
-        
+
     let v2: Value = serde_json::from_str(&buffer2)
         .or_else(|_| serde_yml::from_str(&buffer2))
         .or_else(|_| toml::from_str(&buffer2))
         .map_err(|e| anyhow!("Failed to parse file 2: {}", e))?;
-    
+
     // Clear buffers to free memory
     drop(buffer1);
     drop(buffer2);
-    
+
     // Use optimized diff with memory-conscious approach
-    memory_efficient_diff(&v1, &v2, &mut results, ignore_keys_regex, epsilon, array_id_key);
-    
+    memory_efficient_diff(
+        &v1,
+        &v2,
+        &mut results,
+        ignore_keys_regex,
+        epsilon,
+        array_id_key,
+    );
+
     Ok(results)
 }
 
@@ -738,7 +752,6 @@ fn memory_efficient_diff(
                 v1.clone(),
                 v2.clone(),
             ));
-            return;
         } else if v1.is_object() && v2.is_object() {
             memory_efficient_diff_objects(
                 "",
@@ -777,10 +790,10 @@ fn memory_efficient_diff_objects(
 ) {
     // Process keys in batches to limit memory usage
     const BATCH_SIZE: usize = 1000;
-    
+
     let keys1: Vec<_> = map1.keys().collect();
     let keys2: Vec<_> = map2.keys().collect();
-    
+
     // Process in batches
     for chunk in keys1.chunks(BATCH_SIZE) {
         for key in chunk {
@@ -789,13 +802,13 @@ fn memory_efficient_diff_objects(
                     continue;
                 }
             }
-            
+
             let current_path = if path.is_empty() {
                 (*key).clone()
             } else {
                 format!("{path}.{key}")
             };
-            
+
             match (map1.get(*key), map2.get(*key)) {
                 (Some(value1), Some(value2)) => {
                     if value1.is_object() && value2.is_object() {
@@ -856,7 +869,7 @@ fn memory_efficient_diff_objects(
             }
         }
     }
-    
+
     // Process added keys
     for chunk in keys2.chunks(BATCH_SIZE) {
         for key in chunk {
@@ -886,7 +899,7 @@ fn memory_efficient_diff_arrays(
 ) {
     // Use the existing array diff logic but with batching for very large arrays
     const BATCH_SIZE: usize = 10000;
-    
+
     if arr1.len() > BATCH_SIZE || arr2.len() > BATCH_SIZE {
         // Process large arrays in chunks
         let max_len = arr1.len().max(arr2.len());
@@ -894,7 +907,7 @@ fn memory_efficient_diff_arrays(
             let chunk_end = (chunk_start + BATCH_SIZE).min(max_len);
             let chunk1 = arr1.get(chunk_start..chunk_end).unwrap_or(&[]);
             let chunk2 = arr2.get(chunk_start..chunk_end).unwrap_or(&[]);
-            
+
             // Process this chunk using existing logic
             diff_arrays(
                 path,
