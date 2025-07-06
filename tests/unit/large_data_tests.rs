@@ -3,6 +3,7 @@ use serde_json::json;
 // Large data performance tests
 
 #[test]
+#[allow(clippy::uninlined_format_args)]
 fn test_large_array_performance() {
     // Create large arrays (10,000 elements)
     let mut large_array1 = Vec::new();
@@ -11,7 +12,7 @@ fn test_large_array_performance() {
     for i in 0..10000 {
         let item = json!({
             "id": i,
-            "name": format!("item_{}", i),
+            "name": format!("item_{i}"),
             "value": i * 2,
             "metadata": {
                 "category": format!("cat_{}", i % 10),
@@ -63,12 +64,12 @@ fn test_large_array_performance() {
 fn test_deep_nested_structure_performance() {
     fn create_deep_structure(depth: usize, base_value: i32) -> serde_json::Value {
         if depth == 0 {
-            return json!({"value": base_value, "data": format!("data_{}", base_value)});
+            return json!({"value": base_value, "data": format!("data_{base_value}")});
         }
 
         let mut obj = serde_json::Map::new();
         for i in 0..3 {
-            let key = format!("level_{}", i);
+            let key = format!("level_{i}");
             obj.insert(key, create_deep_structure(depth - 1, base_value * 3 + i));
         }
         json!(obj)
@@ -104,11 +105,12 @@ fn test_deep_nested_structure_performance() {
     assert_eq!(standard_results.len(), optimized_results.len());
     assert!(!standard_results.is_empty());
 
-    println!("Deep structure - Standard: {:?}", standard_duration);
-    println!("Deep structure - Optimized: {:?}", optimized_duration);
+    println!("Deep structure - Standard: {standard_duration:?}");
+    println!("Deep structure - Optimized: {optimized_duration:?}");
 }
 
 #[test]
+#[allow(clippy::uninlined_format_args)]
 fn test_memory_usage_estimation() {
     let small_value = json!({"key": "value"});
     let medium_value = json!({
@@ -125,13 +127,13 @@ fn test_memory_usage_estimation() {
     let mut large_object = serde_json::Map::new();
     for i in 0..1000 {
         large_object.insert(
-            format!("key_{}", i),
+            format!("key_{i}"),
             json!({
                 "value": i,
-                "data": format!("data_string_{}", i),
+                "data": format!("data_string_{i}"),
                 "nested": {
                     "field1": i * 2,
-                    "field2": format!("nested_{}", i)
+                    "field2": format!("nested_{i}")
                 }
             }),
         );
@@ -146,9 +148,9 @@ fn test_memory_usage_estimation() {
     assert!(medium_usage > small_usage);
     assert!(large_usage > medium_usage);
 
-    println!("Small value memory usage: {} bytes", small_usage);
-    println!("Medium value memory usage: {} bytes", medium_usage);
-    println!("Large value memory usage: {} bytes", large_usage);
+    println!("Small value memory usage: {small_usage} bytes");
+    println!("Medium value memory usage: {medium_usage} bytes");
+    println!("Large value memory usage: {large_usage} bytes");
 
     // Test memory limit check
     assert!(!would_exceed_memory_limit(&small_value, &small_value));
@@ -156,27 +158,28 @@ fn test_memory_usage_estimation() {
 
     // Large values might or might not exceed limit depending on implementation
     let exceeds = would_exceed_memory_limit(&large_value, &large_value);
-    println!("Large value exceeds memory limit: {}", exceeds);
+    println!("Large value exceeds memory limit: {exceeds}");
 }
 
 #[test]
+#[allow(clippy::uninlined_format_args)]
 fn test_batch_processing_effectiveness() {
     // Create data that benefits from batching
     let mut large_map1 = serde_json::Map::new();
     let mut large_map2 = serde_json::Map::new();
 
     for i in 0..5000 {
-        let key = format!("field_{:04}", i);
+        let key = format!("field_{i:04}");
         let value1 = json!({
             "id": i,
-            "data": format!("original_{}", i),
+            "data": format!("original_{i}"),
             "timestamp": format!("2023-01-01T{:02}:00:00Z", i % 24)
         });
 
         let mut value2 = value1.clone();
         // Modify every 100th item
         if i % 100 == 0 {
-            value2["data"] = json!(format!("modified_{}", i));
+            value2["data"] = json!(format!("modified_{i}"));
         }
 
         large_map1.insert(key.clone(), value1);
@@ -203,11 +206,12 @@ fn test_batch_processing_effectiveness() {
         // Should find 50 differences (every 100th of 5000 items)
         assert_eq!(results.len(), 50);
 
-        println!("Batch size {}: {:?}", batch_size, duration);
+        println!("Batch size {batch_size}: {duration:?}");
     }
 }
 
 #[test]
+#[allow(clippy::uninlined_format_args)]
 fn test_array_id_key_performance() {
     // Create large array with ID keys
     let mut users1 = Vec::new();
@@ -216,8 +220,8 @@ fn test_array_id_key_performance() {
     for i in 0..1000 {
         let user = json!({
             "id": i,
-            "username": format!("user_{}", i),
-            "email": format!("user{}@example.com", i),
+            "username": format!("user_{i}"),
+            "email": format!("user{i}@example.com"),
             "profile": {
                 "age": 20 + (i % 50),
                 "location": format!("City {}", i % 10)
@@ -250,14 +254,12 @@ fn test_array_id_key_performance() {
     assert_eq!(id_results.len(), 2); // Only 2 actual changes
 
     println!(
-        "Positional comparison: {} diffs in {:?}",
-        positional_results.len(),
-        positional_duration
+        "Positional comparison: {} diffs in {positional_duration:?}",
+        positional_results.len()
     );
     println!(
-        "ID-based comparison: {} diffs in {:?}",
-        id_results.len(),
-        id_duration
+        "ID-based comparison: {} diffs in {id_duration:?}",
+        id_results.len()
     );
 
     // Test optimized mode with ID key
@@ -274,13 +276,13 @@ fn test_array_id_key_performance() {
 
     assert_eq!(optimized_results.len(), 2); // Same as non-optimized ID-based
     println!(
-        "Optimized ID-based: {} diffs in {:?}",
-        optimized_results.len(),
-        optimized_duration
+        "Optimized ID-based: {} diffs in {optimized_duration:?}",
+        optimized_results.len()
     );
 }
 
 #[test]
+#[allow(clippy::uninlined_format_args)]
 fn test_regex_filtering_performance() {
     // Create data with many keys that will be filtered
     let mut data1 = serde_json::Map::new();
@@ -289,28 +291,28 @@ fn test_regex_filtering_performance() {
     for i in 0..1000 {
         // Add keys that should be ignored
         data1.insert(
-            format!("_internal_{}", i),
-            json!(format!("internal_value_{}", i)),
+            format!("_internal_{i}"),
+            json!(format!("internal_value_{i}")),
         );
         data1.insert(
-            format!("timestamp_{}", i),
+            format!("timestamp_{i}"),
             json!(format!("2023-01-01T{:02}:00:00Z", i % 24)),
         );
 
         // Add keys that should be compared
-        data1.insert(format!("config_{}", i), json!({"value": i}));
+        data1.insert(format!("config_{i}"), json!({"value": i}));
 
         // Same for data2, but with changes
         data2.insert(
-            format!("_internal_{}", i),
-            json!(format!("different_internal_{}", i)),
+            format!("_internal_{i}"),
+            json!(format!("different_internal_{i}")),
         ); // Should be ignored
         data2.insert(
-            format!("timestamp_{}", i),
+            format!("timestamp_{i}"),
             json!(format!("2023-01-02T{:02}:00:00Z", i % 24)),
         ); // Should be ignored
         data2.insert(
-            format!("config_{}", i),
+            format!("config_{i}"),
             json!({"value": if i % 10 == 0 { i + 1 } else { i }}),
         ); // Should be compared
     }
@@ -335,14 +337,12 @@ fn test_regex_filtering_performance() {
     assert_eq!(filtered_results.len(), 100); // Only config changes (every 10th of 1000)
 
     println!(
-        "All differences: {} in {:?}",
-        all_results.len(),
-        all_duration
+        "All differences: {} in {all_duration:?}",
+        all_results.len()
     );
     println!(
-        "Filtered differences: {} in {:?}",
-        filtered_results.len(),
-        filtered_duration
+        "Filtered differences: {} in {filtered_duration:?}",
+        filtered_results.len()
     );
 
     // Test optimized mode with regex
@@ -359,8 +359,7 @@ fn test_regex_filtering_performance() {
 
     assert_eq!(optimized_results.len(), 100); // Same as non-optimized filtered
     println!(
-        "Optimized filtered: {} in {:?}",
-        optimized_results.len(),
-        optimized_duration
+        "Optimized filtered: {} in {optimized_duration:?}",
+        optimized_results.len()
     );
 }
