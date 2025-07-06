@@ -177,7 +177,7 @@ npx diffx-js file1.json file2.json
 
 ```bash
 # Coming soon
-pip install diffx-py
+pip install diffx-python
 diffx file1.json file2.json
 ```
 
