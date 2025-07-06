@@ -86,10 +86,10 @@ diffx/
 - **✅ 実装済み** - 全ての基本機能が動作
 
 ## 3. 他言語向けラッパー（npm/pip）
-- **npmパッケージ（diffx-bin）**
+- **npmパッケージ（diffx-js）**
   - Node.js環境から diffx CLI を呼び出すラッパー
   - `child_process.spawn()` でCLIを実行
-- **pipパッケージ（diffx-bin）**
+- **pipパッケージ（diffx-py）**
   - Python環境から diffx CLI を呼び出すラッパー
   - `subprocess.run()` でCLIを実行
 - **✅ 実装済み**
