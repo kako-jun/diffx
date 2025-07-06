@@ -5,12 +5,12 @@ use serde_json::json;
 fn test_diff_config_standard_mode() {
     let v1 = json!({ "a": 1, "b": 2 });
     let v2 = json!({ "a": 2, "b": 2 });
-    
+
     let config = DiffConfig {
         use_memory_optimization: false,
         ..Default::default()
     };
-    
+
     let differences = diff_with_config(&v1, &v2, &config);
     assert_eq!(differences.len(), 1);
 }
@@ -19,12 +19,12 @@ fn test_diff_config_standard_mode() {
 fn test_diff_config_optimized_mode() {
     let v1 = json!({ "a": 1, "b": 2 });
     let v2 = json!({ "a": 2, "b": 2 });
-    
+
     let config = DiffConfig {
         use_memory_optimization: true,
         ..Default::default()
     };
-    
+
     let differences = diff_with_config(&v1, &v2, &config);
     assert_eq!(differences.len(), 1);
 }
@@ -40,7 +40,7 @@ fn test_diff_config_with_array_changes() {
             {"id": 3, "name": "Charlie"}
         ]
     });
-    
+
     let v2 = json!({
         "users": [
             {"id": 1, "name": "Alice"},
@@ -49,12 +49,12 @@ fn test_diff_config_with_array_changes() {
             {"id": 4, "name": "David"}    // Added
         ]
     });
-    
+
     let config = DiffConfig {
         use_memory_optimization: false,
         ..Default::default()
     };
-    
+
     let differences = diff_with_config(&v1, &v2, &config);
     assert!(!differences.is_empty());
 }
@@ -66,18 +66,18 @@ fn test_diff_config_optimized_with_changes() {
             "items": [1, 2, 3, 4, 5]
         }
     });
-    
+
     let v2 = json!({
         "data": {
             "items": [1, 2, 6, 4, 5]  // Changed 3 -> 6
         }
     });
-    
+
     let config = DiffConfig {
         use_memory_optimization: true,
         ..Default::default()
     };
-    
+
     let differences = diff_with_config(&v1, &v2, &config);
     assert!(!differences.is_empty());
 }
@@ -90,10 +90,10 @@ fn test_memory_usage_estimation() {
         "object": {"nested": "value"},
         "string": "hello world"
     });
-    
+
     let simple_usage = estimate_memory_usage(&simple_value);
     let complex_usage = estimate_memory_usage(&complex_value);
-    
+
     assert!(complex_usage > simple_usage);
     assert!(simple_usage > 0);
 }
@@ -112,7 +112,7 @@ fn test_diff_algorithms_produce_same_results() {
             }
         }
     });
-    
+
     let v2 = json!({
         "config": {
             "database": {
@@ -128,14 +128,14 @@ fn test_diff_algorithms_produce_same_results() {
             }
         }
     });
-    
+
     // Test both algorithms produce the same results
     let standard_results = diff_standard(&v1, &v2, None, None, None);
     let optimized_results = diff_optimized(&v1, &v2, None, None, None);
-    
+
     // Both should find the same differences
     assert_eq!(standard_results.len(), optimized_results.len());
-    
+
     // Results should be functionally equivalent (may differ in order)
     assert!(!standard_results.is_empty());
     assert!(!optimized_results.is_empty());
@@ -145,7 +145,7 @@ fn test_diff_algorithms_produce_same_results() {
 fn test_backward_compatibility() {
     let v1 = json!({ "old": "value" });
     let v2 = json!({ "new": "value" });
-    
+
     // Original diff function should still work exactly as before
     let differences = diff(&v1, &v2, None, None, None);
     assert_eq!(differences.len(), 2); // One removed, one added

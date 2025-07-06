@@ -1,7 +1,10 @@
 use anyhow::{bail, Context, Result};
 use clap::{Parser, ValueEnum};
 use colored::*;
-use diffx_core::{diff, diff_with_config, parse_csv, parse_ini, parse_xml, value_type_name, DiffResult, DiffConfig};
+use diffx_core::{
+    diff, diff_with_config, parse_csv, parse_ini, parse_xml, value_type_name, DiffConfig,
+    DiffResult,
+};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -283,7 +286,7 @@ fn main() -> Result<()> {
         .array_id_key
         .as_deref()
         .or(config.array_id_key.as_deref());
-        
+
     // Memory optimization settings
     let use_memory_optimization = args.optimize || config.use_memory_optimization.unwrap_or(false);
     let batch_size = args.batch_size.or(config.batch_size).unwrap_or(1000);

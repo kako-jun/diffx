@@ -15,7 +15,7 @@ fn test_optimize_flag_basic() {
             {"id": 2, "name": "Bob", "score": 200}
         ]
     });
-    
+
     let data2 = serde_json::json!({
         "users": [
             {"id": 1, "name": "Alice", "score": 150},  // Changed
@@ -25,7 +25,7 @@ fn test_optimize_flag_basic() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
@@ -49,14 +49,14 @@ fn test_optimize_with_batch_size() {
             "data": format!("value_{}", i)
         }));
     }
-    
+
     let data1 = serde_json::json!({"items": large_array});
     let mut data2 = data1.clone();
     data2["items"][500]["name"] = serde_json::json!("modified_user");
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
 
@@ -80,7 +80,7 @@ fn test_optimize_with_array_id_key() {
             {"sku": "DEF456", "name": "Product B", "price": 200}
         ]
     });
-    
+
     let data2 = serde_json::json!({
         "products": [
             {"sku": "DEF456", "name": "Product B", "price": 250},  // Price changed, order changed
@@ -90,7 +90,7 @@ fn test_optimize_with_array_id_key() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
@@ -115,7 +115,7 @@ fn test_optimize_with_path_filter() {
         },
         "other": {"value": 123}
     });
-    
+
     let data2 = serde_json::json!({
         "config": {
             "database": {"host": "localhost", "port": 5433},  // Changed
@@ -126,7 +126,7 @@ fn test_optimize_with_path_filter() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
@@ -150,7 +150,7 @@ fn test_optimize_with_ignore_regex() {
         "timestamp": "2023-01-01T00:00:00Z",
         "_internal": "ignore_me"
     });
-    
+
     let data2 = serde_json::json!({
         "config": {"host": "remotehost", "port": 5432},  // Changed
         "timestamp": "2023-01-02T00:00:00Z",  // Changed but ignored
@@ -159,7 +159,7 @@ fn test_optimize_with_ignore_regex() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
@@ -184,7 +184,7 @@ fn test_optimize_json_output() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
 
@@ -210,20 +210,22 @@ fn test_optimize_json_output() {
 fn test_optimize_directory_comparison() {
     let temp_dir1 = tempfile::tempdir().unwrap();
     let temp_dir2 = tempfile::tempdir().unwrap();
-    
+
     // Create test files
     let file1_content = serde_json::json!({"config": {"value": 1}});
     let file2_content = serde_json::json!({"config": {"value": 2}});
-    
+
     fs::write(
         temp_dir1.path().join("config.json"),
-        serde_json::to_string(&file1_content).unwrap()
-    ).unwrap();
-    
+        serde_json::to_string(&file1_content).unwrap(),
+    )
+    .unwrap();
+
     fs::write(
         temp_dir2.path().join("config.json"),
-        serde_json::to_string(&file2_content).unwrap()
-    ).unwrap();
+        serde_json::to_string(&file2_content).unwrap(),
+    )
+    .unwrap();
 
     // Test optimize with directory comparison
     diffx_cmd()
@@ -245,7 +247,7 @@ fn test_standard_vs_optimize_same_results() {
         ],
         "config": {"setting": true}
     });
-    
+
     let data2 = serde_json::json!({
         "array": [
             {"id": 1, "value": "changed"},
@@ -256,7 +258,7 @@ fn test_standard_vs_optimize_same_results() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
 
@@ -288,8 +290,11 @@ fn test_standard_vs_optimize_same_results() {
     // Parse and compare (results should be functionally equivalent)
     let standard_json: serde_json::Value = serde_json::from_slice(&standard_output).unwrap();
     let optimized_json: serde_json::Value = serde_json::from_slice(&optimized_output).unwrap();
-    
-    assert_eq!(standard_json.as_array().unwrap().len(), optimized_json.as_array().unwrap().len());
+
+    assert_eq!(
+        standard_json.as_array().unwrap().len(),
+        optimized_json.as_array().unwrap().len()
+    );
 }
 
 #[test]
@@ -299,7 +304,7 @@ fn test_batch_size_without_optimize_ignored() {
 
     let file1 = NamedTempFile::with_suffix(".json").unwrap();
     let file2 = NamedTempFile::with_suffix(".json").unwrap();
-    
+
     fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
 
