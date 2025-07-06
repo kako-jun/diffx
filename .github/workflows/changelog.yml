@@ -40,10 +40,13 @@ jobs:
         if git diff --staged --quiet; then
           echo "チェンジログに変更はありませんでした"
         else
-          git commit -m "docs: Update CHANGELOG.md
+          git commit -m "$(cat <<'EOF'
+docs: Update CHANGELOG.md
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
-Co-Authored-By: Claude <noreply@anthropic.com>"
+Co-Authored-By: Claude <noreply@anthropic.com>
+EOF
+          )"
           git push
         fi
