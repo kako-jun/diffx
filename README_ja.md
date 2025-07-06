@@ -5,8 +5,12 @@
 [English README](README.md) | [日本語版 README](README_ja.md)
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
-[![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
+[![Crates.io CLI](https://img.shields.io/crates/v/diffx.svg?label=diffx-cli)](https://crates.io/crates/diffx)
+[![Crates.io Core](https://img.shields.io/crates/v/diffx-core.svg?label=diffx-core)](https://crates.io/crates/diffx-core)
+[![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
+[![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
 [![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
+[![Documentation API](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 データの**構造**と**意味**を理解する次世代diffツール。JSON、YAML、TOML、XML、INI、CSVファイルに最適。

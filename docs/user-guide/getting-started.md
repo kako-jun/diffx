@@ -276,6 +276,69 @@ diffx .env.example .env.local --format ini
 diffx build_manifest.json build_manifest.expected.json
 ```
 
+## Performance Optimization
+
+For large files or complex data structures, use the `--optimize` flag to enable memory-efficient processing:
+
+### Large File Processing
+
+```bash
+# Process large JSON files (>100MB) efficiently
+diffx large_dataset_v1.json large_dataset_v2.json --optimize
+
+# Optimize with custom batch size
+diffx huge_config.json huge_config.new.json --optimize --batch-size 5000
+
+# Process massive CSV files
+diffx sales_data_2023.csv sales_data_2024.csv --optimize --format csv
+```
+
+### When to Use Optimization
+
+Use `--optimize` when dealing with:
+
+- **Large files** (>100MB)
+- **Deep nested structures** (>10 levels)
+- **Large arrays** (>10,000 elements)
+- **Memory-constrained environments**
+
+```bash
+# Example: Processing large configuration files
+diffx kubernetes_config_old.yaml kubernetes_config_new.yaml --optimize
+
+# Example: Database export comparison
+diffx users_dump_before.json users_dump_after.json --optimize --array-id-key "id"
+
+# Example: CI/CD with limited memory
+diffx deployment_config.json deployment_config.prod.json --optimize --batch-size 2000
+```
+
+### Performance Configuration
+
+Combine optimization with other options:
+
+```bash
+# Optimized comparison with filtering
+diffx large_data.json large_data.v2.json --optimize --path "config.database"
+
+# Optimized with regex filtering
+diffx huge_config.yaml huge_config.new.yaml --optimize --ignore-keys-regex "^(timestamp|_temp)"
+
+# Optimized floating-point comparison
+diffx financial_data.json financial_data.updated.json --optimize --epsilon 0.0001
+```
+
+### Memory Usage Guidelines
+
+| Data Size | Batch Size | Expected Memory |
+|-----------|------------|-----------------|
+| < 10MB    | Default    | < 50MB         |
+| 10-100MB  | 1000       | < 200MB        |
+| 100MB-1GB | 5000       | < 500MB        |
+| > 1GB     | 10000      | < 1GB          |
+
+> **Note**: Standard mode is used by default for predictable behavior. Use `--optimize` only when explicitly needed for large data processing.
+
 ## Configuration File
 
 Create `~/.config/diffx/config.toml` for default options:
@@ -292,6 +355,10 @@ ignore_keys_regex = "^(timestamp|_.*|createdAt|updatedAt)$"
 
 # Default array ID key
 array_id_key = "id"
+
+# Performance optimization settings
+use_memory_optimization = false  # Enable with --optimize flag
+batch_size = 1000               # Batch size for large data processing
 
 # Enable colors in output
 colors = true
