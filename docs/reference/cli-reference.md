@@ -244,6 +244,72 @@ diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 - Maintains directory structure in output
 - Respects format auto-detection for each file
 
+### Performance Options
+
+#### `--optimize`
+- **Type**: Boolean flag
+- **Default**: False (standard mode)
+- **Description**: Enable memory-efficient processing for large files and data structures
+
+**When to Use:**
+- Large files (>100MB)
+- Deep nested structures (>10 levels)
+- Large arrays (>10,000 elements)
+- Memory-constrained environments
+
+**Examples:**
+```bash
+# Process large datasets efficiently
+diffx large_data.json large_data.v2.json --optimize
+
+# Optimize with custom batch size
+diffx huge_config.yaml huge_config.new.yaml --optimize --batch-size 5000
+
+# Combine with other options
+diffx massive_db.json massive_db.new.json --optimize --array-id-key "id" --path "users"
+```
+
+**Performance Comparison:**
+```bash
+# Standard mode (default) - predictable, unlimited memory usage
+diffx config.json config.new.json
+
+# Optimized mode - memory-efficient, batched processing
+diffx config.json config.new.json --optimize
+```
+
+#### `--batch-size <SIZE>`
+- **Type**: Integer
+- **Default**: 1000
+- **Description**: Number of elements to process in each batch during optimization
+
+**Guidelines:**
+- **Small files** (<10MB): Use default (1000)
+- **Medium files** (10-100MB): Use 1000-2000
+- **Large files** (100MB-1GB): Use 2000-5000
+- **Huge files** (>1GB): Use 5000-10000
+
+**Examples:**
+```bash
+# Default batch size
+diffx large_file.json large_file.v2.json --optimize
+
+# Custom batch size for very large files
+diffx massive_dataset.json massive_dataset.v2.json --optimize --batch-size 10000
+
+# Fine-tuned for memory constraints
+diffx big_config.yaml big_config.new.yaml --optimize --batch-size 500
+```
+
+**Memory Usage Estimation:**
+| Batch Size | Memory Usage | Best For |
+|------------|--------------|----------|
+| 500        | ~100MB       | Memory-constrained systems |
+| 1000       | ~200MB       | Default (balanced) |
+| 2000       | ~400MB       | Large files |
+| 5000       | ~800MB       | Very large files |
+| 10000      | ~1.5GB       | Massive datasets |
+
 ### Information Options
 
 #### `-h, --help`

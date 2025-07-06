@@ -5,8 +5,12 @@
 [日本語版 README](README_ja.md) | [English README](README.md)
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
-[![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
+[![Crates.io CLI](https://img.shields.io/crates/v/diffx.svg?label=diffx-cli)](https://crates.io/crates/diffx)
+[![Crates.io Core](https://img.shields.io/crates/v/diffx-core.svg?label=diffx-core)](https://crates.io/crates/diffx-core)
+[![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
+[![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
 [![Documentation](https://img.shields.io/badge/docs-GitHub-blue)](https://github.com/kako-jun/diffx/tree/main/docs/index.md)
+[![Documentation API](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A next-generation diff tool that understands the **structure** and **meaning** of your data, not just text changes. Perfect for JSON, YAML, TOML, XML, INI, and CSV files.
@@ -216,6 +220,10 @@ diffx large.json large_v2.json --ignore-keys-regex "^timestamp$|^_.*"
 diffx users.json users_v2.json --array-id-key "id"
 diffx metrics.json metrics_v2.json --epsilon 0.001
 
+# Performance optimization for large files
+diffx huge_dataset.json huge_dataset_v2.json --optimize
+diffx massive_config.yaml massive_config_new.yaml --optimize --batch-size 5000
+
 # Directory comparison
 diffx config_dir1/ config_dir2/ --recursive
 
@@ -234,6 +242,11 @@ diffx diff1.json diff2.json  # Compare the changes themselves!
   run: |
     diffx config/prod.yaml config/staging.yaml --output json > changes.json
     # Process changes.json for deployment validation
+
+- name: Compare large datasets efficiently  
+  run: |
+    diffx large_prod_data.json large_staging_data.json --optimize --output json > data_changes.json
+    # Optimized processing for large files in CI
 ```
 
 **Git Hook:**

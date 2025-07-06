@@ -1,7 +1,7 @@
 use anyhow::{bail, Context, Result};
 use clap::{Parser, ValueEnum};
 use colored::*;
-use diffx_core::{diff, parse_csv, parse_ini, parse_xml, value_type_name, DiffResult};
+use diffx_core::{diff, diff_with_config, parse_csv, parse_ini, parse_xml, value_type_name, DiffResult, DiffConfig};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -23,6 +23,10 @@ struct Config {
     epsilon: Option<f64>,
     #[serde(default)]
     array_id_key: Option<String>,
+    #[serde(default)]
+    use_memory_optimization: Option<bool>,
+    #[serde(default)]
+    batch_size: Option<usize>,
 }
 
 fn load_config() -> Config {
@@ -99,6 +103,14 @@ struct Args {
     /// Key to use for identifying array elements (e.g., "id")
     #[arg(long)]
     array_id_key: Option<String>,
+
+    /// Enable memory optimization for large files (explicitly requested)
+    #[arg(long)]
+    optimize: bool,
+
+    /// Batch size for processing large data structures (default: 1000)
+    #[arg(long)]
+    batch_size: Option<usize>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
@@ -271,6 +283,10 @@ fn main() -> Result<()> {
         .array_id_key
         .as_deref()
         .or(config.array_id_key.as_deref());
+        
+    // Memory optimization settings
+    let use_memory_optimization = args.optimize || config.use_memory_optimization.unwrap_or(false);
+    let batch_size = args.batch_size.or(config.batch_size).unwrap_or(1000);
 
     // Handle directory comparison
     if args.recursive {
@@ -286,6 +302,8 @@ fn main() -> Result<()> {
             ignore_keys_regex.as_ref(),
             epsilon,
             array_id_key,
+            use_memory_optimization,
+            batch_size,
         )?;
         return Ok(());
     }
@@ -307,7 +325,22 @@ fn main() -> Result<()> {
     let v1: Value = parse_content(&content1, input_format)?;
     let v2: Value = parse_content(&content2, input_format)?;
 
-    let mut differences = diff(&v1, &v2, ignore_keys_regex.as_ref(), epsilon, array_id_key);
+    let differences = if use_memory_optimization {
+        // Use optimized diff configuration
+        let config = DiffConfig {
+            ignore_keys_regex: ignore_keys_regex.clone(),
+            epsilon,
+            array_id_key: array_id_key.map(|s| s.to_string()),
+            use_memory_optimization: true,
+            batch_size,
+        };
+        diff_with_config(&v1, &v2, &config)
+    } else {
+        // Use standard diff for compatibility
+        diff(&v1, &v2, ignore_keys_regex.as_ref(), epsilon, array_id_key)
+    };
+
+    let mut differences = differences;
 
     if let Some(filter_path) = args.path {
         differences.retain(|d| {
@@ -341,6 +374,8 @@ fn compare_directories(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    use_memory_optimization: bool,
+    batch_size: usize,
 ) -> Result<()> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
     for entry in WalkDir::new(dir1).into_iter().filter_map(|e| e.ok()) {
@@ -391,7 +426,22 @@ fn compare_directories(
                 let v1: Value = parse_content(&content1, input_format)?;
                 let v2: Value = parse_content(&content2, input_format)?;
 
-                let mut differences = diff(&v1, &v2, ignore_keys_regex, epsilon, array_id_key);
+                let differences = if use_memory_optimization {
+                    // Use optimized diff configuration
+                    let config = DiffConfig {
+                        ignore_keys_regex: ignore_keys_regex.cloned(),
+                        epsilon,
+                        array_id_key: array_id_key.map(|s| s.to_string()),
+                        use_memory_optimization: true,
+                        batch_size,
+                    };
+                    diff_with_config(&v1, &v2, &config)
+                } else {
+                    // Use standard diff for compatibility
+                    diff(&v1, &v2, ignore_keys_regex, epsilon, array_id_key)
+                };
+
+                let mut differences = differences;
 
                 if let Some(filter_path_str) = &filter_path {
                     differences.retain(|d| {

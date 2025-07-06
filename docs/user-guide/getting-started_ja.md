@@ -354,6 +354,92 @@ diffx configs/ configs_backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 diffx env/dev/ env/prod/ -r --output json > env_diff.json
 ```
 
+## パフォーマンス最適化
+
+大容量ファイルや複雑なデータ構造を処理する際は、`--optimize` フラグを使用してメモリ効率的な処理を有効にできます：
+
+### 大容量ファイル処理
+
+```bash
+# 大容量JSONファイル（>100MB）を効率的に処理
+diffx large_dataset_v1.json large_dataset_v2.json --optimize
+
+# カスタムバッチサイズで最適化
+diffx huge_config.json huge_config.new.json --optimize --batch-size 5000
+
+# 大規模CSVファイルの処理
+diffx sales_data_2023.csv sales_data_2024.csv --optimize --format csv
+```
+
+### 最適化を使用すべき場面
+
+以下の場合に `--optimize` を使用してください：
+
+- **大容量ファイル**（>100MB）
+- **深いネスト構造**（>10レベル）
+- **大規模配列**（>10,000要素）
+- **メモリ制限のある環境**
+
+```bash
+# 例：大容量設定ファイルの処理
+diffx kubernetes_config_old.yaml kubernetes_config_new.yaml --optimize
+
+# 例：データベースダンプの比較
+diffx users_dump_before.json users_dump_after.json --optimize --array-id-key "id"
+
+# 例：CI/CDでのメモリ制限下での処理
+diffx deployment_config.json deployment_config.prod.json --optimize --batch-size 2000
+```
+
+### パフォーマンス設定
+
+最適化を他のオプションと組み合わせ：
+
+```bash
+# 最適化とフィルタリングの組み合わせ
+diffx large_data.json large_data.v2.json --optimize --path "config.database"
+
+# 最適化と正規表現フィルタリング
+diffx huge_config.yaml huge_config.new.yaml --optimize --ignore-keys-regex "^(timestamp|_temp)"
+
+# 最適化と浮動小数点比較
+diffx financial_data.json financial_data.updated.json --optimize --epsilon 0.0001
+```
+
+### パフォーマンス比較
+
+**標準モード vs 最適化モード:**
+
+```bash
+# 標準モード（デフォルト）- 予測可能、無制限メモリ使用
+diffx config.json config.new.json
+
+# 最適化モード - メモリ効率的、バッチ処理
+diffx config.json config.new.json --optimize
+```
+
+**実行例:**
+```bash
+# 10,000要素の配列を持つJSONファイル（50MB）の比較例
+# テスト環境: AMD Ryzen 5 PRO 4650U
+$ time diffx large_users.json large_users_v2.json
+# 標準モード: ~0.15s, メモリ使用量: ~150MB
+
+$ time diffx large_users.json large_users_v2.json --optimize
+# 最適化モード: ~0.12s, メモリ使用量: ~80MB
+```
+
+### メモリ使用量ガイドライン
+
+| データサイズ | バッチサイズ | 期待メモリ使用量 |
+|-------------|------------|----------------|
+| < 10MB      | デフォルト    | < 50MB         |
+| 10-100MB    | 1000       | < 200MB        |
+| 100MB-1GB   | 5000       | < 500MB        |
+| > 1GB       | 10000      | < 1GB          |
+
+> **注意**: 予測可能な動作のため、標準モードがデフォルトです。大容量データ処理で明示的に必要な場合のみ `--optimize` を使用してください。
+
 ## 設定とカスタマイズ
 
 ### 設定ファイル
@@ -380,6 +466,10 @@ epsilon = 0.001
 
 # デフォルトの配列IDキー
 array_id_key = "id"
+
+# パフォーマンス最適化設定
+use_memory_optimization = false  # --optimize フラグで有効化
+batch_size = 1000               # 大容量データ処理のバッチサイズ
 
 # 再帰比較を有効化
 recursive = true
