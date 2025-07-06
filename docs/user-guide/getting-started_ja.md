@@ -698,16 +698,16 @@ diffx docker-compose.yml docker-compose.override.yml \
 
 ### より詳しく学ぶ
 
-1. **[設定ガイド](configuration.md)** - 詳細な設定オプション
-2. **[実用例](examples.md)** - 業界別の実用例
-3. **[CLI リファレンス](../reference/cli-reference.md)** - 全コマンドオプション
-4. **[統合ガイド](../guides/integrations.md)** - CI/CD統合の詳細
+1. **[設定ガイド](configuration_ja.md)** - 詳細な設定オプション
+2. **[実用例](examples_ja.md)** - 業界別の実用例
+3. **[CLI リファレンス](../reference/cli-reference_ja.md)** - 全コマンドオプション
+4. **[統合ガイド](../guides/integrations_ja.md)** - CI/CD統合の詳細
 
 ### 高度な機能
 
-- **[API リファレンス](../reference/api-reference.md)** - Rust ライブラリとして使用
-- **[パフォーマンスガイド](../guides/performance.md)** - 最適化とベンチマーク
-- **[ツール比較](../reference/comparison.md)** - 他ツールとの比較
+- **[API リファレンス](../reference/api-reference_ja.md)** - Rust ライブラリとして使用
+- **[パフォーマンスガイド](../guides/performance_ja.md)** - 最適化とベンチマーク
+- **[ツール比較](../reference/comparison_ja.md)** - 他ツールとの比較
 
 ### コミュニティ
 
@@ -716,7 +716,7 @@ diffx docker-compose.yml docker-compose.override.yml \
 
 ### 貢献
 
-diffx プロジェクトへの貢献に興味がある場合は、[コントリビューションガイド](../../CONTRIBUTING.md) をご確認ください。
+diffx プロジェクトへの貢献に興味がある場合は、[コントリビューションガイド](../../CONTRIBUTING_ja.md) をご確認ください。
 
 ---
 
