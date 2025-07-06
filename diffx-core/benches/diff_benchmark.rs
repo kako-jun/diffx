@@ -117,11 +117,11 @@ fn benchmark_array_sizes(c: &mut Criterion) {
 }
 
 fn benchmark_deep_nesting(c: &mut Criterion) {
-    let depths = vec![1, 3, 5, 8];
+    let depths = vec![1, 3, 5, 6];  // Reduced max depth from 8 to 6 to prevent exponential explosion
 
     let mut group = c.benchmark_group("diff_depth_scaling");
     for depth in depths {
-        let (v1, v2) = create_test_data(100, depth);
+        let (v1, v2) = create_test_data(50, depth);  // Reduced size for deep nesting tests
 
         group.bench_with_input(BenchmarkId::new("depth", depth), &depth, |b, _| {
             b.iter(|| diff(black_box(&v1), black_box(&v2), None, None, None))
