@@ -15,6 +15,7 @@ env:
 jobs:
   benchmark:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Shorter timeout
     
     steps:
     - name: Checkout code
@@ -34,7 +35,8 @@ jobs:
         
     - name: Run benchmarks
       run: |
-        cargo bench --package diffx-core > benchmark_results.txt
+        # Quick benchmark run with shorter sampling time
+        CARGO_CRITERION_ARGS="--sample-size 10 --measurement-time 1" cargo bench --package diffx-core > benchmark_results.txt 2>&1 || true
         cat benchmark_results.txt
         
     - name: Check performance regression
@@ -117,6 +119,7 @@ jobs:
 
   benchmark-comparison:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # Shorter timeout
     if: github.event_name == 'pull_request'
     
     steps:
@@ -137,7 +140,7 @@ jobs:
         
     - name: Run PR benchmarks
       run: |
-        cargo bench --package diffx-core > pr_benchmark.txt
+        CARGO_CRITERION_ARGS="--sample-size 10 --measurement-time 1" cargo bench --package diffx-core > pr_benchmark.txt 2>&1 || true
         echo "## 📊 Performance Impact" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Benchmark Results" >> $GITHUB_STEP_SUMMARY

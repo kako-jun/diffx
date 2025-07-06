@@ -8,6 +8,7 @@ on:
         required: true
         default: true
         type: boolean
+  # Only run on manual trigger
 
 permissions:
   contents: write
