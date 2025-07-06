@@ -230,7 +230,7 @@ npx diffx-js file1.json file2.json
 
 ```bash
 # 近日対応予定
-pip install diffx-py
+pip install diffx-python
 diffx file1.json file2.json
 ```
 

@@ -5,7 +5,7 @@ Python wrapper for the `diffx` CLI tool - semantic diff for structured data.
 ## Installation
 
 ```bash
-pip install diffx-py
+pip install diffx-python
 ```
 
 This will automatically download the appropriate `diffx` binary for your system from GitHub Releases.

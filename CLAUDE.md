@@ -89,7 +89,7 @@ diffx/
 - **npmパッケージ（diffx-js）**
   - Node.js環境から diffx CLI を呼び出すラッパー
   - `child_process.spawn()` でCLIを実行
-- **pipパッケージ（diffx-py）**
+- **pipパッケージ（diffx-python）**
   - Python環境から diffx CLI を呼び出すラッパー
   - `subprocess.run()` でCLIを実行
 - **✅ 実装済み**
