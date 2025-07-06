@@ -51,8 +51,8 @@ fn test_large_array_performance() {
     assert_eq!(standard_results.len(), 3); // 3 modifications
 
     // Print performance comparison
-    println!("Standard mode: {:?}", standard_duration);
-    println!("Optimized mode: {:?}", optimized_duration);
+    println!("Standard mode: {standard_duration:?}");
+    println!("Optimized mode: {optimized_duration:?}");
     println!(
         "Speedup: {:.2}x",
         standard_duration.as_nanos() as f64 / optimized_duration.as_nanos() as f64
