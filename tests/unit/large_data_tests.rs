@@ -336,10 +336,7 @@ fn test_regex_filtering_performance() {
     assert!(filtered_results.len() < all_results.len());
     assert_eq!(filtered_results.len(), 100); // Only config changes (every 10th of 1000)
 
-    println!(
-        "All differences: {} in {all_duration:?}",
-        all_results.len()
-    );
+    println!("All differences: {} in {all_duration:?}", all_results.len());
     println!(
         "Filtered differences: {} in {filtered_duration:?}",
         filtered_results.len()
