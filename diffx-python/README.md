@@ -1,4 +1,4 @@
-# diffx
+# diffx-python
 
 Python wrapper for the `diffx` CLI tool - semantic diff for structured data.
 

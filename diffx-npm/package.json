@@ -1,8 +1,8 @@
 {
   "name": "diffx-js",
-  "version": "0.3.0",
-  "description": "A CLI tool for structured diffing of JSON, YAML, and TOML files.",
-  "keywords": ["diff", "json", "yaml", "toml", "cli", "structured", "configuration"],
+  "version": "0.3.1",
+  "description": "A Node.js wrapper for the diffx CLI tool - structured diffing of JSON, YAML, TOML, XML, INI, and CSV files.",
+  "keywords": ["diff", "json", "yaml", "toml", "xml", "ini", "csv", "cli", "structured", "configuration", "semantic"],
   "main": "index.js",
   "bin": {
     "diffx": "./index.js"

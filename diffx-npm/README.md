@@ -1,4 +1,4 @@
-# diffx-npm
+# diffx-js
 
 A Node.js wrapper for the `diffx` CLI tool.
 
@@ -13,7 +13,7 @@ This will automatically download the appropriate `diffx` binary for your system 
 ## Usage
 
 ```javascript
-const { runDiffx } = require('diffx-npm');
+const { runDiffx } = require('diffx-js');
 
 async function main() {
   // Compare two JSON files
