@@ -320,7 +320,7 @@ diffx config.json config.new.json
 
 ## 設定ファイル
 
-詳細は[設定ガイド](../user-guide/configuration.md)を参照してください。
+詳細は[設定ガイド](../user-guide/configuration_ja.md)を参照してください。
 
 ## 使用パターン
 

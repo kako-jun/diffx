@@ -6,41 +6,41 @@
 
 ## クイックリンク
 
-- **[はじめに](user-guide/getting-started.md)** - 基本概念と核となる考え方を学ぶ
-- **[インストールガイド](user-guide/installation.md)** - システムに diffx をセットアップ
-- **[CLI リファレンス](reference/cli-reference.md)** - 完全なコマンドライン資料
-- **[実用例](user-guide/examples.md)** - 業界横断的な実用例
+- **[はじめに](user-guide/getting-started_ja.md)** - 基本概念と核となる考え方を学ぶ
+- **[インストールガイド](user-guide/installation_ja.md)** - システムに diffx をセットアップ
+- **[CLI リファレンス](reference/cli-reference_ja.md)** - 完全なコマンドライン資料
+- **[実用例](user-guide/examples_ja.md)** - 業界横断的な実用例
 
 ## ドキュメント構成
 
 ### 📚 ユーザーガイド
 *はじめに使うための必須ガイドと日常使用方法*
 
-- **[インストール](user-guide/installation.md)** - プラットフォーム別インストール手順
-- **[はじめに](user-guide/getting-started.md)** - 基本概念と最初のステップ
-- **[設定](user-guide/configuration.md)** - 設定ファイルとオプション
-- **[実用例](user-guide/examples.md)** - 8業界カテゴリーの実用例
+- **[インストール](user-guide/installation_ja.md)** - プラットフォーム別インストール手順
+- **[はじめに](user-guide/getting-started_ja.md)** - 基本概念と最初のステップ
+- **[設定](user-guide/configuration_ja.md)** - 設定ファイルとオプション
+- **[実用例](user-guide/examples_ja.md)** - 8業界カテゴリーの実用例
 - **[FAQ](user-guide/faq_ja.md)** - よくある質問とトラブルシューティング
 
 ### 📖 リファレンス
 *完全な技術リファレンス資料*
 
-- **[CLI リファレンス](reference/cli-reference.md)** - 完全なコマンドラインインターフェース資料
-- **[API リファレンス](reference/api-reference.md)** - Rust クレート API 資料
-- **[ツール比較](reference/comparison.md)** - diffx と他のツールとの比較
+- **[CLI リファレンス](reference/cli-reference_ja.md)** - 完全なコマンドラインインターフェース資料
+- **[API リファレンス](reference/api-reference_ja.md)** - Rust クレート API 資料
+- **[ツール比較](reference/comparison_ja.md)** - diffx と他のツールとの比較
 
 ### 🛠️ ガイド
 *高度なトピックと統合ガイダンス*
 
-- **[統合ガイド](guides/integrations.md)** - CI/CD、開発ツール、自動化
-- **[パフォーマンスガイド](guides/performance.md)** - ベンチマークと最適化戦略
+- **[統合ガイド](guides/integrations_ja.md)** - CI/CD、開発ツール、自動化
+- **[パフォーマンスガイド](guides/performance_ja.md)** - ベンチマークと最適化戦略
 
 ### 📋 プロジェクト情報
 *プロジェクトガバナンスと開発情報*
 
-- **[変更履歴](project/changelog.md)** - バージョン履歴とリリースノート
-- **[ロードマップ](project/roadmap.md)** - 将来の開発計画
-- **[コントリビューションガイド](../CONTRIBUTING.md)** - プロジェクトへの貢献方法
+- **[変更履歴](project/changelog_ja.md)** - バージョン履歴とリリースノート
+- **[ロードマップ](project/roadmap_ja.md)** - 将来の開発計画
+- **[コントリビューションガイド](../CONTRIBUTING_ja.md)** - プロジェクトへの貢献方法
 
 ## diffx の特徴
 
