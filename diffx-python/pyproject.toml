@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "diffx-python"
 version = "0.3.1"
-description = "Python wrapper for diffx - semantic diff for structured data"
+description = "Python wrapper for diffx - semantic diffing of JSON, YAML, TOML, XML, INI, and CSV files. Focuses on structural meaning rather than formatting."
 readme = "README.md"
 license = "MIT"
 authors = [
@@ -36,7 +36,12 @@ keywords = [
     "ini",
     "csv",
     "structured-data",
-    "comparison"
+    "comparison",
+    "devops",
+    "ci-cd",
+    "automation",
+    "data-analysis",
+    "configuration"
 ]
 requires-python = ">=3.8"
 dependencies = []

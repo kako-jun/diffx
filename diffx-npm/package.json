@@ -1,16 +1,62 @@
 {
   "name": "diffx-js",
   "version": "0.3.1",
-  "description": "A Node.js wrapper for the diffx CLI tool - structured diffing of JSON, YAML, TOML, XML, INI, and CSV files.",
-  "keywords": ["diff", "json", "yaml", "toml", "xml", "ini", "csv", "cli", "structured", "configuration", "semantic"],
+  "description": "A Node.js wrapper for the diffx CLI tool - semantic diffing of JSON, YAML, TOML, XML, INI, and CSV files. Focuses on structural meaning rather than formatting.",
+  "keywords": [
+    "diff",
+    "json", 
+    "yaml",
+    "toml",
+    "xml",
+    "ini",
+    "csv",
+    "cli",
+    "structured",
+    "configuration",
+    "semantic",
+    "comparison",
+    "devops",
+    "ci-cd",
+    "automation",
+    "data-analysis"
+  ],
   "main": "index.js",
   "bin": {
     "diffx": "./index.js"
   },
   "scripts": {
     "postinstall": "node scripts/download-binary.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js",
+    "examples": "node examples.js",
+    "verify": "node index.js --help",
+    "prepublish": "npm run verify"
   },
-  "author": "",
-  "license": "MIT"
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "files": [
+    "index.js",
+    "scripts/download-binary.js",
+    "bin/",
+    "README.md",
+    "examples.js",
+    "test.js"
+  ],
+  "os": ["linux", "darwin", "win32"],
+  "cpu": ["x64", "arm64"],
+  "author": "kako-jun",
+  "license": "MIT",
+  "homepage": "https://github.com/kako-jun/diffx",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kako-jun/diffx.git",
+    "directory": "diffx-npm"
+  },
+  "bugs": {
+    "url": "https://github.com/kako-jun/diffx/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/kako-jun"
+  }
 }

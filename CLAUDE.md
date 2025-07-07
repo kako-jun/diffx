@@ -60,7 +60,7 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 ## プッシュ前の必須チェック (Pre-Push Requirements)
 **必ずプッシュ前に以下を実行すること:**
 ```bash
-./ci-local.sh
+./scripts/ci-local.sh
 ```
 
 - このスクリプトはGitHub Actions CIと完全に同じ環境・パラメータで実行される

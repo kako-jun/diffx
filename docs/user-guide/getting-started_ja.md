@@ -716,7 +716,7 @@ diffx docker-compose.yml docker-compose.override.yml \
 
 ### 貢献
 
-diffx プロジェクトへの貢献に興味がある場合は、[コントリビューションガイド](../../CONTRIBUTING_ja.md) をご確認ください。
+diffx プロジェクトへの貢献に興味がある場合は、[コントリビューションガイド](../../CONTRIBUTING.md) をご確認ください。
 
 ---
 

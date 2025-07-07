@@ -40,7 +40,7 @@
 
 - **[変更履歴](project/changelog_ja.md)** - バージョン履歴とリリースノート
 - **[ロードマップ](project/roadmap_ja.md)** - 将来の開発計画
-- **[コントリビューションガイド](../CONTRIBUTING_ja.md)** - プロジェクトへの貢献方法
+- **[コントリビューションガイド](../CONTRIBUTING.md)** - プロジェクトへの貢献方法
 
 ## diffx の特徴
 
