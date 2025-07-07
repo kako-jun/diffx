@@ -2,7 +2,7 @@
 
 > **🚀 構造化データの意味的差分 - フォーマットではなく本質に集中**
 
-[English README](README.md) | [日本語版 README](README_ja.md)
+[English README](README.md) | [日本語版 README](README_ja.md) | [中文版 README](README_zh.md)
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io CLI](https://img.shields.io/crates/v/diffx.svg?label=diffx-cli)](https://crates.io/crates/diffx)
