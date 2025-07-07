@@ -4,6 +4,57 @@
 diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出ツール。
 人間にもAIにもわかりやすい出力を提供し、設定ファイル・構成ファイル・データの変更を明確に可視化する。
 
+# 🌏 多言語ドキュメント対応方針 (Multilingual Documentation Policy)
+
+## 実装完了 (2025-01-07)
+- **英語版（デフォルト）**: 既存のすべてのドキュメント
+- **日本語版**: `_ja.md` サフィックス付きファイル（完成済み）
+- **中国語版**: `_zh.md` サフィックス付きファイル（完成済み）
+
+## ファイル命名規則
+- 英語版: `filename.md`
+- 日本語版: `filename_ja.md`
+- 中国語版: `filename_zh.md`
+
+## リンク統一性原則
+- 英語ドキュメント内のリンクは英語版を参照
+- 日本語ドキュメント内のリンクは日本語版を参照
+- 中国語ドキュメント内のリンクは中国語版を参照
+
+## 作成されたファイル一覧
+
+### トップレベル
+- README_zh.md
+
+### docs/
+- index_zh.md
+
+### docs/user-guide/
+- installation_zh.md
+- getting-started_zh.md
+- configuration_zh.md
+- examples_zh.md
+- faq_zh.md
+
+### docs/reference/
+- diffx-format_zh.md
+- cli-reference_zh.md
+- api-reference_zh.md
+- comparison_zh.md
+
+### docs/guides/
+- integrations_zh.md
+- performance_zh.md
+
+### docs/project/
+- changelog_zh.md
+- roadmap_zh.md
+
+## メンテナンス方針
+- 新しい英語ドキュメントを追加する際は、対応する日本語・中国語版も作成する
+- 内容の更新時は、全言語版を同期して更新する
+- 各言語版内のリンクは同一言語版へのリンクを維持する
+
 # 🚨 重要な開発ルール (Important Development Rules)
 
 ## プッシュ前の必須チェック (Pre-Push Requirements)
