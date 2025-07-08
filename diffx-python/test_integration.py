@@ -237,7 +237,7 @@ def main():
     if failed > 0:
         sys.exit(1)
     else:
-        print("All tests passed! 🎉")
+        print("All tests passed!")
 
 if __name__ == "__main__":
     main()

@@ -13,7 +13,7 @@ def test_availability():
     """Test if diffx is available."""
     print("🧪 Testing diffx availability...")
     available = diffx.is_diffx_available()
-    print(f"✅ diffx available: {available}")
+    print(f"OK: diffx available: {available}")
     assert available, "diffx should be available"
 
 def test_string_comparison():
@@ -25,7 +25,7 @@ def test_string_comparison():
     
     # Test JSON output
     result = diffx.diff_string(json1, json2, 'json', DiffOptions(output='json'))
-    print(f"✅ JSON diff result: {len(result)} differences")
+    print(f"OK: JSON diff result: {len(result)} differences")
     
     for diff_item in result:
         if diff_item.added:
@@ -35,7 +35,7 @@ def test_string_comparison():
     
     # Test CLI output
     cli_result = diffx.diff_string(json1, json2, 'json')
-    print(f"✅ CLI output:\n{cli_result}")
+    print(f"OK: CLI output:\n{cli_result}")
 
 def test_legacy_api():
     """Test legacy API for backward compatibility."""
@@ -51,8 +51,8 @@ def test_legacy_api():
         file2.write_text('{"name": "Alice", "age": 31}')
         
         result = run_diffx([str(file1), str(file2)])
-        print(f"✅ Legacy API - Return code: {result.returncode}")
-        print(f"✅ Legacy API - Output:\n{result.stdout}")
+        print(f"OK: Legacy API - Return code: {result.returncode}")
+        print(f"OK: Legacy API - Output:\n{result.stdout}")
 
 def test_file_comparison():
     """Test file comparison."""
@@ -81,7 +81,7 @@ def test_file_comparison():
             str(file1), str(file2),
             DiffOptions(output='json', path='database')
         )
-        print(f"✅ File diff (database only): {len(result)} differences")
+        print(f"OK: File diff (database only): {len(result)} differences")
         for diff_item in result:
             if diff_item.modified:
                 print(f"  Modified: {diff_item.modified}")
@@ -108,7 +108,7 @@ hobbies:
 """
     
     result = diffx.diff_string(yaml1, yaml2, 'yaml')
-    print(f"✅ YAML diff:\n{result}")
+    print(f"OK: YAML diff:\n{result}")
 
 def test_error_handling():
     """Test error handling."""
@@ -116,14 +116,14 @@ def test_error_handling():
     
     try:
         diffx.diff('nonexistent1.json', 'nonexistent2.json')
-        print("❌ Should have raised an error")
+        print("ERROR: Should have raised an error")
         assert False, "Should have raised DiffError"
     except diffx.DiffError as e:
-        print(f"✅ Error handling works: {e}")
+        print(f"OK: Error handling works: {e}")
 
 def main():
     """Run all tests."""
-    print("🚀 diffx Python Package Manual Test Suite\n")
+    print("diffx Python Package Manual Test Suite\n")
     
     test_availability()
     test_string_comparison()
@@ -132,7 +132,7 @@ def main():
     test_yaml_comparison()
     test_error_handling()
     
-    print("\n🎉 All tests completed successfully!")
+    print("\nAll tests completed successfully!")
 
 if __name__ == "__main__":
     main()

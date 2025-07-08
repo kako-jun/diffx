@@ -195,11 +195,11 @@ def example_configuration_drift_detection():
     
     print("Configuration Drift Detected:")
     if drift:
-        print("⚠️  Your production configuration has drifted from expected state!")
+        print("WARNING: Your production configuration has drifted from expected state!")
         for diff_item in drift:
             print(f"  • {diff_item}")
     else:
-        print("✅ Configuration is in expected state")
+        print("OK: Configuration is in expected state")
     
     print()
 
@@ -251,11 +251,11 @@ def example_ci_cd_integration():
     critical_changes = [d for d in deployment_diff if 'credentials' in str(d) or 'host' in str(d)]
     
     if critical_changes:
-        print("\n🚨 Critical changes detected! Manual approval required.")
+        print("\nCRITICAL: Critical changes detected! Manual approval required.")
         for change in critical_changes:
-            print(f"  ⚠️  {change}")
+            print(f"  WARNING: {change}")
     else:
-        print("\n✅ No critical changes. Safe to deploy.")
+        print("\nOK: No critical changes. Safe to deploy.")
     
     print()
 
@@ -423,11 +423,11 @@ def example_data_validation():
     
     print("Data Validation Results:")
     if validation_diff:
-        print("❌ Data validation failed!")
+        print("ERROR: Data validation failed!")
         for diff_item in validation_diff:
             print(f"  • {diff_item}")
     else:
-        print("✅ Data validation passed!")
+        print("OK: Data validation passed!")
     
     print()
 
@@ -469,7 +469,7 @@ def example_monitoring_integration():
     
     print("Performance Monitoring Alert:")
     if metrics_diff:
-        print("🚨 Performance degradation detected!")
+        print("CRITICAL: Performance degradation detected!")
         for diff_item in metrics_diff:
             print(f"  • {diff_item}")
         
@@ -478,16 +478,16 @@ def example_monitoring_integration():
         resource_changes = [d for d in metrics_diff if 'resources' in str(d)]
         
         if performance_changes:
-            print("\n📊 Performance Impact:")
+            print("\nPerformance Impact:")
             for change in performance_changes:
-                print(f"  ⚠️  {change}")
+                print(f"  WARNING: {change}")
         
         if resource_changes:
             print("\n💻 Resource Impact:")
             for change in resource_changes:
-                print(f"  ⚠️  {change}")
+                print(f"  WARNING: {change}")
     else:
-        print("✅ All metrics within expected ranges")
+        print("OK: All metrics within expected ranges")
     
     print()
 
@@ -513,13 +513,13 @@ def main():
         try:
             example()
         except Exception as e:
-            print(f"❌ {example.__name__} failed: {e}")
+            print(f"ERROR: {example.__name__} failed: {e}")
             import traceback
             traceback.print_exc()
             print()
     
     print("=" * 60)
-    print("Examples completed! 🎉")
+    print("Examples completed!")
     print("=" * 60)
     print()
     print("For more information:")

@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# 🔍 Version consistency checker for diffx packages
+# Version consistency checker for diffx packages
 # Ensures all packages have consistent versions
 
 set -e
 
-echo "🔍 Checking version consistency across diffx packages..."
+echo "Checking version consistency across diffx packages..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -15,19 +15,19 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}OK: $1${NC}"
 }
 
 warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}WARNING: $1${NC}"
 }
 
 error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}ERROR: $1${NC}"
 }
 
 info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}INFO: $1${NC}"
 }
 
 # Extract versions
@@ -48,7 +48,7 @@ fi
 
 # Display versions
 echo ""
-echo "📊 Current Package Versions:"
+echo "Current Package Versions:"
 echo "┌─────────────────┬─────────────┐"
 echo "│ Package         │ Version     │"
 echo "├─────────────────┼─────────────┤"

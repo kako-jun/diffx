@@ -13,19 +13,19 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}OK: $1${NC}"
 }
 
 warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}WARNING: $1${NC}"
 }
 
 error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}ERROR: $1${NC}"
 }
 
 info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}INFO: $1${NC}"
 }
 
 log() {
@@ -148,9 +148,9 @@ try:
         print('Binary not available, attempting download...')
         import subprocess
         subprocess.run(['diffx-download-binary'], check=True, capture_output=True)
-    print('✅ Binary availability check passed')
+    print('OK: Binary availability check passed')
 except Exception as e:
-    print(f'❌ Binary check failed: {e}')
+    print(f'ERROR: Binary check failed: {e}')
     exit(1)
 "
 success "Binary availability verified"
@@ -174,9 +174,9 @@ try:
     )
     
     if result.success and len(result.diffs) == 2:
-        print('✅ Python API diff function works correctly')
+        print('OK: Python API diff function works correctly')
     else:
-        print(f'❌ Python API unexpected result: {len(result.diffs) if result.success else \"failed\"}')
+        print(f'ERROR: Python API unexpected result: {len(result.diffs) if result.success else \"failed\"}')
         exit(1)
         
     # Test different output formats
@@ -190,13 +190,13 @@ try:
     )
     
     if json_result.success and json_result.output.startswith('['):
-        print('✅ Python API JSON output works')
+        print('OK: Python API JSON output works')
     else:
-        print('❌ Python API JSON output failed')
+        print('ERROR: Python API JSON output failed')
         exit(1)
         
 except Exception as e:
-    print(f'❌ Python API test failed: {e}')
+    print(f'ERROR: Python API test failed: {e}')
     import traceback
     traceback.print_exc()
     exit(1)
@@ -223,9 +223,9 @@ try:
     # Test legacy run_diffx function
     result = diffx.run_diffx(file1, file2)
     if 'test' in result and 'old' in result and 'new' in result:
-        print('✅ Backward compatibility API works')
+        print('OK: Backward compatibility API works')
     else:
-        print('❌ Backward compatibility API failed')
+        print('ERROR: Backward compatibility API failed')
         exit(1)
 finally:
     os.unlink(file1)
@@ -287,7 +287,7 @@ with open('config_old.json', 'w') as f:
 with open('config_new.json', 'w') as f:
     json.dump(config_new, f, indent=2)
 
-print('✅ Test data created')
+print('OK: Test data created')
 "
 deactivate
 
@@ -312,9 +312,9 @@ result = diffx.diff('config_old.json', 'config_new.json', diffx.DiffOptions(outp
 if result.success:
     with open('python_result.json', 'w') as f:
         f.write(result.output)
-    print('✅ Python processing complete')
+    print('OK: Python processing complete')
 else:
-    print('❌ Python processing failed')
+    print('ERROR: Python processing failed')
     exit(1)
 "
 
@@ -330,21 +330,21 @@ with open('python_result.json') as f:
     python_data = json.load(f)
 
 if len(npm_data) == len(python_data):
-    print(f'✅ Both packages found {len(npm_data)} differences')
+    print(f'OK: Both packages found {len(npm_data)} differences')
     
     # Check that both found the same types of changes
     npm_paths = {item['path'] for item in npm_data}
     python_paths = {item['path'] for item in python_data}
     
     if npm_paths == python_paths:
-        print('✅ Both packages identified the same change paths')
+        print('OK: Both packages identified the same change paths')
     else:
-        print('❌ Packages found different change paths')
+        print('ERROR: Packages found different change paths')
         print(f'npm: {npm_paths}')
         print(f'python: {python_paths}')
         exit(1)
 else:
-    print(f'❌ Different number of changes: npm={len(npm_data)}, python={len(python_data)}')
+    print(f'ERROR: Different number of changes: npm={len(npm_data)}, python={len(python_data)}')
     exit(1)
 "
 success "Cross-platform compatibility verified"
@@ -415,7 +415,7 @@ fi
 ###########################################
 
 echo ""
-echo "🎉 All Published Package Tests Passed!"
+echo "All Published Package Tests Passed!"
 echo "======================================"
 echo ""
 success "npm package (diffx-js) - All functionality verified"
@@ -423,7 +423,7 @@ success "Python package (diffx-python) - All functionality verified"
 success "Cross-platform compatibility - Results identical"
 success "Real-world scenarios - Working correctly"
 echo ""
-info "Published packages are ready for production use! 🚀"
+info "Published packages are ready for production use!"
 
 log "Cleaning up temporary directory..."
 cd /

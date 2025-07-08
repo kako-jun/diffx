@@ -24,15 +24,15 @@ function log(message, color = 'reset') {
 }
 
 function success(message) {
-    log(`✅ ${message}`, 'green');
+    log(`PASS: ${message}`, 'green');
 }
 
 function error(message) {
-    log(`❌ ${message}`, 'red');
+    log(`ERROR: ${message}`, 'red');
 }
 
 function info(message) {
-    log(`ℹ️  ${message}`, 'blue');
+    log(`INFO: ${message}`, 'blue');
 }
 
 // Test data
@@ -212,7 +212,7 @@ async function runTests() {
             throw new Error('Error handling failed');
         }
 
-        success('All tests passed! 🎉');
+        success('All tests passed!');
         info('diffx-js package is working correctly');
         
     } catch (err) {

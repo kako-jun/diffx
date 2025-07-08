@@ -99,11 +99,11 @@ def main():
         if platform.system() != "Windows":
             binary_path.chmod(0o755)
         
-        print(f"✅ diffx binary installed successfully at {binary_path}")
+        print(f"SUCCESS: diffx binary installed successfully at {binary_path}")
         return 0
         
     except Exception as error:
-        print(f"❌ Failed to download diffx binary: {error}")
+        print(f"ERROR: Failed to download diffx binary: {error}")
         print("You may need to install diffx manually from: https://github.com/kako-jun/diffx/releases")
         # Don't fail the installation, just warn
         return 0

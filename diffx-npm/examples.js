@@ -26,12 +26,12 @@ function log(message, color = 'reset') {
 }
 
 function header(message) {
-    log(`\n🔥 ${message}`, 'cyan');
-    log('='.repeat(message.length + 4), 'cyan');
+    log(`\n${message}`, 'cyan');
+    log('='.repeat(message.length), 'cyan');
 }
 
 function example(title, description) {
-    log(`\n📝 ${title}`, 'yellow');
+    log(`\n${title}`, 'yellow');
     log(`   ${description}`, 'blue');
 }
 
@@ -387,7 +387,7 @@ jobs:
             'Use diffx within your Node.js applications for automated config validation'
         );
 
-        log('\n📄 Example Node.js Integration:', 'yellow');
+        log('\nExample Node.js Integration:', 'yellow');
         const nodeExample = `
 const { spawn } = require('child_process');
 
@@ -427,7 +427,7 @@ checkConfigChanges('config_v1.json', 'config_v2.json')
 
         output(nodeExample);
 
-        log('\n🎯 Use Cases:', 'cyan');
+        log('\nUse Cases:', 'cyan');
         log('   • Configuration drift detection in DevOps pipelines', 'blue');
         log('   • API schema validation in CI/CD', 'blue');
         log('   • Environment parity checking', 'blue');
@@ -435,20 +435,20 @@ checkConfigChanges('config_v1.json', 'config_v2.json')
         log('   • Infrastructure as Code validation', 'blue');
         log('   • Database schema migration verification', 'blue');
 
-        log('\n✨ Tips for Better Results:', 'cyan');
+        log('\nTips for Better Results:', 'cyan');
         log('   • Use --output json for programmatic processing', 'blue');
         log('   • Combine with jq for advanced JSON manipulation', 'blue');
         log('   • Set up automated alerts for critical changes', 'blue');
         log('   • Version control your configuration files', 'blue');
         log('   • Use in pre-commit hooks for validation', 'blue');
 
-        log('\n🔗 More Information:', 'green');
+        log('\nMore Information:', 'green');
         log('   • Documentation: https://github.com/kako-jun/diffx/tree/main/docs', 'blue');
         log('   • Issues: https://github.com/kako-jun/diffx/issues', 'blue');
         log('   • npm package: https://www.npmjs.com/package/diffx-js', 'blue');
 
     } catch (error) {
-        log(`\n❌ Error running examples: ${error.message}`, 'red');
+        log(`\nError running examples: ${error.message}`, 'red');
     } finally {
         // Cleanup
         process.chdir(oldCwd);

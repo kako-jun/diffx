@@ -108,10 +108,10 @@ async function main() {
       fs.chmodSync(binaryPath, '755');
     }
     
-    console.log(`✅ diffx binary installed successfully at ${binaryPath}`);
+    console.log(`SUCCESS: diffx binary installed successfully at ${binaryPath}`);
     
   } catch (error) {
-    console.error('❌ Failed to download diffx binary:', error.message);
+    console.error('ERROR: Failed to download diffx binary:', error.message);
     console.error('You may need to install diffx manually from: https://github.com/kako-jun/diffx/releases');
     // Don't fail the installation, just warn
     process.exit(0);
