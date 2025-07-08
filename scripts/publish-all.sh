@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# 🚀 diffx unified publishing script for all packages
+# diffx unified publishing script for all packages
 # Publishes Rust crates, npm, and PyPI packages in sequence
 
 set -e  # Exit on any error
 
-echo "🌟 Starting unified diffx publishing workflow..."
+echo "Starting unified diffx publishing workflow..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,15 +20,15 @@ log() {
 }
 
 success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}OK: $1${NC}"
 }
 
 warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}WARNING: $1${NC}"
 }
 
 error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}ERROR: $1${NC}"
 }
 
 # Check prerequisites
@@ -63,7 +63,7 @@ NPM_VERSION=$(node -p "require('./diffx-npm/package.json').version")
 PYTHON_VERSION=$(python -c "import tomli; print(tomli.load(open('diffx-python/pyproject.toml', 'rb'))['project']['version'])" 2>/dev/null || echo "unknown")
 
 echo ""
-echo "📊 Current Versions:"
+echo "Current Versions:"
 echo "   diffx-core:   $CORE_VERSION"
 echo "   diffx-cli:    $CLI_VERSION"
 echo "   diffx-js:     $NPM_VERSION"
@@ -78,11 +78,11 @@ fi
 # Confirm publishing plan
 log "Publishing plan:"
 echo "   1. 🦀 Rust crates (diffx-core, diffx)"
-echo "   2. 📦 npm package (diffx-js)"
+echo "   2. npm package (diffx-js)"
 echo "   3. 🐍 PyPI package (diffx-python)"
 echo ""
 
-read -p "🚀 Continue with unified publishing? (y/N): " -n 1 -r
+read -p "Continue with unified publishing? (y/N): " -n 1 -r
 echo ""
 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -140,12 +140,12 @@ success "PyPI package published successfully"
 
 # Final summary
 echo ""
-echo "🎉 Unified publishing complete!"
+echo "Unified publishing complete!"
 echo ""
-echo "📋 Published packages:"
+echo "Published packages:"
 echo "   🦀 diffx-core@$CORE_VERSION    → https://crates.io/crates/diffx-core"
 echo "   🦀 diffx@$CLI_VERSION         → https://crates.io/crates/diffx"
-echo "   📦 diffx-js@$NPM_VERSION      → https://www.npmjs.com/package/diffx-js"
+echo "   diffx-js@$NPM_VERSION      → https://www.npmjs.com/package/diffx-js"
 echo "   🐍 diffx-python@$PYTHON_VERSION → https://pypi.org/project/diffx-python/"
 echo ""
 
@@ -155,4 +155,4 @@ echo "   npm install diffx-js"
 echo "   pip install diffx-python"
 echo ""
 
-success "All packages are now available! 🚀"
+success "All packages are now available!"
