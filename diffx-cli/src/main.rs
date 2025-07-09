@@ -166,7 +166,7 @@ fn read_input(file_path: &Path) -> Result<String> {
         Ok(buffer)
     } else {
         fs::read_to_string(file_path)
-            .context(format!("Failed to read file: {}", file_path.display()))
+            .with_context(|| format!("Failed to read file: {}", file_path.display()))
     }
 }
 
@@ -266,7 +266,14 @@ fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
     Ok(())
 }
 
-fn main() -> Result<()> {
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("Error: {:#}", e);
+        std::process::exit(2);
+    }
+}
+
+fn run() -> Result<()> {
     let args = Args::parse();
     let config = load_config();
 

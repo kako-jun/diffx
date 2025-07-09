@@ -182,6 +182,8 @@ fn test_exit_code_differences_found() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .output()
         .expect("Failed to execute command");
     
@@ -202,6 +204,8 @@ fn test_exit_code_file_not_found() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg("nonexistent_file.json")
+        .arg("--format")
+        .arg("json")
         .output()
         .expect("Failed to execute command");
     
@@ -223,6 +227,8 @@ fn test_exit_code_invalid_json() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .output()
         .expect("Failed to execute command");
     
@@ -244,6 +250,8 @@ fn test_exit_code_invalid_regex() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .arg("--ignore-keys-regex")
         .arg("[invalid")
         .output()
@@ -696,6 +704,8 @@ fn test_batch_size_without_optimize() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .arg("--batch-size")
         .arg("1000")
         .output()
@@ -719,6 +729,8 @@ fn test_very_large_batch_size() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .arg("--optimize")
         .arg("--batch-size")
         .arg("100000")
