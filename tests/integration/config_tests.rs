@@ -83,7 +83,7 @@ fn test_config_file_all_options() {
     // Create config file with all options
     fs::write(&config_path, r#"
 output = "yaml"
-format = "json"
+format = "Json"
 ignore_keys_regex = "^(timestamp|_.*)"
 epsilon = 0.01
 array_id_key = "id"
@@ -339,7 +339,7 @@ fn test_config_file_format_specification() {
     
     // Create config file with format specification
     fs::write(&config_path, r#"
-format = "json"
+format = "Json"
 output = "yaml"
 "#).unwrap();
     
