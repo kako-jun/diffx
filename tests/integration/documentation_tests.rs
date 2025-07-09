@@ -2,11 +2,9 @@ use std::process::Command;
 use std::io::Write;
 use tempfile::NamedTempFile;
 
-// Note: Environment variables are not currently implemented in diffx CLI
-// These tests are placeholders for future implementation
+// Environment variables are now implemented in diffx CLI
 
 #[test]
-#[ignore] // Environment variables not implemented yet
 fn test_environment_variables_output() {
     let mut file1 = NamedTempFile::new().unwrap();
     let mut file2 = NamedTempFile::new().unwrap();
@@ -18,6 +16,8 @@ fn test_environment_variables_output() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_OUTPUT", "json")
         .output()
         .expect("Failed to execute command");
@@ -28,7 +28,6 @@ fn test_environment_variables_output() {
 }
 
 #[test]
-#[ignore] // Environment variables not implemented yet
 fn test_environment_variables_ignore_keys() {
     let mut file1 = NamedTempFile::new().unwrap();
     let mut file2 = NamedTempFile::new().unwrap();
@@ -40,6 +39,8 @@ fn test_environment_variables_ignore_keys() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_IGNORE_KEYS_REGEX", "^(timestamp|_.*)")
         .output()
         .expect("Failed to execute command");
@@ -48,7 +49,6 @@ fn test_environment_variables_ignore_keys() {
 }
 
 #[test]
-#[ignore] // Environment variables not implemented yet
 fn test_environment_variables_epsilon() {
     let mut file1 = NamedTempFile::new().unwrap();
     let mut file2 = NamedTempFile::new().unwrap();
@@ -60,6 +60,8 @@ fn test_environment_variables_epsilon() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_EPSILON", "0.001")
         .output()
         .expect("Failed to execute command");
@@ -68,7 +70,6 @@ fn test_environment_variables_epsilon() {
 }
 
 #[test]
-#[ignore] // Environment variables not implemented yet
 fn test_environment_variables_combined() {
     let mut file1 = NamedTempFile::new().unwrap();
     let mut file2 = NamedTempFile::new().unwrap();
@@ -80,6 +81,8 @@ fn test_environment_variables_combined() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_OUTPUT", "json")
         .env("DIFFX_IGNORE_KEYS_REGEX", "^timestamp$")
         .env("DIFFX_EPSILON", "0.001")
@@ -158,6 +161,8 @@ fn test_exit_code_no_differences() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .output()
         .expect("Failed to execute command");
     

@@ -183,7 +183,7 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
 
 fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) {
     if differences.is_empty() {
-        println!("No differences found.");
+        // Follow diff convention: output nothing when no differences
         return;
     }
 
@@ -270,18 +270,32 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let config = load_config();
 
-    let output_format = args.output.or(config.output).unwrap_or(OutputFormat::Cli);
+    // Check environment variables
+    let env_output_format = std::env::var("DIFFX_OUTPUT").ok().and_then(|s| {
+        match s.to_lowercase().as_str() {
+            "cli" => Some(OutputFormat::Cli),
+            "json" => Some(OutputFormat::Json),
+            "yaml" => Some(OutputFormat::Yaml),
+            "unified" => Some(OutputFormat::Unified),
+            _ => None,
+        }
+    });
+
+    let output_format = args.output.or(env_output_format).or(config.output).unwrap_or(OutputFormat::Cli);
     let input_format_from_config = config.format;
 
     let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
         Some(Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?)
+    } else if let Some(regex_str) = std::env::var("DIFFX_IGNORE_KEYS_REGEX").ok().as_ref() {
+        Some(Regex::new(regex_str).context("Invalid regex from DIFFX_IGNORE_KEYS_REGEX environment variable")?)
     } else if let Some(regex_str) = &config.ignore_keys_regex {
         Some(Regex::new(regex_str).context("Invalid regex from config file")?)
     } else {
         None
     };
 
-    let epsilon = args.epsilon.or(config.epsilon);
+    let env_epsilon = std::env::var("DIFFX_EPSILON").ok().and_then(|s| s.parse::<f64>().ok());
+    let epsilon = args.epsilon.or(env_epsilon).or(config.epsilon);
     let array_id_key = args
         .array_id_key
         .as_deref()
@@ -296,7 +310,7 @@ fn main() -> Result<()> {
         if !args.input1.is_dir() || !args.input2.is_dir() {
             bail!("Both inputs must be directories for recursive comparison.");
         }
-        compare_directories(
+        let has_differences = compare_directories(
             &args.input1,
             &args.input2,
             args.format.or(input_format_from_config),
@@ -308,7 +322,13 @@ fn main() -> Result<()> {
             use_memory_optimization,
             batch_size,
         )?;
-        return Ok(());
+        
+        // Exit with appropriate code following diff tool conventions
+        if has_differences {
+            std::process::exit(1); // Differences found
+        } else {
+            return Ok(()); // No differences
+        }
     }
 
     // Handle single file/stdin comparison
@@ -357,6 +377,9 @@ fn main() -> Result<()> {
         });
     }
 
+    // Check if differences were found
+    let has_differences = !differences.is_empty();
+
     match output_format {
         OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
         OutputFormat::Json => print_json_output(differences)?,
@@ -364,7 +387,12 @@ fn main() -> Result<()> {
         OutputFormat::Unified => print_unified_output(&v1, &v2)?,
     }
 
-    Ok(())
+    // Exit with appropriate code following diff tool conventions
+    if has_differences {
+        std::process::exit(1); // Differences found
+    } else {
+        Ok(()) // No differences
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -379,7 +407,7 @@ fn compare_directories(
     array_id_key: Option<&str>,
     use_memory_optimization: bool,
     batch_size: usize,
-) -> Result<()> {
+) -> Result<bool> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
     for entry in WalkDir::new(dir1).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
@@ -403,6 +431,7 @@ fn compare_directories(
     all_relative_paths.extend(files2.keys().cloned());
 
     let mut compared_files = 0;
+    let mut has_any_differences = false;
 
     for relative_path in &all_relative_paths {
         let path1_option = files1.get(relative_path.as_path());
@@ -458,6 +487,11 @@ fn compare_directories(
                     });
                 }
 
+                // Check if this file has differences
+                if !differences.is_empty() {
+                    has_any_differences = true;
+                }
+
                 match output {
                     OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
                     OutputFormat::Json => print_json_output(differences)?,
@@ -473,6 +507,7 @@ fn compare_directories(
                     dir1.display(),
                     relative_path.display()
                 );
+                has_any_differences = true;
             }
             (None, Some(_)) => {
                 println!(
@@ -481,6 +516,7 @@ fn compare_directories(
                     dir2.display(),
                     relative_path.display()
                 );
+                has_any_differences = true;
             }
             (None, None) => { /* Should not happen */ }
         }
@@ -490,5 +526,5 @@ fn compare_directories(
         println!("No comparable files found in directories.");
     }
 
-    Ok(())
+    Ok(has_any_differences)
 }
