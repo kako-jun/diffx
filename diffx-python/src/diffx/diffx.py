@@ -27,6 +27,8 @@ class DiffOptions:
     ignore_keys_regex: Optional[str] = None
     epsilon: Optional[float] = None
     array_id_key: Optional[str] = None
+    optimize: bool = False
+    batch_size: Optional[int] = None
 
 
 class DiffResult:
@@ -166,6 +168,14 @@ def diff(
     # Add array ID key option
     if options.array_id_key:
         args.extend(["--array-id-key", options.array_id_key])
+    
+    # Add optimize option
+    if options.optimize:
+        args.append("--optimize")
+    
+    # Add batch size option
+    if options.batch_size is not None:
+        args.extend(["--batch-size", str(options.batch_size)])
     
     stdout, stderr = _execute_diffx(args)
     
