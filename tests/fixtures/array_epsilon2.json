@@ -1,6 +1,0 @@
-{
-  "records": [
-    {"id": 1, "value": 10.00003, "name": "item1"},
-    {"id": 2, "value": 20.00004, "name": "item2_updated"}
-  ]
-}

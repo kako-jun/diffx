@@ -13,7 +13,7 @@ fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.json")
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("~ age: 30 -> 31"))
         .stdout(predicate::str::contains(
             "~ city: \"New York\" -> \"Boston\"",
@@ -28,7 +28,7 @@ fn test_basic_yaml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.yaml")
         .arg("../tests/fixtures/file2.yaml");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("~ age: 30 -> 31"))
         .stdout(predicate::str::contains(
             "~ city: \"New York\" -> \"Boston\"",
@@ -43,7 +43,7 @@ fn test_basic_toml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.toml")
         .arg("../tests/fixtures/file2.toml");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("~ age: 30 -> 31"))
         .stdout(predicate::str::contains(
             "~ city: \"New York\" -> \"Boston\"",
@@ -58,7 +58,7 @@ fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.ini")
         .arg("../tests/fixtures/file2.ini");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ section1.key2: \"value2\" -> \"new_value2\"",
         ))
@@ -72,7 +72,7 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.xml")
         .arg("../tests/fixtures/file2.xml");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ item.$text: \"value2\" -> \"value3\"",
         ))
@@ -86,7 +86,7 @@ fn test_basic_csv_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.csv")
         .arg("../tests/fixtures/file2.csv");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ [0].header2: \"valueB\" -> \"new_valueB\"",
         ))
@@ -131,7 +131,7 @@ fn test_specify_input_format() -> Result<(), Box<dyn std::error::Error>> {
         )?;
     } // stdin is dropped here, closing the pipe
     let output = child.wait_with_output()?;
-    assert!(output.status.success());
+    assert_eq!(output.status.code(), Some(1)); // Differences found
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(predicate::str::contains("~ age: 30 -> 31").eval(&stdout));
     assert!(predicate::str::contains("~ city: \"New York\" -> \"Boston\"").eval(&stdout));
@@ -148,7 +148,7 @@ fn test_json_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--output")
         .arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(r#""Modified""#))
         .stdout(predicate::str::contains(r#""age""#))
         .stdout(predicate::str::contains(r#""city""#))
@@ -168,7 +168,7 @@ fn test_yaml_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--output")
         .arg("yaml");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             r#"- Modified:
   - age
@@ -197,7 +197,7 @@ fn test_unified_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--output")
         .arg("unified");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("-  \"age\": 30,"))
         .stdout(predicate::str::contains("+  \"age\": 31,"))
         .stdout(predicate::str::contains("-  \"city\": \"New York\","));
@@ -212,7 +212,7 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-keys-regex")
         .arg("^age$");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("~ age:").not())
         .stdout(predicate::str::contains(
             r#"~ city: "New York" -> "Boston""#,
@@ -230,7 +230,7 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("0.00001");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("No differences found.")); // No differences expected within epsilon
+        .stdout(predicate::str::is_empty()); // No differences expected within epsilon (empty output)
     Ok(())
 }
 
@@ -242,7 +242,7 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--array-id-key")
         .arg("id");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("~ [id=1].age: 25 -> 26"))
         .stdout(
             predicate::str::contains("+ [id=3]: ")
@@ -261,7 +261,7 @@ fn test_directory_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/dir2")
         .arg("--recursive");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("--- Comparing b.json ---"))
         .stdout(predicate::str::contains(
             "~ key3: \"value3\" -> \"new_value3\"",
@@ -297,7 +297,7 @@ fn test_meta_chaining() -> Result<(), Box<dyn std::error::Error>> {
     cmd3.arg("../tests/output/diff_report_v1.json")
         .arg("../tests/output/diff_report_v2.json");
     cmd3.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             r#"~ [1].Modified[1]: "1.0" -> "1.1""#,
         ))
@@ -323,7 +323,7 @@ fn test_path_filtering_application() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--path")
         .arg("application");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ application.debug: true -> false",
         ))
@@ -343,7 +343,7 @@ fn test_path_filtering_services() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--path")
         .arg("services");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("~ services.auth.url: \"http://localhost:8080\" -> \"https://auth.example.com\""))
         .stdout(predicate::str::contains("~ services.cache.enabled: false -> true"))
         .stdout(predicate::str::contains("~ services.cache.url: \"redis://localhost:6379\" -> \"redis://cache.example.com:6379\""))
@@ -360,7 +360,7 @@ fn test_path_filtering_database() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--path")
         .arg("database");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ database.host: \"localhost\" -> \"prod-db.example.com\"",
         ))
@@ -381,7 +381,7 @@ fn test_complex_regex_security_fields() -> Result<(), Box<dyn std::error::Error>
         .arg("--ignore-keys-regex")
         .arg("^(password|secret_.*|credentials|connection_string)$");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ application.version: \"1.0.0\" -> \"1.1.0\"",
         ))
@@ -403,7 +403,7 @@ fn test_complex_regex_build_fields() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-keys-regex")
         .arg("^(timestamp|build_.*|deploy_.*)$");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ application.version: \"1.0.0\" -> \"1.1.0\"",
         ))
@@ -427,7 +427,7 @@ fn test_complex_regex_multiple_groups() -> Result<(), Box<dyn std::error::Error>
         .arg("--ignore-keys-regex")
         .arg("^(password|secret_.*|timestamp|build_.*)$");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ application.version: \"1.0.0\" -> \"1.1.0\"",
         ))
@@ -451,7 +451,7 @@ fn test_combined_path_and_regex() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-keys-regex")
         .arg("^(timestamp|build_.*)$");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ monitoring.metrics.cpu: 45.2 -> 52.1",
         ))
@@ -476,7 +476,7 @@ fn test_combined_path_and_output_format() -> Result<(), Box<dyn std::error::Erro
         .arg("--output")
         .arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(r#""Modified""#))
         .stdout(predicate::str::contains(r#""application.debug""#))
         .stdout(predicate::str::contains(r#"true"#))
@@ -513,7 +513,7 @@ fn test_combined_array_id_and_epsilon() -> Result<(), Box<dyn std::error::Error>
         .arg("--epsilon")
         .arg("0.0001");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ records[id=2].name: \"item2\" -> \"item2_updated\"",
         ))
@@ -535,7 +535,7 @@ fn test_config_file_integration() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file1.json")
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
-        .success()
+        .code(1)
         // Config file specifies output = "json", so expect JSON format
         .stdout(predicate::str::contains(r#""Modified""#))
         .stdout(predicate::str::contains(r#""age""#))
@@ -574,7 +574,7 @@ key3 = value3
     }
 
     let output = child.wait_with_output()?;
-    assert!(output.status.success());
+    assert_eq!(output.status.code(), Some(1)); // Differences found
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         predicate::str::contains("~ section1.key2: \"value2\" -> \"new_value2\"").eval(&stdout)
@@ -595,7 +595,7 @@ fn test_api_schema_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--output")
         .arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(r#""Modified""#))
         .stdout(predicate::str::contains(r#""Added""#))
         .stdout(predicate::str::contains(r#"paths./users.post"#))
@@ -614,7 +614,7 @@ fn test_cicd_configuration_drift() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--output")
         .arg("yaml");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains("Modified"))
         .stdout(predicate::str::contains("application.version"))
         .stdout(predicate::str::contains("security.host"))
@@ -636,7 +636,7 @@ fn test_environment_config_comparison() -> Result<(), Box<dyn std::error::Error>
         .arg("--ignore-keys-regex")
         .arg("^(host|port|password|.*_secret)$");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicate::str::contains(
             "~ application.debug: true -> false",
         ))
@@ -659,7 +659,7 @@ fn test_array_id_key_from_config() -> Result<(), Box<dyn std::error::Error>> {
     .arg("../tests/fixtures/users_v1.json")
     .arg("../tests/fixtures/users_v2.json");
     cmd.assert()
-        .success()
+        .code(1)
         // Config specifies array_id_key = "id" and output = "json"
         // Should identify array elements by ID and show semantic changes
         .stdout(predicate::str::contains(r#""Modified""#))

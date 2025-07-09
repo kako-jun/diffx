@@ -25,6 +25,8 @@ epsilon = 0.001
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .output()
         .expect("Failed to execute command");
@@ -58,6 +60,8 @@ ignore_keys_regex = "^timestamp$"
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .arg("--output")
         .arg("yaml") // Override config file setting
         .env("DIFFX_CONFIG_PATH", &config_path)
@@ -103,6 +107,8 @@ batch_size = 500
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .output()
         .expect("Failed to execute command");
@@ -168,6 +174,8 @@ invalid_toml_syntax = [
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .output()
         .expect("Failed to execute command");
@@ -193,6 +201,8 @@ fn test_config_file_nonexistent_path() {
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .output()
         .expect("Failed to execute command");
@@ -224,6 +234,8 @@ ignore_keys_regex = "^timestamp$"
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .env("DIFFX_IGNORE_KEYS_REGEX", "^(timestamp|debug)$") // Environment overrides config
         .output()
@@ -258,6 +270,8 @@ epsilon = 0.1
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .arg("--epsilon")
         .arg("0.01") // CLI overrides config
         .env("DIFFX_CONFIG_PATH", &config_path)
@@ -307,6 +321,8 @@ array_id_key = "id"
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .output()
         .expect("Failed to execute command");
@@ -383,6 +399,8 @@ output = "json"
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .env("DIFFX_CONFIG_PATH", &config_path)
         .output()
         .expect("Failed to execute command");
@@ -427,6 +445,8 @@ ignore_keys_regex = "^metadata.*"
         .args(&["run", "--bin", "diffx", "--"])
         .arg(file1.path())
         .arg(file2.path())
+        .arg("--format")
+        .arg("json")
         .arg("--path")
         .arg("database") // CLI path filtering
         .env("DIFFX_CONFIG_PATH", &config_path)
