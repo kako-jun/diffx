@@ -4,13 +4,13 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "CLI for semantic diffing of structured data - understands JSON, YAML, TOML, XML, INI, CSV"
+description = "Fast CLI tool for semantic comparison of structured configuration files with UNIX-style options and advanced filtering capabilities"
 homepage.workspace = true
 repository.workspace = true
 documentation.workspace = true
 readme = "../README.md"
 keywords.workspace = true
-categories = ["command-line-utilities"]
+categories = ["command-line-utilities", "development-tools"]
 exclude.workspace = true
 rust-version.workspace = true
 

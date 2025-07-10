@@ -4,13 +4,13 @@ version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
-description = "Semantic diff library for structured data - JSON, YAML, TOML, XML, INI, CSV support"
+description = "High-performance semantic diff library for structured data with advanced features: array tracking, regex filtering, floating-point tolerance, and memory-efficient processing"
 homepage.workspace = true
 repository.workspace = true
 documentation.workspace = true
 readme = "../README.md"
-keywords = ["diff", "semantic", "json", "yaml", "data-structures"]
-categories = ["data-structures", "parsing", "algorithms"]
+keywords = ["diff", "algorithm", "json", "yaml", "data-analysis"]
+categories = ["data-structures", "parsing", "algorithms", "text-processing"]
 exclude.workspace = true
 rust-version.workspace = true
 

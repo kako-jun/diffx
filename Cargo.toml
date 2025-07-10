@@ -10,18 +10,21 @@ version = "0.3.0"
 edition = "2021"
 authors = ["kako-jun <kako.jun.42@gmail.com>"]
 license = "MIT"
-description = "Semantic diff tool for structured data - understands JSON, YAML, TOML, XML, INI, CSV"
+description = "Fast semantic diff tool for structured data (JSON/YAML/TOML/XML/INI/CSV) with advanced features like array tracking, regex filtering, and floating-point tolerance"
 homepage = "https://github.com/kako-jun/diffx"
 repository = "https://github.com/kako-jun/diffx"
 documentation = "https://docs.rs/diffx"
 readme = "README.md"
-keywords = ["diff", "semantic", "json", "yaml", "structured-data"]
-categories = ["command-line-utilities", "development-tools", "text-processing"]
+keywords = ["diff", "semantic", "json", "yaml", "configuration"]
+categories = ["command-line-utilities", "development-tools", "text-processing", "parsing", "data-structures"]
 exclude = [
     ".github/",
     "target/"
 ]
 rust-version = "1.75"
+
+[workspace.metadata.docs.rs.badges]
+maintenance = { status = "actively-developed" }
 
 [workspace.metadata.docs.rs]
 all-features = true
