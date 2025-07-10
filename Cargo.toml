@@ -6,9 +6,9 @@ members = [
 ]
 
 [workspace.package]
-version = "0.3.2"
+version = "0.4.0"
 edition = "2021"
-authors = ["kako-jun <kako.jun.42@gmail.com>"]
+authors = ["kako-jun"]
 license = "MIT"
 description = "Fast semantic diff tool for structured data (JSON/YAML/TOML/XML/INI/CSV) with advanced features like array tracking, regex filtering, and floating-point tolerance"
 homepage = "https://github.com/kako-jun/diffx"
