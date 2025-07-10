@@ -20,7 +20,7 @@
     "automation",
     "data-analysis"
   ],
-  "main": "index.js",
+  "main": "lib.js",
   "bin": {
     "diffx": "./index.js"
   },
@@ -36,6 +36,7 @@
   },
   "files": [
     "index.js",
+    "lib.js",
     "scripts/download-binary.js",
     "bin/",
     "README.md",

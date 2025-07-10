@@ -28,7 +28,11 @@ class DiffOptions:
     epsilon: Optional[float] = None
     array_id_key: Optional[str] = None
     optimize: bool = False
-    batch_size: Optional[int] = None
+    context: Optional[int] = None
+    ignore_whitespace: bool = False
+    ignore_case: bool = False
+    quiet: bool = False
+    brief: bool = False
 
 
 class DiffResult:
@@ -173,9 +177,25 @@ def diff(
     if options.optimize:
         args.append("--optimize")
     
-    # Add batch size option
-    if options.batch_size is not None:
-        args.extend(["--batch-size", str(options.batch_size)])
+    # Add context option
+    if options.context is not None:
+        args.extend(["--context", str(options.context)])
+    
+    # Add ignore whitespace option
+    if options.ignore_whitespace:
+        args.append("--ignore-whitespace")
+    
+    # Add ignore case option
+    if options.ignore_case:
+        args.append("--ignore-case")
+    
+    # Add quiet option
+    if options.quiet:
+        args.append("--quiet")
+    
+    # Add brief option
+    if options.brief:
+        args.append("--brief")
     
     stdout, stderr = _execute_diffx(args)
     

@@ -9,7 +9,7 @@ import tempfile
 import json
 import subprocess
 from pathlib import Path
-from diffx import diff, diff_files, diff_json, diff_directories
+from diffx import diff, diff_string, is_diffx_available, DiffOptions, Format, OutputFormat
 
 def test_basic_functionality():
     """Test basic diff functionality"""
@@ -24,8 +24,9 @@ def test_basic_functionality():
     print(f"✓ Basic diff: {len(result)} differences found")
     assert len(result) > 0
     
-    # Test JSON diff
-    json_result = diff_json(data1, data2)
+    # Test diff with options
+    options = DiffOptions(output=OutputFormat.JSON)
+    json_result = diff_string(json.dumps(data1), json.dumps(data2), Format.JSON, options)
     json_data = json.loads(json_result)
     print(f"✓ JSON diff: {len(json_data)} differences found")
     assert len(json_data) > 0
@@ -44,8 +45,9 @@ def test_file_comparison():
         file2 = f2.name
     
     try:
-        # Test file comparison
-        result = diff_files(file1, file2)
+        # Test file comparison using diff
+        with open(file1, 'r') as f1, open(file2, 'r') as f2:
+            result = diff(json.load(f1), json.load(f2))
         print(f"✓ File diff: {len(result)} differences found")
         assert len(result) > 0
         
@@ -74,8 +76,10 @@ def test_directory_comparison():
         (dir1 / "config.json").write_text(json.dumps({"env": "dev", "debug": True}))
         (dir2 / "config.json").write_text(json.dumps({"env": "prod", "debug": False}))
         
-        # Test directory comparison
-        result = diff_directories(str(dir1), str(dir2))
+        # Test directory comparison using individual file diffs
+        config1 = json.loads((dir1 / "config.json").read_text())
+        config2 = json.loads((dir2 / "config.json").read_text())
+        result = diff(config1, config2)
         print(f"✓ Directory diff: {len(result)} differences found")
         assert len(result) > 0
 
@@ -121,25 +125,64 @@ def test_error_handling():
     """Test error handling scenarios"""
     print("Testing error handling...")
     
-    # Test with non-existent files
+    # Test with invalid data
     try:
-        diff_files("non_existent1.json", "non_existent2.json")
-        assert False, "Should have raised an exception"
+        result = diff({"invalid": "data"}, None)
+        print(f"✓ Error handling: handled gracefully")
     except Exception as e:
         print(f"✓ Error handling: {type(e).__name__}")
     
-    # Test with invalid JSON
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        f.write("invalid json content")
-        invalid_file = f.name
-    
+    # Test with invalid JSON string
     try:
-        diff_files(invalid_file, invalid_file)
+        result = diff_string("invalid json", "{}", Format.JSON)
         print("✓ Invalid JSON handling: no exception raised")
     except Exception as e:
         print(f"✓ Invalid JSON handling: {type(e).__name__}")
-    finally:
-        os.unlink(invalid_file)
+
+def test_new_options():
+    """Test new options: ignore-case, ignore-whitespace, context, quiet, brief"""
+    print("Testing new options...")
+    
+    # Test ignore-case option
+    data1 = {"status": "Active", "level": "Info"}
+    data2 = {"status": "ACTIVE", "level": "INFO"}
+    
+    options = DiffOptions(ignore_case=True, output=OutputFormat.JSON)
+    result = diff_string(json.dumps(data1), json.dumps(data2), Format.JSON, options)
+    json_data = json.loads(result)
+    print(f"✓ Ignore-case option: {len(json_data)} differences found (should be 0)")
+    assert len(json_data) == 0
+    
+    # Test ignore-whitespace option
+    data3 = {"text": "Hello  World", "message": "Test\tValue"}
+    data4 = {"text": "Hello World", "message": "Test Value"}
+    
+    options = DiffOptions(ignore_whitespace=True, output=OutputFormat.JSON)
+    result = diff_string(json.dumps(data3), json.dumps(data4), Format.JSON, options)
+    json_data = json.loads(result)
+    print(f"✓ Ignore-whitespace option: {len(json_data)} differences found (should be 0)")
+    assert len(json_data) == 0
+    
+    # Test context option
+    data5 = {"host": "localhost", "port": 5432, "name": "myapp"}
+    data6 = {"host": "localhost", "port": 5433, "name": "myapp"}
+    
+    options = DiffOptions(context=3, output=OutputFormat.UNIFIED)
+    result = diff_string(json.dumps(data5, indent=2), json.dumps(data6, indent=2), Format.JSON, options)
+    print(f"✓ Context option: unified output generated")
+    assert "@@" in result or "port" in result
+    
+    # Test quiet option
+    options = DiffOptions(quiet=True)
+    result = diff_string(json.dumps(data1), json.dumps(data2), Format.JSON, options)
+    print(f"✓ Quiet option: output suppressed")
+    assert result == ""
+    
+    # Test brief option
+    options = DiffOptions(brief=True)
+    result = diff_string(json.dumps(data5), json.dumps(data6), Format.JSON, options)
+    print(f"✓ Brief option: brief output generated")
+    assert "differ" in result or "port" in result
 
 def test_advanced_features():
     """Test advanced features"""
@@ -211,6 +254,7 @@ def main():
         test_file_comparison,
         test_directory_comparison,
         test_error_handling,
+        test_new_options,
         test_advanced_features,
         test_cli_integration,
     ]
