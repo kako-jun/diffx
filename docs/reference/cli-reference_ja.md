@@ -219,6 +219,157 @@ diffx records.json records.new.json --array-id-key "primary_key"
 // 結果: 変更なし（同じ要素、異なる順序）
 ```
 
+#### `--ignore-whitespace`
+- **型**: ブールフラグ
+- **デフォルト**: False
+- **説明**: 文字列値の空白差異を無視
+
+**例:**
+```bash
+# 異なる空白を持つファイル
+echo '{"text": "Hello  World"}' > file1.json
+echo '{"text": "Hello World"}' > file2.json
+
+# 通常の比較では差分を表示
+diffx file1.json file2.json
+# 出力: ~ text: "Hello  World" -> "Hello World"
+
+# 空白無視で比較 - 差分なしと報告
+diffx file1.json file2.json --ignore-whitespace
+# 出力: (差分なし)
+```
+
+**使用ケース:**
+- 一貫性のない間隔を持つ設定ファイル
+- 異なるシステムからエクスポートされたデータ
+- 余分なスペースを導入する手動編集
+- 正規化済み vs 生のテキストデータ
+
+#### `--ignore-case`
+- **型**: ブールフラグ
+- **デフォルト**: False
+- **説明**: 文字列値の大文字小文字差異を無視
+
+**例:**
+```bash
+# 異なる大文字小文字を持つファイル
+echo '{"status": "Active"}' > file1.json
+echo '{"status": "ACTIVE"}' > file2.json
+
+# 通常の比較では差分を表示
+diffx file1.json file2.json
+# 出力: ~ status: "Active" -> "ACTIVE"
+
+# 大文字小文字無視で比較 - 差分なしと報告
+diffx file1.json file2.json --ignore-case
+# 出力: (差分なし)
+```
+
+**使用ケース:**
+- 様々な大文字小文字を持つユーザー入力データ
+- レガシーシステムの移行
+- 大文字小文字を区別しない設定値
+- データ正規化タスク
+
+**オプションの組み合わせ:**
+```bash
+# 空白と大文字小文字の両方の差異を処理
+diffx config.json config.new.json --ignore-whitespace --ignore-case
+
+# 複数オプションを使用した複雑な例
+diffx data.yaml data.updated.yaml \
+  --ignore-case \
+  --ignore-whitespace \
+  --epsilon 0.001 \
+  --ignore-keys-regex "^(timestamp|version)$"
+```
+
+### 出力制御オプション
+
+#### `--context <N>`
+- **型**: 整数
+- **デフォルト**: なし（すべてのコンテキストを表示）
+- **説明**: unified出力形式で差分周辺のN行のコンテキストを表示
+
+**例:**
+```bash
+# 変更箇所周辺の2行のコンテキストを表示
+diffx config.json config.new.json --output unified --context 2
+
+# 変更行のみ表示（コンテキストなし）
+diffx config.json config.new.json --output unified --context 0
+
+# デフォルト動作（すべてのコンテキスト）
+diffx config.json config.new.json --output unified
+```
+
+**コンテキスト付きサンプル出力:**
+```diff
+# --context 2
+  "database": {
+    "host": "localhost",
+-   "port": 5432
++   "port": 5433
+  },
+  "cache": {
+
+# --context 0  
+-   "port": 5432
++   "port": 5433
+```
+
+#### `-q, --quiet`
+- **型**: ブールフラグ
+- **デフォルト**: False
+- **説明**: 通常の出力を抑制し、終了ステータスのみを返す
+
+**例:**
+```bash
+# ファイルが異なるかをチェック（スクリプト用）
+diffx config.json config.new.json --quiet
+echo $?  # 0 = 差分なし, 1 = 差分あり, 2 = エラー
+
+# シェルスクリプトで使用
+if diffx config.json backup.json --quiet; then
+    echo "ファイルは同一"
+else
+    echo "ファイルが異なる"
+fi
+
+# 他のオプションと組み合わせ
+diffx large.json large.new.json --quiet --ignore-whitespace
+```
+
+**終了コード:**
+- `0`: 差分なし
+- `1`: 差分あり
+- `2`: エラー発生（無効なファイル、フォーマットエラーなど）
+
+#### `--brief`
+- **型**: ブールフラグ
+- **デフォルト**: False
+- **説明**: 差分内容ではなく、ファイル名のみを報告（`diff --brief`に類似）
+
+**例:**
+```bash
+# ファイルが異なるかのみを報告
+diffx config.json config.new.json --brief
+# 出力: Files config.json and config.new.json differ
+
+# ディレクトリ比較で使用
+diffx configs/ configs.backup/ --recursive --brief
+# 出力: Files configs/app.json and configs.backup/app.json differ
+
+# フィルタリングと組み合わせ
+diffx data.json data.new.json --brief --ignore-keys-regex "^timestamp$"
+```
+
+**使用ケース:**
+- バッチ処理スクリプト
+- 迅速なファイル比較チェック
+- 自動テストパイプライン
+- ファイル同期検証
+
 ### ディレクトリオプション
 
 #### `-r, --recursive`
