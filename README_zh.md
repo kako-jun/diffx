@@ -215,14 +215,20 @@ diffx file1.json file2.json
 diffx config.yaml config_new.yaml --output json
 diffx data.toml data_updated.toml --output yaml
 
-# 高级选项
+# 高级过滤选项
 diffx large.json large_v2.json --ignore-keys-regex "^timestamp$|^_.*"
 diffx users.json users_v2.json --array-id-key "id"
 diffx metrics.json metrics_v2.json --epsilon 0.001
 
+# 高需求实用选项
+diffx config.yaml config_new.yaml --ignore-case          # 忽略大小写差异
+diffx api.json api_formatted.json --ignore-whitespace    # 忽略空白变更
+diffx large.json large_v2.json --context 3 --output unified  # 显示3行上下文
+diffx file1.json file2.json --quiet && echo "文件相同"    # 脚本自动化
+diffx dir1/ dir2/ --recursive --brief                    # 快速文件变更检查
+
 # 大文件性能优化
 diffx huge_dataset.json huge_dataset_v2.json --optimize
-diffx massive_config.yaml massive_config_new.yaml --optimize --batch-size 5000
 
 # 目录比较
 diffx config_dir1/ config_dir2/ --recursive

@@ -154,10 +154,20 @@ diffx file1.json file2.json
 diffx config.yaml config_new.yaml --output json
 diffx data.toml data_updated.toml --output yaml
 
-# 高度なオプション
+# 高度なフィルタリングオプション
 diffx large.json large_v2.json --ignore-keys-regex "^timestamp$|^_.*"
 diffx users.json users_v2.json --array-id-key "id"
 diffx metrics.json metrics_v2.json --epsilon 0.001
+
+# 高需要な実用的オプション
+diffx config.yaml config_new.yaml --ignore-case          # 大文字小文字の違いを無視
+diffx api.json api_formatted.json --ignore-whitespace    # 空白の変更を無視
+diffx large.json large_v2.json --context 3 --output unified  # 3行のコンテキストを表示
+diffx file1.json file2.json --quiet && echo "ファイルが同じ"  # スクリプト自動化
+diffx dir1/ dir2/ --recursive --brief                    # 高速ファイル変更チェック
+
+# 大きなファイルの性能最適化
+diffx huge_dataset.json huge_dataset_v2.json --optimize
 
 # ディレクトリ比較
 diffx config_dir1/ config_dir2/ --recursive

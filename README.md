@@ -215,14 +215,20 @@ diffx file1.json file2.json
 diffx config.yaml config_new.yaml --output json
 diffx data.toml data_updated.toml --output yaml
 
-# Advanced options
+# Advanced filtering options
 diffx large.json large_v2.json --ignore-keys-regex "^timestamp$|^_.*"
 diffx users.json users_v2.json --array-id-key "id"
 diffx metrics.json metrics_v2.json --epsilon 0.001
 
+# High-demand practical options
+diffx config.yaml config_new.yaml --ignore-case          # Ignore case differences
+diffx api.json api_formatted.json --ignore-whitespace    # Ignore whitespace changes
+diffx large.json large_v2.json --context 3 --output unified  # Show 3 lines of context
+diffx file1.json file2.json --quiet && echo "Files identical"  # Script automation
+diffx dir1/ dir2/ --recursive --brief                    # Quick file change check
+
 # Performance optimization for large files
 diffx huge_dataset.json huge_dataset_v2.json --optimize
-diffx massive_config.yaml massive_config_new.yaml --optimize --batch-size 5000
 
 # Directory comparison
 diffx config_dir1/ config_dir2/ --recursive
@@ -242,6 +248,17 @@ diffx diff1.json diff2.json  # Compare the changes themselves!
   run: |
     diffx config/prod.yaml config/staging.yaml --output json > changes.json
     # Process changes.json for deployment validation
+
+- name: Quick file change detection
+  run: |
+    if ! diffx config/current.json config/new.json --quiet; then
+      echo "Configuration changed, triggering deployment"
+    fi
+
+- name: Compare with ignore options for cleaner diffs
+  run: |
+    diffx api_old.json api_new.json --ignore-case --ignore-whitespace --output json > api_changes.json
+    # Focus on semantic changes, ignore formatting
 
 - name: Compare large datasets efficiently  
   run: |
