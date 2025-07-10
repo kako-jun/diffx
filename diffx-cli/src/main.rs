@@ -14,59 +14,6 @@ use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-#[derive(Debug, Deserialize, Default)]
-struct Config {
-    #[serde(default)]
-    output: Option<OutputFormat>,
-    #[serde(default)]
-    format: Option<Format>,
-    #[serde(default)]
-    ignore_keys_regex: Option<String>,
-    #[serde(default)]
-    epsilon: Option<f64>,
-    #[serde(default)]
-    array_id_key: Option<String>,
-    #[serde(default)]
-    use_memory_optimization: Option<bool>,
-    #[serde(default)]
-    batch_size: Option<usize>,
-}
-
-fn load_config() -> Config {
-    // Check for environment variable first (for testing and manual override)
-    let config_path = std::env::var("DIFFX_CONFIG_PATH")
-        .ok()
-        .map(PathBuf::from)
-        .or_else(|| {
-            // Use standard config directory
-            dirs::config_dir().map(|p| p.join("diffx").join("config.toml"))
-        })
-        .or_else(|| {
-            // Fallback for systems without a standard config directory
-            Some(PathBuf::from(".diffx.toml"))
-        });
-
-    if let Some(path) = config_path {
-        if path.exists() {
-            match fs::read_to_string(&path) {
-                Ok(content) => match toml::from_str(&content) {
-                    Ok(config) => return config,
-                    Err(e) => eprintln!(
-                        "Warning: Could not parse config file {}: {}",
-                        path.display(),
-                        e
-                    ),
-                },
-                Err(e) => eprintln!(
-                    "Warning: Could not read config file {}: {}",
-                    path.display(),
-                    e
-                ),
-            }
-        }
-    }
-    Config::default()
-}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -311,52 +258,21 @@ fn main() {
 
 fn run() -> Result<()> {
     let args = Args::parse();
-    let config = load_config();
 
-    // Check environment variables
-    let env_output_format =
-        std::env::var("DIFFX_OUTPUT")
-            .ok()
-            .and_then(|s| match s.to_lowercase().as_str() {
-                "cli" => Some(OutputFormat::Cli),
-                "json" => Some(OutputFormat::Json),
-                "yaml" => Some(OutputFormat::Yaml),
-                "unified" => Some(OutputFormat::Unified),
-                _ => None,
-            });
-
-    let output_format = args
-        .output
-        .or(env_output_format)
-        .or(config.output)
-        .unwrap_or(OutputFormat::Cli);
-    let input_format_from_config = config.format;
+    let output_format = args.output.unwrap_or(OutputFormat::Cli);
 
     let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
         Some(Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?)
-    } else if let Some(regex_str) = std::env::var("DIFFX_IGNORE_KEYS_REGEX").ok().as_ref() {
-        Some(
-            Regex::new(regex_str)
-                .context("Invalid regex from DIFFX_IGNORE_KEYS_REGEX environment variable")?,
-        )
-    } else if let Some(regex_str) = &config.ignore_keys_regex {
-        Some(Regex::new(regex_str).context("Invalid regex from config file")?)
     } else {
         None
     };
 
-    let env_epsilon = std::env::var("DIFFX_EPSILON")
-        .ok()
-        .and_then(|s| s.parse::<f64>().ok());
-    let epsilon = args.epsilon.or(env_epsilon).or(config.epsilon);
-    let array_id_key = args
-        .array_id_key
-        .as_deref()
-        .or(config.array_id_key.as_deref());
+    let epsilon = args.epsilon;
+    let array_id_key = args.array_id_key.as_deref();
 
     // Memory optimization settings
-    let use_memory_optimization = args.optimize || config.use_memory_optimization.unwrap_or(false);
-    let batch_size = args.batch_size.or(config.batch_size).unwrap_or(1000);
+    let use_memory_optimization = args.optimize;
+    let batch_size = args.batch_size.unwrap_or(1000);
 
     // Handle directory comparison
     if args.recursive {
@@ -366,7 +282,7 @@ fn run() -> Result<()> {
         let has_differences = compare_directories(
             &args.input1,
             &args.input2,
-            args.format.or(input_format_from_config),
+            args.format,
             output_format,
             args.path,
             ignore_keys_regex.as_ref(),
@@ -390,12 +306,10 @@ fn run() -> Result<()> {
 
     let input_format = if let Some(fmt) = args.format {
         fmt
-    } else if let Some(fmt) = input_format_from_config {
-        fmt
     } else {
         infer_format_from_path(&args.input1)
             .or_else(|| infer_format_from_path(&args.input2))
-            .context("Could not infer format from file extensions. Please specify --format or configure in diffx.toml.")?
+            .context("Could not infer format from file extensions. Please specify --format.")?
     };
 
     let v1: Value = parse_content(&content1, input_format)?;
@@ -519,7 +433,7 @@ fn compare_directories(
                 } else {
                     infer_format_from_path(path1)
                         .or_else(|| infer_format_from_path(path2))
-                        .context(format!("Could not infer format for {}. Please specify --format or configure in diffx.toml.", relative_path.display()))?
+                        .context(format!("Could not infer format for {}. Please specify --format.", relative_path.display()))?
                 };
 
                 let v1: Value = parse_content(&content1, input_format)?;
