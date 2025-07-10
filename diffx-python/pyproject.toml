@@ -9,7 +9,7 @@ description = "Python wrapper for diffx - semantic diffing of JSON, YAML, TOML, 
 readme = "README.md"
 license = "MIT"
 authors = [
-    { name = "kako-jun", email = "kako.jun.42@gmail.com" }
+    { name = "kako-jun" }
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
