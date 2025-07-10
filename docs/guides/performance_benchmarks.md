@@ -84,13 +84,17 @@ Time: 272.26µs - 290.94µs (median: 281µs)
    diffx data1.json data2.json --ignore-keys-regex "^(timestamp|_.*)"
    ```
 
-### Configuration for Performance
+### Performance Options
 
-```toml
-# ~/.config/diffx/config.toml
-array_id_key = "id"           # Semantic array comparison
-ignore_keys_regex = "^_.*"    # Skip internal fields
-epsilon = 0.001               # Efficient float comparison
+```bash
+# Semantic array comparison
+diffx file1.json file2.json --array-id-key id
+
+# Skip internal fields
+diffx file1.json file2.json --ignore-keys-regex "^_.*"
+
+# Efficient float comparison  
+diffx file1.json file2.json --epsilon 0.001
 ```
 
 ## Comparison with Other Tools

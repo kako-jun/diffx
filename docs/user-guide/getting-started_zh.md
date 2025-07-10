@@ -362,33 +362,6 @@ $ time diffx large_users.json large_users_v2.json --optimize
 
 > **注意**: 默认使用标准模式以获得可预测的行为。仅在大数据处理时明确需要时使用 `--optimize`。
 
-## 配置文件
-
-创建 `~/.config/diffx/config.toml` 以设置默认选项：
-
-```toml
-# 默认输出格式
-output = "cli"
-
-# 浮点比较的默认 epsilon
-epsilon = 0.001
-
-# 默认忽略的键
-ignore_keys_regex = "^(timestamp|_.*|createdAt|updatedAt)$"
-
-# 默认数组 ID 键
-array_id_key = "id"
-
-# 性能优化设置
-use_memory_optimization = false  # 使用 --optimize 标志启用
-batch_size = 1000               # 大数据处理的批处理大小
-
-# 在输出中启用颜色
-colors = true
-
-# 目录的默认递归模式
-recursive = true
-```
 
 ## 与其他工具的集成
 

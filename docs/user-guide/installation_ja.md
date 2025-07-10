@@ -543,7 +543,7 @@ Add-MpPreference -ExclusionPath "C:\path\to\diffx.exe"
 #### 1. 実行が遅い
 ```bash
 # 診断: 詳細モードで実行
-DIFFX_VERBOSE=1 diffx file1.json file2.json
+diffx file1.json file2.json --help
 
 # 解決策1: パスフィルタリング使用
 diffx large1.json large2.json --path "specific.section"

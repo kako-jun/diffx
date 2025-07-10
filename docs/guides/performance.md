@@ -469,7 +469,7 @@ diffx users1.json users2.json --array-id-key "id"
 #### Enable Verbose Output
 ```bash
 # Check what diffx is processing
-DIFFX_VERBOSE=true diffx file1.json file2.json
+diffx file1.json file2.json --help
 ```
 
 #### Profile Memory Usage

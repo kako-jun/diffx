@@ -469,7 +469,7 @@ diffx users1.json users2.json --array-id-key "id"
 #### 启用详细输出
 ```bash
 # 检查 diffx 正在处理什么
-DIFFX_VERBOSE=true diffx file1.json file2.json
+diffx file1.json file2.json --help
 ```
 
 #### 分析内存使用

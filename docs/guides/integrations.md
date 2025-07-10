@@ -1369,8 +1369,8 @@ BACKUP_DIR="${BACKUP_DIR:-./config/backups}"
 LOG_FILE="${LOG_FILE:-/var/log/config-manager.log}"
 
 # Default diffx options
-DIFFX_IGNORE_REGEX="${DIFFX_IGNORE_REGEX:-^(timestamp|lastModified|createdAt|updatedAt|buildTime|version)$}"
-DIFFX_OUTPUT_FORMAT="${DIFFX_OUTPUT_FORMAT:-json}"
+IGNORE_REGEX="${IGNORE_REGEX:-^(timestamp|lastModified|createdAt|updatedAt|buildTime|version)$}"
+OUTPUT_FORMAT="${OUTPUT_FORMAT:-json}"
 
 # Logging function
 log() {
@@ -1422,8 +1422,8 @@ validate_config() {
     local diff_output=$(mktemp)
     
     if diffx "$baseline_file" "$config_file" \
-       --ignore-keys-regex "$DIFFX_IGNORE_REGEX" \
-       --output "$DIFFX_OUTPUT_FORMAT" > "$diff_output"; then
+       --ignore-keys-regex "$IGNORE_REGEX" \
+       --output "$OUTPUT_FORMAT" > "$diff_output"; then
         log "✅ $config_file: No semantic differences from baseline"
         rm "$diff_output"
         return 0
@@ -1501,7 +1501,7 @@ compare_configs() {
     log "Comparing $file1 with $file2"
     
     diffx "$file1" "$file2" \
-        --ignore-keys-regex "$DIFFX_IGNORE_REGEX" \
+        --ignore-keys-regex "$IGNORE_REGEX" \
         --output cli
 }
 
@@ -1546,7 +1546,7 @@ EOF
             if [[ -f "$baseline_file" ]]; then
                 local diff_output=$(mktemp)
                 if diffx "$baseline_file" "$config_file" \
-                   --ignore-keys-regex "$DIFFX_IGNORE_REGEX" \
+                   --ignore-keys-regex "$IGNORE_REGEX" \
                    --output json > "$diff_output"; then
                     echo '<p class="success">✅ No differences from baseline</p>' >> "$report_file"
                 else
@@ -1644,8 +1644,8 @@ Environment Variables:
     BASELINE_DIR           Baseline configuration directory (default: ./config/baseline)
     BACKUP_DIR             Backup directory (default: ./config/backups)
     LOG_FILE               Log file path (default: /var/log/config-manager.log)
-    DIFFX_IGNORE_REGEX     Regex pattern for keys to ignore
-    DIFFX_OUTPUT_FORMAT    Output format for diffx (default: json)
+    IGNORE_REGEX     Regex pattern for keys to ignore
+    OUTPUT_FORMAT    Output format for diffx (default: json)
     MONITOR_INTERVAL       Monitoring interval in seconds (default: 300)
 
 Examples:
