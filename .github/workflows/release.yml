@@ -1,6 +1,9 @@
 name: Release
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       tag:
@@ -91,9 +94,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release create ${{ github.event.inputs.tag }} \
-          --title "Release ${{ github.event.inputs.tag }}" \
-          --notes "Release ${{ github.event.inputs.tag }}" \
+        TAG_NAME="${{ github.event.inputs.tag || github.ref_name }}"
+        gh release create "$TAG_NAME" \
+          --title "Release $TAG_NAME" \
+          --notes "Release $TAG_NAME" \
           --draft
         
         # Upload all artifacts
@@ -101,8 +105,30 @@ jobs:
           if [ -d "$dir" ]; then
             for file in "$dir"*; do
               if [ -f "$file" ]; then
-                gh release upload ${{ github.event.inputs.tag }} "$file"
+                gh release upload "$TAG_NAME" "$file"
               fi
             done
           fi
         done
+
+  publish-crates:
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+    
+    - name: Publish to crates.io
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      run: |
+        # Publish core library first
+        cargo publish --package diffx-core
+        
+        # Wait a bit for the core package to be available
+        sleep 30
+        
+        # Publish CLI tool
+        cargo publish --package diffx
