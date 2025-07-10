@@ -635,4 +635,3 @@ mod tests {
 - [CLI Reference](cli-reference.md) for command-line usage
 - [Getting Started Guide](../user-guide/getting-started.md) for basic concepts
 - [Examples](../user-guide/examples.md) for practical use cases
-- [Configuration Guide](../user-guide/configuration.md) for advanced settings

@@ -18,7 +18,6 @@ Welcome to the comprehensive `diffx` documentation!
 
 - **[Installation](user-guide/installation.md)** - Platform-specific installation instructions
 - **[Getting Started](user-guide/getting-started.md)** - Basic concepts and first steps
-- **[Configuration](user-guide/configuration.md)** - Configuration files and settings
 - **[Examples](user-guide/examples.md)** - Real-world examples across 8 industry categories
 - **[FAQ](user-guide/faq.md)** - Frequently asked questions and troubleshooting
 
@@ -39,8 +38,6 @@ Welcome to the comprehensive `diffx` documentation!
 ### 📋 Project Information
 *Project governance and development information*
 
-- **[Changelog](project/changelog.md)** - Version history and release notes
-- **[Roadmap](project/roadmap.md)** - Future development plans
 - **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to the project
 
 ## What Makes diffx Different?
