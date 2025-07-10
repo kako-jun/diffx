@@ -191,8 +191,16 @@ $ diffx report1.json report2.json  # Compare the changes themselves!
 ### Installation
 
 ```bash
-# Install CLI tool
+# Rust (recommended - native performance)
 cargo install diffx
+
+# Node.js ecosystem
+npm install diffx-js
+
+# Python ecosystem  
+pip install diffx-python
+
+# Or download pre-built binaries from GitHub Releases
 ```
 
 For detailed usage and examples, see the [documentation](docs/index.md).
@@ -276,14 +284,30 @@ if diffx package.json HEAD~1:package.json --output json | jq -e '.[] | select(.A
 fi
 ```
 
+## 🌍 Multi-Language Support
+
+diffx is available across multiple ecosystems:
+
+```bash
+# Rust (native CLI)
+cargo install diffx
+
+# Node.js wrapper
+npm install diffx-js
+
+# Python wrapper  
+pip install diffx-python
+```
+
+All packages provide the same semantic diff capabilities with automatic binary download.
+
 ## 🔮 Future Plans
 
 - **Interactive TUI (`diffx-tui`)**: A powerful viewer showcasing diffx capabilities with side-by-side data display
-- **Language wrappers**: Node.js and Python packages for calling diffx CLI
-- **GitHub Actions integration**: Built-in diff checking workflows
 - **AI agent integration**: Automated diff summarization and explanation
 - **Web UI version** (`diffx-web`)
 - **VSCode extension** (`diffx-vscode`)
+- **Advanced CI/CD templates**: Pre-built workflows for common use cases
 
 ## 🤝 Contributing
 
