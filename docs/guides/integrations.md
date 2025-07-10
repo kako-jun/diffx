@@ -67,6 +67,8 @@ jobs:
               # Run diffx with configuration-specific settings
               diffx /tmp/base_file "$file" \
                 --ignore-keys-regex "^(timestamp|lastModified|createdAt|updatedAt|buildTime)$" \
+                --ignore-case \
+                --ignore-whitespace \
                 --output json > "/tmp/diff_${file//\//_}.json"
               
               # Check for critical changes
@@ -277,6 +279,88 @@ validate_terraform:
       fi
   when: manual
   allow_failure: false
+```
+
+#### High-Demand Options in CI/CD
+
+The new high-demand options provide powerful automation capabilities:
+
+```yaml
+# Quick deployment validation
+validate_deployment:
+  stage: deploy-validation
+  script:
+    - |
+      # Fast check if configs changed (exit code only)
+      if ! diffx baseline_config.json deployment_config.json --quiet; then
+        echo "Configuration changes detected, running full validation"
+        
+        # Show only filenames for quick overview  
+        diffx configs/ updated_configs/ --recursive --brief
+        
+        # Detailed analysis with ignore options
+        diffx baseline_config.json deployment_config.json \
+          --ignore-case \
+          --ignore-whitespace \
+          --ignore-keys-regex "^(deploy_time|build_id|version)" \
+          --output json > deployment_diff.json
+          
+        # Send for approval if changes detected
+        trigger_approval_workflow.sh deployment_diff.json
+      else
+        echo "No semantic changes - auto-deploying"
+        auto_deploy.sh
+      fi
+
+# Continuous configuration monitoring
+monitor_config_drift:
+  stage: monitor
+  schedule:
+    - cron: "*/15 * * * *"  # Every 15 minutes
+  script:
+    - |
+      # Check for configuration drift
+      if ! diffx /etc/app/config.json expected_config.json \
+         --ignore-keys-regex "^(hostname|instance_id|last_.*)" \
+         --ignore-case \
+         --quiet; then
+        
+        # Alert with context
+        diffx /etc/app/config.json expected_config.json \
+          --ignore-keys-regex "^(hostname|instance_id|last_.*)" \
+          --ignore-case \
+          --context 2 \
+          --output unified | \
+          send_alert.sh "Configuration Drift Detected"
+      fi
+
+# Batch file validation
+validate_all_configs:
+  stage: validate
+  script:
+    - |
+      # Quick scan of all config files
+      failed_files=()
+      
+      find configs/ -name "*.json" | while read config; do
+        baseline="baselines/$(basename $config)"
+        if [ -f "$baseline" ]; then
+          if ! diffx "$baseline" "$config" --quiet; then
+            echo "Changed: $(basename $config)"
+            failed_files+=("$config")
+          fi
+        fi
+      done
+      
+      # Detailed analysis only for changed files
+      for file in "${failed_files[@]}"; do
+        baseline="baselines/$(basename $file)"
+        echo "=== Analysis: $file ==="
+        diffx "$baseline" "$file" \
+          --ignore-whitespace \
+          --context 1 \
+          --output unified
+      done
 ```
 
 ### Jenkins Pipeline
