@@ -249,6 +249,34 @@ fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
     Ok(())
 }
 
+fn extract_path_value(value: &Value, path: &str) -> Option<Value> {
+    let parts: Vec<&str> = path.split('.').collect();
+    let mut current = value;
+    
+    for part in parts {
+        // Handle array index notation like "users[0]"
+        if let Some(bracket_pos) = part.find('[') {
+            let key = &part[..bracket_pos];
+            let index_str = &part[bracket_pos + 1..part.len() - 1];
+            
+            // First get the object field
+            current = current.get(key)?;
+            
+            // Then get the array element
+            if let Ok(index) = index_str.parse::<usize>() {
+                current = current.get(index)?;
+            } else {
+                // Handle array with id notation like "users[id=1]"
+                return None; // For now, simplified implementation
+            }
+        } else {
+            current = current.get(part)?;
+        }
+    }
+    
+    Some(current.clone())
+}
+
 fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
     let content1_pretty = serde_json::to_string_pretty(v1)?;
     let content2_pretty = serde_json::to_string_pretty(v2)?;
@@ -371,8 +399,10 @@ fn run() -> Result<()> {
     };
 
     let mut differences = differences;
+    
+    let filter_path = args.path.as_deref();
 
-    if let Some(filter_path) = args.path {
+    if let Some(path) = filter_path {
         differences.retain(|d| {
             let key = match d {
                 DiffResult::Added(k, _) => k,
@@ -380,7 +410,7 @@ fn run() -> Result<()> {
                 DiffResult::Modified(k, _, _) => k,
                 DiffResult::TypeChanged(k, _, _) => k,
             };
-            key.starts_with(&filter_path)
+            key.starts_with(path)
         });
     }
 
@@ -391,7 +421,19 @@ fn run() -> Result<()> {
         OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
         OutputFormat::Json => print_json_output(differences)?,
         OutputFormat::Yaml => print_yaml_output(differences)?,
-        OutputFormat::Unified => print_unified_output(&v1, &v2)?,
+        OutputFormat::Unified => {
+            // For unified output with path filtering, extract the filtered portion
+            if let Some(path) = filter_path {
+                let filtered_v1 = extract_path_value(&v1, path);
+                let filtered_v2 = extract_path_value(&v2, path);
+                match (filtered_v1, filtered_v2) {
+                    (Some(fv1), Some(fv2)) => print_unified_output(&fv1, &fv2)?,
+                    _ => print_unified_output(&v1, &v2)?,
+                }
+            } else {
+                print_unified_output(&v1, &v2)?
+            }
+        }
     }
 
     // Exit with appropriate code following diff tool conventions
