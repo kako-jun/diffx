@@ -2,60 +2,84 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.0] - 2025-01-05
+## [Unreleased]
 
-### 🚀 Features
-- **cli** Add npm and pip wrapper packages for JavaScript and Python integration
-- **core** Add array_id_key configuration support with complete documentation  
-- **ci** Add comprehensive performance regression testing to CI pipeline
-- **config** Add epsilon tolerance for floating-point number comparisons
-- **config** Add regex-based key filtering to ignore specific patterns
-- **output** Add path-based filtering to show only specific difference paths
-- **formats** Complete support for JSON, YAML, TOML, XML, INI, and CSV formats
-- **cli** Add automatic format detection from file extensions
-- **cli** Add stdin support for piped input
-- **cli** Add recursive directory comparison functionality
-- **cli** Add configuration file support (~/.config/diffx/config.toml)
+### Added
+- Comprehensive documentation overhaul with hierarchical structure
+- Performance benchmarks and optimization guide
+- Integration guide with CI/CD platforms and development tools
+- Tool comparison matrix with detailed feature analysis
+- Real-world examples across 8 industry categories
 
-### 🐛 Bug Fixes  
-- **build** Add write permissions to release workflow for GitHub Actions
-- **build** Correct package name in release workflow configuration
-- **build** Update release workflow to use actions/upload-artifact@v4
-- **lint** Fix clippy::uninlined_format_args warnings in benchmark file
-- **lint** Fix remaining clippy::uninlined_format_args warnings in CLI
-- **lint** Update format! macros to use Rust 2021 inline args syntax
-- **formatting** Apply cargo fmt formatting fixes across codebase
+### Changed
+- Documentation structure reorganized into user-guide, reference, guides, and project sections
+- README simplified and made more accessible with softer language
+- Badge links updated to point to GitHub documentation instead of docs.rs
 
-### 📚 Documentation
-- **docs** Restructure documentation with comprehensive user guides and references
-- **docs** Add 8 industry categories with multiple practical examples
-- **docs** Create complete CLI reference and API documentation  
-- **docs** Add performance benchmarks and optimization strategies
-- **docs** Add integration guides for CI/CD and development tools
-- **docs** Add detailed comparison with other diff tools
-- **docs** Add project roadmap and changelog documentation
-- **readme** Update with new features and improved structure
+### Fixed
+- Corrected unified format explanation to remove contradictory statements
+- Updated format support information to reflect current implementation status
+- Exit code implementation following diff conventions (0=no diff, 1=diff found, 2=error)
+- Unified output path filtering bug fixed
 
-### ⚙️ Miscellaneous Tasks
-- **deps** Update to latest stable Rust dependencies
-- **ci** Configure comprehensive testing and release pipelines
-- **build** Set up cross-platform binary releases for Linux, macOS, and Windows
-- **publish** Release to crates.io for both diffx-core and diffx packages
+### Removed
+- **Configuration file support** - `~/.config/diffx/config.toml` configuration file loading
+- **Environment variable support** - `DIFFX_*` environment variable overrides
+- Removed for consistency with sibling apps (diffai, lawkit) and adherence to UNIX philosophy
 
-### 🧪 Testing
-- **tests** Add 25+ comprehensive test cases covering all functionality
-- **tests** Add integration tests for CLI operations
-- **bench** Add criterion-based performance benchmarking
+## [0.3.2] - 2025-01-15
+
+### Added
+- **Package releases** - npm (diffx-js) and pip (diffx-python) wrapper packages
+- **Comprehensive test automation** - 91 integration tests with 100% pass rate
+- **Documentation verification** - 1:1 mapping between documented examples and test cases
+- **Package testing infrastructure** - Automated verification for published packages
+
+### Fixed
+- **Exit codes** - Proper exit codes (0=no diff, 1=diff found, 2=error)
+- **Python package options** - Added missing `--optimize` and `--batch-size` options
+- **Test coverage** - All documented command examples now have corresponding test cases
+
+## [0.2.0] - 2025-01-15
+
+### Added
+- **XML format support** - Full support for XML file parsing and comparison
+- **INI format support** - Complete INI/config file format support  
+- **CSV format support** - CSV file comparison with array element tracking
+- **Directory comparison** - Recursive directory comparison with `--recursive` flag
+- **Path filtering** - `--path` option to focus comparisons on specific data sections
+- **Floating-point tolerance** - `--epsilon` option for numeric comparison with tolerance
+- **Array element tracking** - `--array-id-key` for intelligent array element identification
+- **Regular expression filtering** - `--ignore-keys-regex` to exclude keys from comparison
+- **Multiple output formats** - JSON, YAML, and unified diff output options
+- **Standard input support** - Compare files with stdin using `-` as filename
+- **Format auto-detection** - Automatic format detection from file extensions
+- **Type change detection** - Explicit reporting of data type changes (e.g., string to number)
+- **Comprehensive test suite** - 73+ test cases covering all features and edge cases
+- **Performance benchmarks** - Criterion-based benchmarks for performance monitoring
+- **Cross-platform support** - Linux, macOS, and Windows compatibility
+
+### Changed
+- **Output format** - Improved CLI output with color-coded differences
+- **Error handling** - Enhanced error messages with proper context
+- **Performance** - Optimized diff algorithms for large files
+- **Documentation** - Complete documentation overhaul with user guides
+
+### Fixed
+- **Unicode handling** - Proper support for non-ASCII characters
+- **Array comparison** - Improved semantic array element matching
+- **Memory usage** - Optimized memory consumption for large files
+- **Edge cases** - Fixed various edge cases in format parsing
 
 ## [0.1.0] - 2024-12-XX
 
-### 🚀 Features
-- **core** Initial implementation of structured diff extraction
-- **formats** Basic JSON, YAML, and TOML support
-- **cli** Basic command-line interface
-- **output** CLI and JSON output formats
+### Added
+- **Core functionality** - Initial implementation of structured diff extraction
+- **Basic formats** - JSON, YAML, and TOML support
+- **CLI interface** - Basic command-line interface
+- **Output formats** - CLI and JSON output formats
 
 <!-- generated by git-cliff -->
