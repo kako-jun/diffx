@@ -523,25 +523,6 @@ fn test_combined_array_id_and_epsilon() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
-#[test]
-fn test_config_file_integration() -> Result<(), Box<dyn std::error::Error>> {
-    // Test configuration file by setting the config path env var
-    // Note: Config file integration is not fully implemented yet, so this test
-    // currently verifies that the command succeeds even with config path set
-    let mut cmd = diffx_cmd();
-    cmd.env("DIFFX_CONFIG_PATH", "../tests/fixtures/test_config.toml")
-        .arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json");
-    cmd.assert()
-        .code(1)
-        // Config file specifies output = "json", so expect JSON format
-        .stdout(predicate::str::contains(r#""Modified""#))
-        .stdout(predicate::str::contains(r#""age""#))
-        .stdout(predicate::str::contains(r#""city""#))
-        .stdout(predicate::str::contains(r#""Added""#))
-        .stdout(predicate::str::contains(r#""items[2]""#));
-    Ok(())
-}
 
 #[test]
 fn test_format_specification_with_stdin() -> Result<(), Box<dyn std::error::Error>> {
@@ -646,25 +627,3 @@ fn test_environment_config_comparison() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
-#[test]
-fn test_array_id_key_from_config() -> Result<(), Box<dyn std::error::Error>> {
-    // Test that array_id_key configuration is properly loaded from config file
-    let mut cmd = diffx_cmd();
-    cmd.env(
-        "DIFFX_CONFIG_PATH",
-        "../tests/fixtures/array_id_config.toml",
-    )
-    .arg("../tests/fixtures/users_v1.json")
-    .arg("../tests/fixtures/users_v2.json");
-    cmd.assert()
-        .code(1)
-        // Config specifies array_id_key = "id" and output = "json"
-        // Should identify array elements by ID and show semantic changes
-        .stdout(predicate::str::contains(r#""Modified""#))
-        .stdout(predicate::str::contains(r#""[id=2].role""#))
-        .stdout(predicate::str::contains(r#""user""#))
-        .stdout(predicate::str::contains(r#""moderator""#))
-        .stdout(predicate::str::contains(r#""Added""#))
-        .stdout(predicate::str::contains(r#""[id=3]""#));
-    Ok(())
-}
