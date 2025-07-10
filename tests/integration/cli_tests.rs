@@ -1017,16 +1017,12 @@ fn test_cicd_batch_file_validation() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test first file (no differences)
     let mut cmd1 = diffx_cmd();
-    cmd1.arg(&config1_path)
-        .arg(&config1_path)
-        .arg("--quiet");
+    cmd1.arg(&config1_path).arg(&config1_path).arg("--quiet");
     cmd1.assert().code(0);
 
     // Test second file (differences)
     let mut cmd2 = diffx_cmd();
-    cmd2.arg(&config1_path)
-        .arg(&config2_path)
-        .arg("--quiet");
+    cmd2.arg(&config1_path).arg(&config2_path).arg("--quiet");
     cmd2.assert().code(1);
 
     Ok(())
@@ -1094,8 +1090,7 @@ fn test_pre_commit_hook_pattern() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-keys-regex")
         .arg("^(environment|debug)$")
         .arg("--quiet");
-    cmd.assert()
-        .code(1); // Would trigger pre-commit warning
+    cmd.assert().code(1); // Would trigger pre-commit warning
     Ok(())
 }
 
