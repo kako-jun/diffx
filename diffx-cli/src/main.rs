@@ -221,11 +221,19 @@ fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) 
 }
 
 fn print_json_output(differences: Vec<DiffResult>) -> Result<()> {
+    if differences.is_empty() {
+        // Follow diff convention: output nothing when no differences
+        return Ok(());
+    }
     println!("{}", serde_json::to_string_pretty(&differences)?);
     Ok(())
 }
 
 fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
+    if differences.is_empty() {
+        // Follow diff convention: output nothing when no differences
+        return Ok(());
+    }
     // Convert DiffResult to a more standard YAML format
     let yaml_data: Vec<serde_json::Value> = differences
         .into_iter()
@@ -252,16 +260,16 @@ fn print_yaml_output(differences: Vec<DiffResult>) -> Result<()> {
 fn extract_path_value(value: &Value, path: &str) -> Option<Value> {
     let parts: Vec<&str> = path.split('.').collect();
     let mut current = value;
-    
+
     for part in parts {
         // Handle array index notation like "users[0]"
         if let Some(bracket_pos) = part.find('[') {
             let key = &part[..bracket_pos];
             let index_str = &part[bracket_pos + 1..part.len() - 1];
-            
+
             // First get the object field
             current = current.get(key)?;
-            
+
             // Then get the array element
             if let Ok(index) = index_str.parse::<usize>() {
                 current = current.get(index)?;
@@ -273,7 +281,7 @@ fn extract_path_value(value: &Value, path: &str) -> Option<Value> {
             current = current.get(part)?;
         }
     }
-    
+
     Some(current.clone())
 }
 
@@ -296,7 +304,7 @@ fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
 
 fn main() {
     if let Err(e) = run() {
-        eprintln!("Error: {:#}", e);
+        eprintln!("Error: {e:#}");
         std::process::exit(2);
     }
 }
@@ -306,30 +314,40 @@ fn run() -> Result<()> {
     let config = load_config();
 
     // Check environment variables
-    let env_output_format = std::env::var("DIFFX_OUTPUT").ok().and_then(|s| {
-        match s.to_lowercase().as_str() {
-            "cli" => Some(OutputFormat::Cli),
-            "json" => Some(OutputFormat::Json),
-            "yaml" => Some(OutputFormat::Yaml),
-            "unified" => Some(OutputFormat::Unified),
-            _ => None,
-        }
-    });
+    let env_output_format =
+        std::env::var("DIFFX_OUTPUT")
+            .ok()
+            .and_then(|s| match s.to_lowercase().as_str() {
+                "cli" => Some(OutputFormat::Cli),
+                "json" => Some(OutputFormat::Json),
+                "yaml" => Some(OutputFormat::Yaml),
+                "unified" => Some(OutputFormat::Unified),
+                _ => None,
+            });
 
-    let output_format = args.output.or(env_output_format).or(config.output).unwrap_or(OutputFormat::Cli);
+    let output_format = args
+        .output
+        .or(env_output_format)
+        .or(config.output)
+        .unwrap_or(OutputFormat::Cli);
     let input_format_from_config = config.format;
 
     let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
         Some(Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?)
     } else if let Some(regex_str) = std::env::var("DIFFX_IGNORE_KEYS_REGEX").ok().as_ref() {
-        Some(Regex::new(regex_str).context("Invalid regex from DIFFX_IGNORE_KEYS_REGEX environment variable")?)
+        Some(
+            Regex::new(regex_str)
+                .context("Invalid regex from DIFFX_IGNORE_KEYS_REGEX environment variable")?,
+        )
     } else if let Some(regex_str) = &config.ignore_keys_regex {
         Some(Regex::new(regex_str).context("Invalid regex from config file")?)
     } else {
         None
     };
 
-    let env_epsilon = std::env::var("DIFFX_EPSILON").ok().and_then(|s| s.parse::<f64>().ok());
+    let env_epsilon = std::env::var("DIFFX_EPSILON")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok());
     let epsilon = args.epsilon.or(env_epsilon).or(config.epsilon);
     let array_id_key = args
         .array_id_key
@@ -357,7 +375,7 @@ fn run() -> Result<()> {
             use_memory_optimization,
             batch_size,
         )?;
-        
+
         // Exit with appropriate code following diff tool conventions
         if has_differences {
             std::process::exit(1); // Differences found
@@ -399,7 +417,7 @@ fn run() -> Result<()> {
     };
 
     let mut differences = differences;
-    
+
     let filter_path = args.path.as_deref();
 
     if let Some(path) = filter_path {

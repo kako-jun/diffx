@@ -1,1 +1,1 @@
-{"services": {"web": {"replicas": 5, "memory": "512Mi"}, "db": {"replicas": 1, "memory": "1Gi"}}, "version": "1.0.1", "timestamp": "2024-01-02T00:00:00Z"}
+{"a": 2}
