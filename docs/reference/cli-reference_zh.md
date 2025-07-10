@@ -361,32 +361,6 @@ case $EXIT_CODE in
 esac
 ```
 
-## 环境变量
-
-这些环境变量可用于设置默认值：
-
-- `DIFFX_OUTPUT` - 默认输出格式
-- `DIFFX_FORMAT` - 默认输入格式
-- `DIFFX_EPSILON` - 默认 epsilon 值
-- `DIFFX_IGNORE_KEYS_REGEX` - 默认忽略模式
-- `DIFFX_ARRAY_ID_KEY` - 默认数组 ID 键
-- `DIFFX_RECURSIVE` - 默认递归模式
-- `DIFFX_COLORS` - 启用/禁用彩色输出
-
-**示例：**
-```bash
-# 通过环境变量设置默认值
-export DIFFX_OUTPUT=json
-export DIFFX_IGNORE_KEYS_REGEX="^(timestamp|_.*)"
-export DIFFX_EPSILON=0.001
-
-# 命令现在使用这些默认值
-diffx config.json config.new.json
-```
-
-## 配置文件
-
-有关使用配置文件的详细信息，请参见[配置指南](../user-guide/configuration_zh.md)。
 
 ## 使用模式
 
@@ -487,12 +461,6 @@ $ diffx file1.json file2.json --ignore-keys-regex "[invalid"
 ### 调试
 
 ```bash
-# 详细输出（如果支持）
-DIFFX_VERBOSE=true diffx file1.json file2.json
-
-# 调试模式（如果支持）
-DIFFX_DEBUG=true diffx file1.json file2.json
-
 # 验证格式检测
 diffx --format json file1.txt file2.txt
 ```

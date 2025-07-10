@@ -321,7 +321,7 @@ rm -rf ~/.config/diffx
 diffx --stream large1.json large2.json
 
 # 增加内存限制
-export DIFFX_MAX_MEMORY=2GB
+diffx --help
 diffx large1.json large2.json
 ```
 

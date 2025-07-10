@@ -361,32 +361,6 @@ case $EXIT_CODE in
 esac
 ```
 
-## Environment Variables
-
-These environment variables can be used to set default values:
-
-- `DIFFX_OUTPUT` - Default output format
-- `DIFFX_FORMAT` - Default input format
-- `DIFFX_EPSILON` - Default epsilon value
-- `DIFFX_IGNORE_KEYS_REGEX` - Default ignore pattern
-- `DIFFX_ARRAY_ID_KEY` - Default array ID key
-- `DIFFX_RECURSIVE` - Default recursive mode
-- `DIFFX_COLORS` - Enable/disable colored output
-
-**Examples:**
-```bash
-# Set defaults via environment
-export DIFFX_OUTPUT=json
-export DIFFX_IGNORE_KEYS_REGEX="^(timestamp|_.*)"
-export DIFFX_EPSILON=0.001
-
-# Commands now use these defaults
-diffx config.json config.new.json
-```
-
-## Configuration File
-
-See the [Configuration Guide](../user-guide/configuration.md) for details on using configuration files.
 
 ## Usage Patterns
 
@@ -487,12 +461,6 @@ Error: Invalid regular expression: unclosed character class
 ### Debugging
 
 ```bash
-# Verbose output (if supported)
-DIFFX_VERBOSE=true diffx file1.json file2.json
-
-# Debug mode (if supported)
-DIFFX_DEBUG=true diffx file1.json file2.json
-
 # Validate format detection
 diffx --format json file1.txt file2.txt
 ```

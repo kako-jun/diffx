@@ -362,33 +362,6 @@ $ time diffx large_users.json large_users_v2.json --optimize
 
 > **Note**: Standard mode is used by default for predictable behavior. Use `--optimize` only when explicitly needed for large data processing.
 
-## Configuration File
-
-Create `~/.config/diffx/config.toml` for default options:
-
-```toml
-# Default output format
-output = "cli"
-
-# Default epsilon for floating-point comparison
-epsilon = 0.001
-
-# Default keys to ignore
-ignore_keys_regex = "^(timestamp|_.*|createdAt|updatedAt)$"
-
-# Default array ID key
-array_id_key = "id"
-
-# Performance optimization settings
-use_memory_optimization = false  # Enable with --optimize flag
-batch_size = 1000               # Batch size for large data processing
-
-# Enable colors in output
-colors = true
-
-# Default recursive mode for directories
-recursive = true
-```
 
 ## Integration with Other Tools
 
@@ -506,14 +479,10 @@ diffx large1.json large2.json --path "specific.section"
 
 **Memory issues with large files:**
 ```bash
-# Increase memory limit (if supported)
-export DIFFX_MAX_MEMORY=2GB
 diffx huge1.json huge2.json
 ```
 
 ## Next Steps
-
-- Read the [Configuration Guide](configuration.md) for advanced settings
 - Explore the [Examples](examples.md) for real-world use cases
 - Check the [CLI Reference](../reference/cli-reference.md) for complete option documentation
 - Learn about [Integration patterns](../guides/integrations.md) for CI/CD workflows

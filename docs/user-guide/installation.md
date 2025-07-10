@@ -321,7 +321,7 @@ For very large files (>100MB), consider:
 diffx --stream large1.json large2.json
 
 # Increase memory limit
-export DIFFX_MAX_MEMORY=2GB
+diffx --help
 diffx large1.json large2.json
 ```
 

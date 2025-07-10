@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected unified format explanation to remove contradictory statements
 - Updated format support information to reflect current implementation status
 
+### Removed
+- **Configuration file support** - `~/.config/diffx/config.toml` configuration file loading
+- **Environment variable support** - `DIFFX_*` environment variable overrides
+- Removed for consistency with sibling apps (diffai, lawkit) and adherence to UNIX philosophy
+
 ## [0.2.0] - 2025-01-15
 
 ### Added

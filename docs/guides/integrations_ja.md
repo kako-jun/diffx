@@ -1369,8 +1369,8 @@ BACKUP_DIR="${BACKUP_DIR:-./config/backups}"
 LOG_FILE="${LOG_FILE:-/var/log/config-manager.log}"
 
 # デフォルト diffx オプション
-DIFFX_IGNORE_REGEX="${DIFFX_IGNORE_REGEX:-^(timestamp|lastModified|createdAt|updatedAt|buildTime|version)$}"
-DIFFX_OUTPUT_FORMAT="${DIFFX_OUTPUT_FORMAT:-json}"
+IGNORE_REGEX="${IGNORE_REGEX:-^(timestamp|lastModified|createdAt|updatedAt|buildTime|version)$}"
+OUTPUT_FORMAT="${OUTPUT_FORMAT:-json}"
 
 # ログ関数
 log() {
@@ -1422,8 +1422,8 @@ validate_config() {
     local diff_output=$(mktemp)
     
     if diffx "$baseline_file" "$config_file" \
-       --ignore-keys-regex "$DIFFX_IGNORE_REGEX" \
-       --output "$DIFFX_OUTPUT_FORMAT" > "$diff_output"; then
+       --ignore-keys-regex "$IGNORE_REGEX" \
+       --output "$OUTPUT_FORMAT" > "$diff_output"; then
         log "✅ $config_file: ベースラインとのセマンティックな差分なし"
         rm "$diff_output"
         return 0
@@ -1501,7 +1501,7 @@ compare_configs() {
     log "$file1 と $file2 を比較中"
     
     diffx "$file1" "$file2" \
-        --ignore-keys-regex "$DIFFX_IGNORE_REGEX" \
+        --ignore-keys-regex "$IGNORE_REGEX" \
         --output cli
 }
 
@@ -1546,7 +1546,7 @@ EOF
             if [[ -f "$baseline_file" ]]; then
                 local diff_output=$(mktemp)
                 if diffx "$baseline_file" "$config_file" \
-                   --ignore-keys-regex "$DIFFX_IGNORE_REGEX" \
+                   --ignore-keys-regex "$IGNORE_REGEX" \
                    --output json > "$diff_output"; then
                     echo '<p class="success">✅ ベースラインとの差分なし</p>' >> "$report_file"
                 else
@@ -1644,8 +1644,8 @@ diffx を使った設定マネージャー
     BASELINE_DIR           ベースライン設定ディレクトリ (デフォルト: ./config/baseline)
     BACKUP_DIR             バックアップディレクトリ (デフォルト: ./config/backups)
     LOG_FILE               ログファイルパス (デフォルト: /var/log/config-manager.log)
-    DIFFX_IGNORE_REGEX     無視するキーの正規表現パターン
-    DIFFX_OUTPUT_FORMAT    diffx の出力フォーマット (デフォルト: json)
+    IGNORE_REGEX     無視するキーの正規表現パターン
+    OUTPUT_FORMAT    diffx の出力フォーマット (デフォルト: json)
     MONITOR_INTERVAL       監視間隔（秒） (デフォルト: 300)
 
 例:

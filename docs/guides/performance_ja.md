@@ -463,7 +463,7 @@ diffx users1.json users2.json --array-id-key "id"
 #### 詳細出力を有効化
 ```bash
 # diffxが何を処理しているかチェック
-DIFFX_VERBOSE=true diffx file1.json file2.json
+diffx file1.json file2.json --help
 ```
 
 #### メモリ使用量をプロファイル

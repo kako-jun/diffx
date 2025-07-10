@@ -295,32 +295,6 @@ case $EXIT_CODE in
 esac
 ```
 
-## 環境変数
-
-デフォルト値を設定する環境変数：
-
-- `DIFFX_OUTPUT` - デフォルト出力フォーマット
-- `DIFFX_FORMAT` - デフォルト入力フォーマット
-- `DIFFX_EPSILON` - デフォルトepsilon値
-- `DIFFX_IGNORE_KEYS_REGEX` - デフォルト無視パターン
-- `DIFFX_ARRAY_ID_KEY` - デフォルト配列IDキー
-- `DIFFX_RECURSIVE` - デフォルト再帰モード
-- `DIFFX_COLORS` - カラー出力の有効/無効
-
-**例:**
-```bash
-# デフォルトを環境変数で設定
-export DIFFX_OUTPUT=json
-export DIFFX_IGNORE_KEYS_REGEX="^(timestamp|_.*)$"
-export DIFFX_EPSILON=0.001
-
-# コマンドは上記デフォルトを使用
-diffx config.json config.new.json
-```
-
-## 設定ファイル
-
-詳細は[設定ガイド](../user-guide/configuration_ja.md)を参照してください。
 
 ## 使用パターン
 
@@ -421,12 +395,6 @@ Error: 無効な正規表現: 文字クラスが閉じられていません
 ### デバッグ
 
 ```bash
-# 詳細出力（サポートされている場合）
-DIFFX_VERBOSE=true diffx file1.json file2.json
-
-# デバッグモード（サポートされている場合）
-DIFFX_DEBUG=true diffx file1.json file2.json
-
 # フォーマット検出の検証
 diffx --format json file1.txt file2.txt
 ```
