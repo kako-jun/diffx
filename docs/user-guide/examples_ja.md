@@ -642,6 +642,197 @@ diffx ad_groups.json ad_groups.new.json \
   --output yaml
 ```
 
+## UNIXコマンドパターン
+
+diffx は一般的な UNIX diff パターンの構造化データ版を提供します：
+
+### `diff -q` 相当: 高速ファイル変更検出
+
+```bash
+# 設定ファイルが変更されているかをexit codeのみで判定
+if ! diffx config.json config.backup.json --quiet; then
+  echo "設定が変更されています。デプロイを開始します"
+  deploy_app.sh
+fi
+
+# 複数の設定ファイルを一括チェック
+for config in configs/*.json; do
+  if ! diffx "$config" "backups/$(basename $config)" --quiet; then
+    echo "$(basename $config) が変更されています"
+  fi
+done
+
+# watchコマンドと組み合わせて継続監視
+watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "設定ドリフトを検出！"'
+```
+
+### `diff --brief` 相当: ファイル名のみ表示
+
+```bash
+# ディレクトリ全体の変更ファイルを高速スキャン
+diffx config_dir/ backup_dir/ --recursive --brief
+
+# CI パイプラインでの変更検出
+changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
+if [ -n "$changed_files" ]; then
+  echo "設定変更を検出:"
+  echo "$changed_files"
+  trigger_validation_pipeline.sh
+fi
+
+# findコマンドと組み合わせて選択的チェック
+find . -name "*.json" -newer last_deploy.marker | while read file; do
+  backup_file="backups/${file}"
+  if [ -f "$backup_file" ]; then
+    diffx "$file" "$backup_file" --brief
+  fi
+done
+```
+
+### `diff -i` 相当: 大文字小文字無視比較
+
+```bash
+# API レスポンスでenum値の大文字小文字違いを無視
+curl -s https://api.example.com/status > current_status.json
+diffx expected_status.json current_status.json --ignore-case
+
+# 大文字小文字が不統一な設定ファイルの比較
+diffx config_template.yaml user_config.yaml \
+  --ignore-case \
+  --ignore-keys-regex "^(name|description)"
+
+# 大文字小文字混在のデータベース設定比較
+diffx db_schema.json migrated_schema.json \
+  --ignore-case \
+  --array-id-key "table_name" \
+  --output json
+```
+
+### `diff -w` 相当: 空白差異無視
+
+```bash
+# フォーマットが異なるJSONファイルの比較
+diffx api_response_pretty.json api_response_minified.json --ignore-whitespace
+
+# 設定ファイルのフォーマット差異を無視
+diffx config.json config_reformatted.json \
+  --ignore-whitespace \
+  --output json
+
+# 空白のバリエーションがあるデータエクスポートの比較
+diffx data_export.json data_import_processed.json \
+  --ignore-whitespace \
+  --array-id-key "id" \
+  --epsilon 0.001
+```
+
+### `diff -C3` 相当: unified diff でのコンテキスト表示
+
+```bash
+# 変更箇所の前後3行を表示
+diffx large_config.json large_config_new.json \
+  --output unified \
+  --context 3
+
+# 最小コンテキストで集中的な差分表示
+diffx api_schema.json api_schema_v2.json \
+  --output unified \
+  --context 1
+
+# コンテキストなしで変更のみ表示
+diffx database_config.json database_config_updated.json \
+  --output unified \
+  --context 0
+```
+
+### 組み合わせUNIXスタイルパターン
+
+```bash
+# diff -qiw file1 file2 相当
+diffx config.json config.backup.json \
+  --quiet \
+  --ignore-case \
+  --ignore-whitespace
+
+# diff -r --brief dir1/ dir2/ 相当
+diffx config_dir/ backup_dir/ \
+  --recursive \
+  --brief
+
+# 高度なパターン: 大文字小文字無視 + 選択的フィールド除外
+diffx user_data.json user_data_migrated.json \
+  --ignore-case \
+  --ignore-whitespace \
+  --ignore-keys-regex "^(created_at|updated_at|timestamp)" \
+  --array-id-key "user_id"
+
+# Git スタイルワークフロー統合
+git show HEAD:config.json > /tmp/old_config.json
+diffx /tmp/old_config.json config.json \
+  --ignore-whitespace \
+  --context 2 \
+  --output unified
+```
+
+### シェル統合例
+
+```bash
+# pre-commit フック相当
+#!/bin/bash
+# .git/hooks/pre-commit
+if ! diffx config/production.json config/staging.json \
+   --ignore-keys-regex "^(environment|debug)" \
+   --quiet; then
+  echo "本番環境とステージング環境の設定に意味的な差異があります"
+  echo "コミット前に確認してください:"
+  diffx config/production.json config/staging.json \
+    --ignore-keys-regex "^(environment|debug)"
+  exit 1
+fi
+
+# デプロイ検証スクリプト
+#!/bin/bash
+# validate_deploy.sh
+deployment_config="$1"
+baseline_config="configs/baseline.json"
+
+if diffx "$baseline_config" "$deployment_config" \
+   --ignore-case \
+   --ignore-whitespace \
+   --quiet; then
+  echo "✅ 設定に変更なし - 安全にデプロイ可能"
+  exit 0
+else
+  echo "⚠️  設定変更を検出:"
+  diffx "$baseline_config" "$deployment_config" \
+    --ignore-case \
+    --ignore-whitespace \
+    --brief
+  echo "デプロイを続行しますか? (y/N)"
+  read -r response
+  [[ "$response" =~ ^[Yy]$ ]] || exit 1
+fi
+
+# アラート付き監視スクリプト
+#!/bin/bash
+# monitor_config_drift.sh
+while true; do
+  if ! diffx /etc/app/config.json /opt/app/expected_config.json \
+     --ignore-keys-regex "^(hostname|instance_id|last_update)" \
+     --quiet; then
+    
+    # 詳細付きアラート送信
+    diffx /etc/app/config.json /opt/app/expected_config.json \
+      --ignore-keys-regex "^(hostname|instance_id|last_update)" \
+      --output json | \
+      curl -X POST https://alerts.example.com/webhook \
+           -H "Content-Type: application/json" \
+           -d @-
+  fi
+  sleep 300  # 5分間隔でチェック
+done
+```
+
 ## 高度な使用パターン
 
 ### 複数環境パイプライン

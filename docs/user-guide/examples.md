@@ -469,6 +469,197 @@ diffx oauth_config.json oauth_config.backup.json \
   --ignore-keys-regex "^(client_secret|private_key)"
 ```
 
+## UNIX Command Patterns
+
+diffx provides equivalents to common UNIX diff patterns, adapted for structured data:
+
+### `diff -q` Equivalent: Quick File Change Detection
+
+```bash
+# Check if configuration files differ (exit code only)
+if ! diffx config.json config.backup.json --quiet; then
+  echo "Configuration has changed, triggering deployment"
+  deploy_app.sh
+fi
+
+# Batch check multiple config files 
+for config in configs/*.json; do
+  if ! diffx "$config" "backups/$(basename $config)" --quiet; then
+    echo "$(basename $config) has changed"
+  fi
+done
+
+# Use with watch for continuous monitoring
+watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "Config drift detected!"'
+```
+
+### `diff --brief` Equivalent: Show Only Changed Filenames  
+
+```bash
+# Quick directory scan for changed files
+diffx config_dir/ backup_dir/ --recursive --brief
+
+# Use in CI pipelines for change detection
+changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
+if [ -n "$changed_files" ]; then
+  echo "Configuration changes detected:"
+  echo "$changed_files"
+  trigger_validation_pipeline.sh
+fi
+
+# Combine with find for selective checking
+find . -name "*.json" -newer last_deploy.marker | while read file; do
+  backup_file="backups/${file}"
+  if [ -f "$backup_file" ]; then
+    diffx "$file" "$backup_file" --brief
+  fi
+done
+```
+
+### `diff -i` Equivalent: Case-Insensitive Comparison
+
+```bash
+# Compare API responses ignoring case differences in enum values
+curl -s https://api.example.com/status > current_status.json
+diffx expected_status.json current_status.json --ignore-case
+
+# Configuration files with inconsistent casing
+diffx config_template.yaml user_config.yaml \
+  --ignore-case \
+  --ignore-keys-regex "^(name|description)"
+
+# Database configuration with mixed case field names
+diffx db_schema.json migrated_schema.json \
+  --ignore-case \
+  --array-id-key "table_name" \
+  --output json
+```
+
+### `diff -w` Equivalent: Ignore Whitespace Differences
+
+```bash
+# Compare JSON files that may have different formatting
+diffx api_response_pretty.json api_response_minified.json --ignore-whitespace
+
+# Ignore formatting differences in configuration
+diffx config.json config_reformatted.json \
+  --ignore-whitespace \
+  --output json
+
+# Compare data exports with whitespace variations
+diffx data_export.json data_import_processed.json \
+  --ignore-whitespace \
+  --array-id-key "id" \
+  --epsilon 0.001
+```
+
+### `diff -C3` Equivalent: Context Lines in Unified Output
+
+```bash
+# Show 3 lines of context around changes
+diffx large_config.json large_config_new.json \
+  --output unified \
+  --context 3
+
+# Minimal context for focused diffs
+diffx api_schema.json api_schema_v2.json \
+  --output unified \
+  --context 1
+
+# No context for change-only view
+diffx database_config.json database_config_updated.json \
+  --output unified \
+  --context 0
+```
+
+### Combined UNIX-Style Patterns
+
+```bash
+# Equivalent to: diff -qiw file1 file2
+diffx config.json config.backup.json \
+  --quiet \
+  --ignore-case \
+  --ignore-whitespace
+
+# Equivalent to: diff -r --brief dir1/ dir2/
+diffx config_dir/ backup_dir/ \
+  --recursive \
+  --brief
+
+# Advanced pattern: Case-insensitive with selective field ignoring
+diffx user_data.json user_data_migrated.json \
+  --ignore-case \
+  --ignore-whitespace \
+  --ignore-keys-regex "^(created_at|updated_at|timestamp)" \
+  --array-id-key "user_id"
+
+# Git-style workflow integration
+git show HEAD:config.json > /tmp/old_config.json
+diffx /tmp/old_config.json config.json \
+  --ignore-whitespace \
+  --context 2 \
+  --output unified
+```
+
+### Shell Integration Examples
+
+```bash
+# Pre-commit hook equivalent
+#!/bin/bash
+# .git/hooks/pre-commit
+if ! diffx config/production.json config/staging.json \
+   --ignore-keys-regex "^(environment|debug)" \
+   --quiet; then
+  echo "Production and staging configs have semantic differences"
+  echo "Please review before committing:"
+  diffx config/production.json config/staging.json \
+    --ignore-keys-regex "^(environment|debug)"
+  exit 1
+fi
+
+# Deployment validation script
+#!/bin/bash
+# validate_deploy.sh
+deployment_config="$1"
+baseline_config="configs/baseline.json"
+
+if diffx "$baseline_config" "$deployment_config" \
+   --ignore-case \
+   --ignore-whitespace \
+   --quiet; then
+  echo "✅ Configuration unchanged - safe to deploy"
+  exit 0
+else
+  echo "⚠️  Configuration changes detected:"
+  diffx "$baseline_config" "$deployment_config" \
+    --ignore-case \
+    --ignore-whitespace \
+    --brief
+  echo "Proceed with deployment? (y/N)"
+  read -r response
+  [[ "$response" =~ ^[Yy]$ ]] || exit 1
+fi
+
+# Monitoring script with alerting
+#!/bin/bash
+# monitor_config_drift.sh
+while true; do
+  if ! diffx /etc/app/config.json /opt/app/expected_config.json \
+     --ignore-keys-regex "^(hostname|instance_id|last_update)" \
+     --quiet; then
+    
+    # Send alert with details
+    diffx /etc/app/config.json /opt/app/expected_config.json \
+      --ignore-keys-regex "^(hostname|instance_id|last_update)" \
+      --output json | \
+      curl -X POST https://alerts.example.com/webhook \
+           -H "Content-Type: application/json" \
+           -d @-
+  fi
+  sleep 300  # Check every 5 minutes
+done
+```
+
 ## Advanced Usage Patterns
 
 ### Multi-Environment Pipeline
