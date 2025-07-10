@@ -219,6 +219,157 @@ diffx records.json records.new.json --array-id-key "primary_key"
 // Result: No changes detected (same elements, different order)
 ```
 
+#### `--ignore-whitespace`
+- **Type**: Boolean flag
+- **Default**: False
+- **Description**: Ignore whitespace differences in string values
+
+**Examples:**
+```bash
+# Files with different whitespace
+echo '{"text": "Hello  World"}' > file1.json
+echo '{"text": "Hello World"}' > file2.json
+
+# Normal comparison shows difference
+diffx file1.json file2.json
+# Output: ~ text: "Hello  World" -> "Hello World"
+
+# With whitespace ignoring - no differences reported
+diffx file1.json file2.json --ignore-whitespace
+# Output: (no differences)
+```
+
+**Use Cases:**
+- Configuration files with inconsistent spacing
+- Data exported from different systems
+- Manual edits that introduce extra spaces
+- Normalized vs. raw text data
+
+#### `--ignore-case`
+- **Type**: Boolean flag
+- **Default**: False
+- **Description**: Ignore case differences in string values
+
+**Examples:**
+```bash
+# Files with different case
+echo '{"status": "Active"}' > file1.json
+echo '{"status": "ACTIVE"}' > file2.json
+
+# Normal comparison shows difference
+diffx file1.json file2.json
+# Output: ~ status: "Active" -> "ACTIVE"
+
+# With case ignoring - no differences reported
+diffx file1.json file2.json --ignore-case
+# Output: (no differences)
+```
+
+**Use Cases:**
+- User input data with varying capitalization
+- Legacy system migrations
+- Case-insensitive configuration values
+- Data normalization tasks
+
+**Combining Options:**
+```bash
+# Handle both whitespace and case differences
+diffx config.json config.new.json --ignore-whitespace --ignore-case
+
+# Complex example with multiple options
+diffx data.yaml data.updated.yaml \
+  --ignore-case \
+  --ignore-whitespace \
+  --epsilon 0.001 \
+  --ignore-keys-regex "^(timestamp|version)$"
+```
+
+### Output Control Options
+
+#### `--context <N>`
+- **Type**: Integer
+- **Default**: None (show all context)
+- **Description**: Show N lines of context around differences in unified output format
+
+**Examples:**
+```bash
+# Show 2 lines of context around changes
+diffx config.json config.new.json --output unified --context 2
+
+# Show only changed lines (no context)
+diffx config.json config.new.json --output unified --context 0
+
+# Default behavior (all context)
+diffx config.json config.new.json --output unified
+```
+
+**Sample Output with Context:**
+```diff
+# --context 2
+   "database": {
+     "host": "localhost",
+-    "port": 5432
++    "port": 5433
+   },
+   "cache": {
+
+# --context 0  
+-    "port": 5432
++    "port": 5433
+```
+
+#### `-q, --quiet`
+- **Type**: Boolean flag
+- **Default**: False
+- **Description**: Suppress normal output; return only exit status
+
+**Examples:**
+```bash
+# Check if files differ (for scripts)
+diffx config.json config.new.json --quiet
+echo $?  # 0 = no differences, 1 = differences found, 2 = error
+
+# Use in shell scripts
+if diffx config.json backup.json --quiet; then
+    echo "Files are identical"
+else
+    echo "Files differ"
+fi
+
+# Combine with other options
+diffx large.json large.new.json --quiet --ignore-whitespace
+```
+
+**Exit Codes:**
+- `0`: No differences found
+- `1`: Differences found
+- `2`: Error occurred (invalid files, format errors, etc.)
+
+#### `--brief`
+- **Type**: Boolean flag
+- **Default**: False
+- **Description**: Report only filenames, not the differences (similar to `diff --brief`)
+
+**Examples:**
+```bash
+# Just report if files differ
+diffx config.json config.new.json --brief
+# Output: Files config.json and config.new.json differ
+
+# Use with directory comparison
+diffx configs/ configs.backup/ --recursive --brief
+# Output: Files configs/app.json and configs.backup/app.json differ
+
+# Combine with filtering
+diffx data.json data.new.json --brief --ignore-keys-regex "^timestamp$"
+```
+
+**Use Cases:**
+- Batch processing scripts
+- Quick file comparison checks
+- Automated testing pipelines
+- File synchronization verification
+
 ### Directory Options
 
 #### `-r, --recursive`
@@ -248,67 +399,48 @@ diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 
 #### `--optimize`
 - **Type**: Boolean flag
-- **Default**: False (standard mode)
+- **Default**: Auto-detected (enabled for files >1MB)
 - **Description**: Enable memory-efficient processing for large files and data structures
 
-**When to Use:**
-- Large files (>100MB)
-- Deep nested structures (>10 levels)
-- Large arrays (>10,000 elements)
+**Auto-Detection Behavior:**
+- Files ≤1MB: Standard mode (fast, unlimited memory)
+- Files >1MB: Optimized mode (memory-efficient, batched processing)
+- Manual override: Use `--optimize` to force optimization for small files
+
+**When to Use Manually:**
+- Force optimization for small but complex nested structures
 - Memory-constrained environments
+- Processing many files in batch
+- Deep nested structures (>10 levels) regardless of size
 
 **Examples:**
 ```bash
-# Process large datasets efficiently
-diffx large_data.json large_data.v2.json --optimize
+# Auto-detection (recommended)
+diffx config.json config.new.json
+# Uses standard mode for small files, optimized for large files
 
-# Optimize with custom batch size
-diffx huge_config.yaml huge_config.new.yaml --optimize --batch-size 5000
+# Force optimization for small files
+diffx small_but_complex.json small_but_complex.new.json --optimize
 
 # Combine with other options
-diffx massive_db.json massive_db.new.json --optimize --array-id-key "id" --path "users"
+diffx massive_db.json massive_db.new.json --array-id-key "id" --path "users"
+# Automatically uses optimized mode for large files
 ```
 
 **Performance Comparison:**
 ```bash
-# Standard mode (default) - predictable, unlimited memory usage
+# Small files (<1MB) - automatic standard mode
 diffx config.json config.new.json
+# Fast processing, unlimited memory usage
 
-# Optimized mode - memory-efficient, batched processing
-diffx config.json config.new.json --optimize
+# Large files (>1MB) - automatic optimized mode  
+diffx large_dataset.json large_dataset.v2.json
+# Memory-efficient, batched processing
+
+# Manual optimization override
+diffx complex_small.json complex_small.new.json --optimize
+# Forces memory-efficient processing
 ```
-
-#### `--batch-size <SIZE>`
-- **Type**: Integer
-- **Default**: 1000
-- **Description**: Number of elements to process in each batch during optimization
-
-**Guidelines:**
-- **Small files** (<10MB): Use default (1000)
-- **Medium files** (10-100MB): Use 1000-2000
-- **Large files** (100MB-1GB): Use 2000-5000
-- **Huge files** (>1GB): Use 5000-10000
-
-**Examples:**
-```bash
-# Default batch size
-diffx large_file.json large_file.v2.json --optimize
-
-# Custom batch size for very large files
-diffx massive_dataset.json massive_dataset.v2.json --optimize --batch-size 10000
-
-# Fine-tuned for memory constraints
-diffx big_config.yaml big_config.new.yaml --optimize --batch-size 500
-```
-
-**Memory Usage Estimation:**
-| Batch Size | Memory Usage | Best For |
-|------------|--------------|----------|
-| 500        | ~100MB       | Memory-constrained systems |
-| 1000       | ~200MB       | Default (balanced) |
-| 2000       | ~400MB       | Large files |
-| 5000       | ~800MB       | Very large files |
-| 10000      | ~1.5GB       | Massive datasets |
 
 ### Information Options
 

@@ -1,0 +1,23 @@
+{
+  "config": {
+    "database": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "myapp"
+    },
+    "cache": {
+      "enabled": true,
+      "ttl": 3600
+    },
+    "logging": {
+      "level": "info",
+      "format": "json"
+    }
+  },
+  "version": "1.0",
+  "features": [
+    "auth",
+    "logging",
+    "cache"
+  ]
+}

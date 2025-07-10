@@ -2,7 +2,6 @@ use std::io::Write;
 use std::process::Command;
 use tempfile::NamedTempFile;
 
-
 #[test]
 fn test_help_command_long() {
     let output = Command::new("cargo")
@@ -254,28 +253,6 @@ fn test_error_handling_invalid_epsilon() {
 }
 
 #[test]
-fn test_error_handling_invalid_batch_size() {
-    let mut file1 = NamedTempFile::new().unwrap();
-    let mut file2 = NamedTempFile::new().unwrap();
-
-    writeln!(file1, r#"{{"name": "Alice", "age": 30}}"#).unwrap();
-    writeln!(file2, r#"{{"name": "Alice", "age": 31}}"#).unwrap();
-
-    let output = Command::new("cargo")
-        .args(["run", "--bin", "diffx", "--"])
-        .arg(file1.path())
-        .arg(file2.path())
-        .arg("--batch-size")
-        .arg("invalid_size")
-        .output()
-        .expect("Failed to execute command");
-
-    assert_ne!(output.status.code(), Some(0));
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("invalid") || stderr.contains("batch"));
-}
-
-#[test]
 fn test_complex_option_combination_1() {
     let mut file1 = NamedTempFile::new().unwrap();
     let mut file2 = NamedTempFile::new().unwrap();
@@ -412,8 +389,6 @@ fn test_complex_option_combination_3() {
         .arg("--path")
         .arg("users")
         .arg("--optimize")
-        .arg("--batch-size")
-        .arg("100")
         .arg("--output")
         .arg("json")
         .output()
@@ -628,8 +603,6 @@ fn test_performance_options_combination() {
         .arg("--format")
         .arg("json")
         .arg("--optimize")
-        .arg("--batch-size")
-        .arg("50")
         .arg("--array-id-key")
         .arg("id")
         .arg("--path")
@@ -640,54 +613,4 @@ fn test_performance_options_combination() {
     assert_eq!(output.status.code(), Some(1));
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains("active"));
-}
-
-#[test]
-fn test_batch_size_without_optimize() {
-    let mut file1 = NamedTempFile::new().unwrap();
-    let mut file2 = NamedTempFile::new().unwrap();
-
-    writeln!(file1, r#"{{"name": "Alice", "age": 30}}"#).unwrap();
-    writeln!(file2, r#"{{"name": "Alice", "age": 31}}"#).unwrap();
-
-    let output = Command::new("cargo")
-        .args(["run", "--bin", "diffx", "--"])
-        .arg(file1.path())
-        .arg(file2.path())
-        .arg("--format")
-        .arg("json")
-        .arg("--batch-size")
-        .arg("1000")
-        .output()
-        .expect("Failed to execute command");
-
-    // Should work even without --optimize
-    assert_eq!(output.status.code(), Some(1));
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("age"));
-}
-
-#[test]
-fn test_very_large_batch_size() {
-    let mut file1 = NamedTempFile::new().unwrap();
-    let mut file2 = NamedTempFile::new().unwrap();
-
-    writeln!(file1, r#"{{"name": "Alice", "age": 30}}"#).unwrap();
-    writeln!(file2, r#"{{"name": "Alice", "age": 31}}"#).unwrap();
-
-    let output = Command::new("cargo")
-        .args(["run", "--bin", "diffx", "--"])
-        .arg(file1.path())
-        .arg(file2.path())
-        .arg("--format")
-        .arg("json")
-        .arg("--optimize")
-        .arg("--batch-size")
-        .arg("100000")
-        .output()
-        .expect("Failed to execute command");
-
-    assert_eq!(output.status.code(), Some(1));
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("age"));
 }

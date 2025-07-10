@@ -55,6 +55,8 @@ pub struct DiffConfig {
     pub array_id_key: Option<String>,
     pub use_memory_optimization: bool, // Explicit choice
     pub batch_size: usize,
+    pub ignore_whitespace: bool,
+    pub ignore_case: bool,
 }
 
 impl Default for DiffConfig {
@@ -65,6 +67,8 @@ impl Default for DiffConfig {
             array_id_key: None,
             use_memory_optimization: false, // Conservative default
             batch_size: 1000,
+            ignore_whitespace: false,
+            ignore_case: false,
         }
     }
 }
@@ -79,7 +83,28 @@ pub fn diff_standard(
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
 ) -> Vec<DiffResult> {
-    diff_standard_implementation(v1, v2, ignore_keys_regex, epsilon, array_id_key)
+    diff_standard_implementation(
+        v1,
+        v2,
+        ignore_keys_regex,
+        epsilon,
+        array_id_key,
+        false,
+        false,
+    )
+}
+
+/// Standard diff function with configuration support
+pub fn diff_standard_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
+    diff_standard_implementation(
+        v1,
+        v2,
+        config.ignore_keys_regex.as_ref(),
+        config.epsilon,
+        config.array_id_key.as_deref(),
+        config.ignore_whitespace,
+        config.ignore_case,
+    )
 }
 
 /// Standard diff function - clean, predictable output
@@ -89,11 +114,13 @@ fn diff_standard_implementation(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) -> Vec<DiffResult> {
     let mut results = Vec::new();
 
     // Handle root level type or value change first
-    if !values_are_equal(v1, v2, epsilon) {
+    if !values_are_equal_with_config(v1, v2, epsilon, ignore_whitespace, ignore_case) {
         let type_match = matches!(
             (v1, v2),
             (Value::Null, Value::Null)
@@ -120,6 +147,8 @@ fn diff_standard_implementation(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         } else if v1.is_array() && v2.is_array() {
             diff_arrays(
@@ -130,6 +159,8 @@ fn diff_standard_implementation(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         } else {
             results.push(DiffResult::Modified("".to_string(), v1.clone(), v2.clone()));
@@ -155,6 +186,24 @@ pub fn diff_optimized(
         ignore_keys_regex,
         epsilon,
         array_id_key,
+        false,
+        false,
+    );
+    results
+}
+
+/// Memory-optimized diff function with configuration support
+pub fn diff_optimized_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
+    let mut results = Vec::new();
+    memory_efficient_diff(
+        v1,
+        v2,
+        &mut results,
+        config.ignore_keys_regex.as_ref(),
+        config.epsilon,
+        config.array_id_key.as_deref(),
+        config.ignore_whitespace,
+        config.ignore_case,
     );
     results
 }
@@ -163,21 +212,9 @@ pub fn diff_optimized(
 pub fn diff_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
     // Explicit choice: user decides which algorithm to use
     if config.use_memory_optimization {
-        diff_optimized(
-            v1,
-            v2,
-            config.ignore_keys_regex.as_ref(),
-            config.epsilon,
-            config.array_id_key.as_deref(),
-        )
+        diff_optimized_with_config(v1, v2, config)
     } else {
-        diff_standard(
-            v1,
-            v2,
-            config.ignore_keys_regex.as_ref(),
-            config.epsilon,
-            config.array_id_key.as_deref(),
-        )
+        diff_standard_with_config(v1, v2, config)
     }
 }
 
@@ -193,6 +230,7 @@ pub fn diff(
     diff_standard(v1, v2, ignore_keys_regex, epsilon, array_id_key)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn diff_recursive(
     path: &str,
     v1: &Value,
@@ -201,6 +239,8 @@ fn diff_recursive(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) {
     match (v1, v2) {
         (Value::Object(map1), Value::Object(map2)) => {
@@ -212,6 +252,8 @@ fn diff_recursive(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         }
         (Value::Array(arr1), Value::Array(arr2)) => {
@@ -223,12 +265,15 @@ fn diff_recursive(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         }
         _ => { /* Should not happen if called correctly from diff_objects/diff_arrays */ }
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn diff_objects(
     path: &str,
     map1: &serde_json::Map<String, Value>,
@@ -237,6 +282,8 @@ fn diff_objects(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) {
     // Check for modified or removed keys
     for (key, value1) in map1 {
@@ -264,8 +311,16 @@ fn diff_objects(
                         ignore_keys_regex,
                         epsilon,
                         array_id_key,
+                        ignore_whitespace,
+                        ignore_case,
                     );
-                } else if !values_are_equal(value1, value2, epsilon) {
+                } else if !values_are_equal_with_config(
+                    value1,
+                    value2,
+                    epsilon,
+                    ignore_whitespace,
+                    ignore_case,
+                ) {
                     let type_match = matches!(
                         (value1, value2),
                         (Value::Null, Value::Null)
@@ -310,6 +365,7 @@ fn diff_objects(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn diff_arrays(
     path: &str,
     arr1: &[Value],
@@ -318,6 +374,8 @@ fn diff_arrays(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) {
     if let Some(id_key) = array_id_key {
         let mut map1: HashMap<Value, &Value> = HashMap::new();
@@ -355,8 +413,16 @@ fn diff_arrays(
                             ignore_keys_regex,
                             epsilon,
                             array_id_key,
+                            ignore_whitespace,
+                            ignore_case,
                         );
-                    } else if !values_are_equal(val1, val2, epsilon) {
+                    } else if !values_are_equal_with_config(
+                        val1,
+                        val2,
+                        epsilon,
+                        ignore_whitespace,
+                        ignore_case,
+                    ) {
                         let type_match = matches!(
                             (val1, val2),
                             (Value::Null, Value::Null)
@@ -411,8 +477,16 @@ fn diff_arrays(
                             ignore_keys_regex,
                             epsilon,
                             array_id_key,
+                            ignore_whitespace,
+                            ignore_case,
                         );
-                    } else if !values_are_equal(val1, val2, epsilon) {
+                    } else if !values_are_equal_with_config(
+                        val1,
+                        val2,
+                        epsilon,
+                        ignore_whitespace,
+                        ignore_case,
+                    ) {
                         let type_match = matches!(
                             (val1, val2),
                             (Value::Null, Value::Null)
@@ -466,8 +540,16 @@ fn diff_arrays(
                             ignore_keys_regex,
                             epsilon,
                             array_id_key,
+                            ignore_whitespace,
+                            ignore_case,
                         );
-                    } else if !values_are_equal(val1, val2, epsilon) {
+                    } else if !values_are_equal_with_config(
+                        val1,
+                        val2,
+                        epsilon,
+                        ignore_whitespace,
+                        ignore_case,
+                    ) {
                         let type_match = matches!(
                             (val1, val2),
                             (Value::Null, Value::Null)
@@ -505,13 +587,51 @@ fn diff_arrays(
     }
 }
 
-fn values_are_equal(v1: &Value, v2: &Value, epsilon: Option<f64>) -> bool {
+fn values_are_equal_with_config(
+    v1: &Value,
+    v2: &Value,
+    epsilon: Option<f64>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
+) -> bool {
+    // Handle numeric comparisons with epsilon
     if let (Some(e), Value::Number(n1), Value::Number(n2)) = (epsilon, v1, v2) {
         if let (Some(f1), Some(f2)) = (n1.as_f64(), n2.as_f64()) {
             return (f1 - f2).abs() < e;
         }
     }
+
+    // Handle string comparisons with ignore options
+    if let (Value::String(s1), Value::String(s2)) = (v1, v2) {
+        let mut str1 = s1.as_str();
+        let mut str2 = s2.as_str();
+
+        let owned_s1;
+        let owned_s2;
+
+        // Apply whitespace normalization if needed
+        if ignore_whitespace {
+            owned_s1 = normalize_whitespace(str1);
+            owned_s2 = normalize_whitespace(str2);
+            str1 = &owned_s1;
+            str2 = &owned_s2;
+        }
+
+        // Apply case normalization if needed
+        if ignore_case {
+            return str1.to_lowercase() == str2.to_lowercase();
+        } else {
+            return str1 == str2;
+        }
+    }
+
+    // Default comparison for all other types
     v1 == v2
+}
+
+fn normalize_whitespace(s: &str) -> String {
+    // Replace all whitespace sequences with single spaces and trim
+    s.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
 
 pub fn value_type_name(value: &Value) -> &str {
@@ -721,12 +841,15 @@ fn streaming_diff<P: AsRef<Path>>(
         ignore_keys_regex,
         epsilon,
         array_id_key,
+        false, // ignore_whitespace - not supported in streaming mode
+        false, // ignore_case - not supported in streaming mode
     );
 
     Ok(results)
 }
 
 /// Memory-efficient diff implementation that processes data in chunks
+#[allow(clippy::too_many_arguments)]
 fn memory_efficient_diff(
     v1: &Value,
     v2: &Value,
@@ -734,9 +857,11 @@ fn memory_efficient_diff(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) {
     // Process diff without cloning large values when possible
-    if !values_are_equal(v1, v2, epsilon) {
+    if !values_are_equal_with_config(v1, v2, epsilon, ignore_whitespace, ignore_case) {
         let type_match = matches!(
             (v1, v2),
             (Value::Null, Value::Null)
@@ -761,6 +886,8 @@ fn memory_efficient_diff(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         } else if v1.is_array() && v2.is_array() {
             memory_efficient_diff_arrays(
@@ -771,6 +898,8 @@ fn memory_efficient_diff(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         } else {
             results.push(DiffResult::Modified("".to_string(), v1.clone(), v2.clone()));
@@ -779,6 +908,7 @@ fn memory_efficient_diff(
 }
 
 /// Memory-efficient object comparison
+#[allow(clippy::too_many_arguments)]
 fn memory_efficient_diff_objects(
     path: &str,
     map1: &serde_json::Map<String, Value>,
@@ -787,6 +917,8 @@ fn memory_efficient_diff_objects(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) {
     // Process keys in batches to limit memory usage
     const BATCH_SIZE: usize = 1000;
@@ -820,6 +952,8 @@ fn memory_efficient_diff_objects(
                             ignore_keys_regex,
                             epsilon,
                             array_id_key,
+                            ignore_whitespace,
+                            ignore_case,
                         );
                     } else if value1.is_array() && value2.is_array() {
                         memory_efficient_diff_arrays(
@@ -830,8 +964,16 @@ fn memory_efficient_diff_objects(
                             ignore_keys_regex,
                             epsilon,
                             array_id_key,
+                            ignore_whitespace,
+                            ignore_case,
                         );
-                    } else if !values_are_equal(value1, value2, epsilon) {
+                    } else if !values_are_equal_with_config(
+                        value1,
+                        value2,
+                        epsilon,
+                        ignore_whitespace,
+                        ignore_case,
+                    ) {
                         let type_match = matches!(
                             (value1, value2),
                             (Value::Null, Value::Null)
@@ -888,6 +1030,7 @@ fn memory_efficient_diff_objects(
 }
 
 /// Memory-efficient array comparison
+#[allow(clippy::too_many_arguments)]
 fn memory_efficient_diff_arrays(
     path: &str,
     arr1: &[Value],
@@ -896,6 +1039,8 @@ fn memory_efficient_diff_arrays(
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
+    ignore_whitespace: bool,
+    ignore_case: bool,
 ) {
     // Use the existing array diff logic but with batching for very large arrays
     const BATCH_SIZE: usize = 10000;
@@ -917,6 +1062,8 @@ fn memory_efficient_diff_arrays(
                 ignore_keys_regex,
                 epsilon,
                 array_id_key,
+                ignore_whitespace,
+                ignore_case,
             );
         }
     } else {
@@ -929,6 +1076,8 @@ fn memory_efficient_diff_arrays(
             ignore_keys_regex,
             epsilon,
             array_id_key,
+            ignore_whitespace,
+            ignore_case,
         );
     }
 }
