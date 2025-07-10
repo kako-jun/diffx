@@ -9,11 +9,11 @@
 [![Docs.rs Core](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
 [![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
-[![Documentation](https://img.shields.io/badge/📚%20ユーザーガイド-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
+[![Documentation](https://img.shields.io/badge/📚%20ユーザーガイド-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index.md)
 [![API Reference](https://img.shields.io/badge/🔧%20API%20リファレンス-docs.rs-blue)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-データの**構造**と**意味**を理解する次世代diffツール。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
+データの**構造**と**意味**を理解する次世代diffツール。テキストの変更ではなく、本質的な差分を抽出。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
 
 ```bash
 # 従来のdiffはフォーマットのノイズを表示（キー順序、ケツカンマなど）
@@ -102,9 +102,38 @@ diffx:      ~0.005秒（クリーンな意味的出力）
     *   `git` や既存のマージツールとの連携を目的としています。
     *   **注意点**: この形式は、`diffx` が検出した意味的な差分のみを従来のdiff形式で表現します。意味的な差分ではない変更（キーの順序変更、空白の変更など）は表示されません。あくまで既存ツールとの互換性のための補助的な位置づけです。
 
-## アーキテクチャ（Architecture）
+## 🏗️ アーキテクチャ
 
-### 構成案
+### システム概要
+
+```mermaid
+graph TB
+    subgraph Core["diffx-core"]
+        B[フォーマットパーサー]
+        C[意味的差分エンジン]
+        D[出力フォーマッター]
+        B --> C --> D
+    end
+
+    E[CLIツール] --> Core
+    F[NPMパッケージ] --> E
+    G[Pythonパッケージ] --> E
+
+    H[JSON] --> B
+    I[YAML] --> B
+    J[TOML] --> B
+    K[XML] --> B
+    L[INI] --> B
+    M[CSV] --> B
+
+    D --> N[CLI表示]
+    D --> O[JSON出力]
+    D --> P[YAML出力]
+    D --> Q[Unified Diff]
+```
+
+### プロジェクト構造
+
 ```
 diffx/
 ├── diffx-core/      # 差分抽出ライブラリ（Crate）
@@ -119,30 +148,64 @@ diffx/
 ```
 
 ### 技術スタック
+
 - **Rust**（高速・安全・クロスプラットフォーム）
-- `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` などのパーサー
-- `clap`（CLI引数処理）
+- `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` パーサー
+- `clap`（CLI引数解析）
 - `colored`（CLI出力の色付け）
 - `similar`（Unified Format出力）
 
-## 🚀 インストールと使い方
+## 🔗 メタチェイン
+
+差分レポートを比較して、変更の進化を時系列で追跡：
+
+```mermaid
+graph LR
+    A[config_v1.json] --> D1[diffx]
+    B[config_v2.json] --> D1
+    D1 --> R1[diff_report_v1.json]
+
+    B --> D2[diffx]
+    C[config_v3.json] --> D2
+    D2 --> R2[diff_report_v2.json]
+
+    R1 --> D3[diffx]
+    R2 --> D3
+    D3 --> M[メタ差分レポート]
+```
+
+```bash
+$ diffx config_v1.json config_v2.json --output json > report1.json
+$ diffx config_v2.json config_v3.json --output json > report2.json
+$ diffx report1.json report2.json  # 変更の変更を比較！
+```
+
+## 🚀 クイックスタート
 
 ### インストール
 
 ```bash
-# CLIツールをインストール
+# Rust（推奨 - ネイティブパフォーマンス）
 cargo install diffx
+
+# Node.jsエコシステム
+npm install diffx-js
+
+# Pythonエコシステム
+pip install diffx-python
+
+# またはGitHub Releasesから事前ビルド済みバイナリをダウンロード
 ```
 
-詳細な使い方とサンプルは [ドキュメント](docs/index_ja.md) をご確認ください。
+詳細な使い方とサンプルは [ドキュメント](docs/index.md) をご確認ください。
 
 ### クイックドキュメントリンク
 
-- **[はじめに](docs/user-guide/getting-started_ja.md)** - 基本を学ぶ
-- **[インストールガイド](docs/user-guide/installation_ja.md)** - プラットフォーム別セットアップ
-- **[CLI リファレンス](docs/reference/cli-reference_ja.md)** - 完全なコマンドリファレンス
-- **[実用例](docs/user-guide/examples_ja.md)** - 業界別使用例
-- **[統合ガイド](docs/guides/integrations_ja.md)** - CI/CD と自動化
+- **[はじめに](docs/user-guide/getting-started.md)** - 基本を学ぶ
+- **[インストールガイド](docs/user-guide/installation.md)** - プラットフォーム別セットアップ
+- **[CLIリファレンス](docs/reference/cli-reference.md)** - 完全なコマンドリファレンス
+- **[実用例](docs/user-guide/examples.md)** - 業界別使用例
+- **[統合ガイド](docs/guides/integrations.md)** - CI/CD と自動化
 
 ### 基本的な使い方
 
@@ -172,20 +235,73 @@ diffx huge_dataset.json huge_dataset_v2.json --optimize
 # ディレクトリ比較
 diffx config_dir1/ config_dir2/ --recursive
 
-# メタチェイニング（変更の追跡）
+# 変更追跡のメタチェイニング
 diffx config_v1.json config_v2.json --output json > diff1.json
 diffx config_v2.json config_v3.json --output json > diff2.json
 diffx diff1.json diff2.json  # 変更の変更を比較！
 ```
 
-## 将来的な展望
+### 統合例
 
-- **インタラクティブTUI (`diffx-tui`)**: `diffx`の力を示すためのサンプル兼高機能ビューア。左右に並べたデータと、それと連動する差分リストを表示し、「フォーマットの揺れに惑わされない、本質的な差分理解」という体験を提供する。
-- **他言語向けラッパー**: Node.js/Python環境からdiffx CLIを呼び出すラッパーパッケージ
-- GitHub Actionsでの差分チェック
-- AIエージェントとの連携（差分要約・説明）
-- Web UI版（diffx-web）
-- VSCode拡張（diffx-vscode）
+**CI/CDパイプライン：**
+
+```yaml
+- name: 設定変更のチェック
+  run: |
+    diffx config/prod.yaml config/staging.yaml --output json > changes.json
+    # デプロイ検証のためにchanges.jsonを処理
+
+- name: 高速ファイル変更検知
+  run: |
+    if ! diffx config/current.json config/new.json --quiet; then
+      echo "設定が変更されました、デプロイを開始します"
+    fi
+
+- name: クリーンな差分のための無視オプション付き比較
+  run: |
+    diffx api_old.json api_new.json --ignore-case --ignore-whitespace --output json > api_changes.json
+    # フォーマットを無視し、意味的変更に集中
+
+- name: 大きなデータセットの効率的比較
+  run: |
+    diffx large_prod_data.json large_staging_data.json --optimize --output json > data_changes.json
+    # CIでの大きなファイルの最適化処理
+```
+
+**Gitフック：**
+
+```bash
+#!/bin/bash
+# pre-commitフック
+if diffx package.json HEAD~1:package.json --output json | jq -e '.[] | select(.Added)' > /dev/null; then
+  echo "新しい依存関係が検出されました、セキュリティ監査を実行中..."
+fi
+```
+
+## 🌍 多言語サポート
+
+diffxは複数のエコシステムで利用可能：
+
+```bash
+# Rust（ネイティブCLI）
+cargo install diffx
+
+# Node.jsラッパー
+npm install diffx-js
+
+# Pythonラッパー
+pip install diffx-python
+```
+
+すべてのパッケージは自動バイナリダウンロードで同じ意味的差分機能を提供します。
+
+## 🔮 将来の計画
+
+- **インタラクティブTUI (`diffx-tui`)**: diffxの機能を示すパワフルなビューアーで、サイドバイサイドのデータ表示
+- **AIエージェント統合**: 自動差分要約と説明
+- **Web UI版** (`diffx-web`)
+- **VSCode拡張** (`diffx-vscode`)
+- **高度なCI/CDテンプレート**: 一般的なユースケース向けの事前構築済みワークフロー
 
 ## 🤝 コントリビューション
 

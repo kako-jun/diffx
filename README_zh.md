@@ -191,19 +191,27 @@ $ diffx report1.json report2.json  # 比较变更本身！
 ### 安装
 
 ```bash
-# 安装 CLI 工具
+# Rust（推荐 - 原生性能）
 cargo install diffx
+
+# Node.js 生态系统
+npm install diffx-js
+
+# Python 生态系统
+pip install diffx-python
+
+# 或从 GitHub Releases 下载预构建的二进制文件
 ```
 
-详细用法和示例，请参阅[文档](docs/index_zh.md)。
+详细用法和示例，请参阅[文档](docs/index.md)。
 
 ### 快速文档链接
 
-- **[快速入门](docs/user-guide/getting-started_zh.md)** - 学习基础知识
-- **[安装指南](docs/user-guide/installation_zh.md)** - 平台特定设置
-- **[CLI 参考](docs/reference/cli-reference_zh.md)** - 完整命令参考
-- **[实际示例](docs/user-guide/examples_zh.md)** - 行业用例
-- **[集成指南](docs/guides/integrations_zh.md)** - CI/CD 和自动化
+- **[快速入门](docs/user-guide/getting-started.md)** - 学习基础知识
+- **[安装指南](docs/user-guide/installation.md)** - 平台特定设置
+- **[CLI 参考](docs/reference/cli-reference.md)** - 完整命令参考
+- **[实际示例](docs/user-guide/examples.md)** - 行业用例
+- **[集成指南](docs/guides/integrations.md)** - CI/CD 和自动化
 
 ### 基本用法
 
@@ -249,6 +257,17 @@ diffx diff1.json diff2.json  # 比较变更本身！
     diffx config/prod.yaml config/staging.yaml --output json > changes.json
     # 处理 changes.json 进行部署验证
 
+- name: 快速文件变更检测
+  run: |
+    if ! diffx config/current.json config/new.json --quiet; then
+      echo "配置已更改，触发部署"
+    fi
+
+- name: 使用忽略选项进行更清洁的差异比较
+  run: |
+    diffx api_old.json api_new.json --ignore-case --ignore-whitespace --output json > api_changes.json
+    # 专注于语义变更，忽略格式化
+
 - name: 高效比较大数据集  
   run: |
     diffx large_prod_data.json large_staging_data.json --optimize --output json > data_changes.json
@@ -265,14 +284,30 @@ if diffx package.json HEAD~1:package.json --output json | jq -e '.[] | select(.A
 fi
 ```
 
+## 🌍 多语言支持
+
+diffx 可在多个生态系统中使用：
+
+```bash
+# Rust（原生 CLI）
+cargo install diffx
+
+# Node.js 包装器
+npm install diffx-js
+
+# Python 包装器
+pip install diffx-python
+```
+
+所有包都通过自动二进制下载提供相同的语义差异功能。
+
 ## 🔮 未来计划
 
-- **交互式 TUI (`diffx-tui`)**: 强大的查看器，展示 diffx 功能，支持并排数据显示
-- **语言包装器**: Node.js 和 Python 包用于调用 diffx CLI
-- **GitHub Actions 集成**: 内置差异检查工作流
+- **交互式 TUI (`diffx-tui`)**: 展示 diffx 功能的强大查看器，支持并排数据显示
 - **AI 代理集成**: 自动化差异摘要和解释
 - **Web UI 版本** (`diffx-web`)
 - **VSCode 扩展** (`diffx-vscode`)
+- **高级 CI/CD 模板**: 常见用例的预构建工作流
 
 ## 🤝 贡献
 
