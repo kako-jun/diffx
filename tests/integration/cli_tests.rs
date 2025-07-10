@@ -847,3 +847,270 @@ fn test_complex_options_combination() -> Result<(), Box<dyn std::error::Error>> 
         ));
     Ok(())
 }
+
+// ===== UNIX COMMAND PATTERN TESTS =====
+
+#[test]
+fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error>> {
+    // Test diff -q equivalent: quiet mode exit codes only
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file1.json") // Same file
+        .arg("--quiet");
+    cmd.assert()
+        .code(0) // No differences
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+
+    // Test with different files
+    let mut cmd2 = diffx_cmd();
+    cmd2.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--quiet");
+    cmd2.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_unix_pattern_diff_brief_equivalent() -> Result<(), Box<dyn std::error::Error>> {
+    // Test diff --brief equivalent: filenames only
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--brief");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains(
+            "Files ../tests/fixtures/file1.json and ../tests/fixtures/file2.json differ",
+        ))
+        .stdout(predicate::str::contains("age").not()) // Should not show details
+        .stdout(predicate::str::contains("city").not());
+    Ok(())
+}
+
+#[test]
+fn test_unix_pattern_diff_i_equivalent() -> Result<(), Box<dyn std::error::Error>> {
+    // Test diff -i equivalent: ignore case
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/case_test1.json")
+        .arg("../tests/fixtures/case_test2.json")
+        .arg("--ignore-case");
+    cmd.assert()
+        .code(0) // No differences when ignoring case
+        .stdout(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_unix_pattern_diff_w_equivalent() -> Result<(), Box<dyn std::error::Error>> {
+    // Test diff -w equivalent: ignore whitespace
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/whitespace_test1.json")
+        .arg("../tests/fixtures/whitespace_test2.json")
+        .arg("--ignore-whitespace");
+    cmd.assert()
+        .code(0) // No differences when ignoring whitespace
+        .stdout(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_unix_pattern_diff_c3_equivalent() -> Result<(), Box<dyn std::error::Error>> {
+    // Test diff -C3 equivalent: context lines
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/context_test1.json")
+        .arg("../tests/fixtures/context_test2.json")
+        .arg("--output")
+        .arg("unified")
+        .arg("--context")
+        .arg("2");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("-      \"port\": 5432"))
+        .stdout(predicate::str::contains("+      \"port\": 5433"))
+        .stdout(predicate::str::contains("\"host\": \"localhost\"")); // Context line
+    Ok(())
+}
+
+#[test]
+fn test_unix_combined_pattern_qiw() -> Result<(), Box<dyn std::error::Error>> {
+    // Test combined pattern: diff -qiw equivalent
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/case_test1.json")
+        .arg("../tests/fixtures/whitespace_test2.json")
+        .arg("--quiet")
+        .arg("--ignore-case")
+        .arg("--ignore-whitespace");
+    cmd.assert()
+        .code(1) // Still differences (different keys)
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_unix_directory_brief_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test diff -r --brief equivalent for directories
+    // Note: --brief affects individual file comparison, not directory traversal
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2")
+        .arg("--recursive")
+        .arg("--brief");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("Comparing")); // Directory comparison shows file names
+    Ok(())
+}
+
+// ===== CI/CD AUTOMATION PATTERN TESTS =====
+
+#[test]
+fn test_cicd_deployment_validation_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test deployment validation pattern from documentation
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_dev.json")
+        .arg("../tests/fixtures/config_prod.json")
+        .arg("--ignore-case")
+        .arg("--ignore-whitespace")
+        .arg("--ignore-keys-regex")
+        .arg("^(environment|debug|host|port)")
+        .arg("--output")
+        .arg("json");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("Modified").or(predicate::str::contains("[]")));
+    Ok(())
+}
+
+#[test]
+fn test_cicd_config_drift_monitoring() -> Result<(), Box<dyn std::error::Error>> {
+    // Test configuration drift monitoring pattern
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(hostname|instance_id|last_.*|timestamp)")
+        .arg("--ignore-case")
+        .arg("--quiet");
+    cmd.assert()
+        .code(1) // Configuration drift detected
+        .stdout(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_cicd_batch_file_validation() -> Result<(), Box<dyn std::error::Error>> {
+    // Test batch file validation pattern
+    use std::fs;
+    use tempfile::tempdir;
+
+    let temp_dir = tempdir()?;
+    let config1_path = temp_dir.path().join("config1.json");
+    let config2_path = temp_dir.path().join("config2.json");
+
+    fs::write(&config1_path, r#"{"app": "test", "version": "1.0"}"#)?;
+    fs::write(&config2_path, r#"{"app": "test", "version": "1.1"}"#)?;
+
+    // Test first file (no differences)
+    let mut cmd1 = diffx_cmd();
+    cmd1.arg(&config1_path)
+        .arg(&config1_path)
+        .arg("--quiet");
+    cmd1.assert().code(0);
+
+    // Test second file (differences)
+    let mut cmd2 = diffx_cmd();
+    cmd2.arg(&config1_path)
+        .arg(&config2_path)
+        .arg("--quiet");
+    cmd2.assert().code(1);
+
+    Ok(())
+}
+
+#[test]
+fn test_git_workflow_integration_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test Git workflow integration pattern
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--ignore-whitespace")
+        .arg("--context")
+        .arg("2")
+        .arg("--output")
+        .arg("unified");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("-"))
+        .stdout(predicate::str::contains("+"));
+    Ok(())
+}
+
+#[test]
+fn test_monitoring_script_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test monitoring script pattern with alerting
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_dev.json")
+        .arg("../tests/fixtures/config_prod.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(hostname|instance_id|last_update|timestamp)")
+        .arg("--output")
+        .arg("json");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::starts_with("["));
+    Ok(())
+}
+
+// ===== ADVANCED AUTOMATION TESTS =====
+
+#[test]
+fn test_api_contract_validation_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test API contract validation from documentation examples
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(timestamp|requestId|serverId|responseTime)$")
+        .arg("--ignore-case")
+        .arg("--output")
+        .arg("json");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("Modified").or(predicate::str::contains("Added")));
+    Ok(())
+}
+
+#[test]
+fn test_pre_commit_hook_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test pre-commit hook pattern from documentation
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_dev.json")
+        .arg("../tests/fixtures/config_prod.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(environment|debug)$")
+        .arg("--quiet");
+    cmd.assert()
+        .code(1); // Would trigger pre-commit warning
+    Ok(())
+}
+
+#[test]
+fn test_kubernetes_config_drift_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    // Test Kubernetes configuration drift detection pattern
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_dev.json")
+        .arg("../tests/fixtures/config_prod.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(metadata\\.(creationTimestamp|resourceVersion|uid)|status\\..*)")
+        .arg("--output")
+        .arg("json");
+    cmd.assert()
+        .code(1) // Configuration differences
+        .stdout(predicate::str::starts_with("["));
+    Ok(())
+}
