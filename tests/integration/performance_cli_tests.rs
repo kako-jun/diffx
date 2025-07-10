@@ -35,7 +35,7 @@ fn test_optimize_flag_basic() {
         .arg(file2.path())
         .arg("--optimize")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("users[0].score"));
 }
 
@@ -68,7 +68,7 @@ fn test_optimize_with_batch_size() {
         .arg("--batch-size")
         .arg("500")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("items[500].name"));
 }
 
@@ -102,7 +102,7 @@ fn test_optimize_with_array_id_key() {
         .arg("--array-id-key")
         .arg("sku")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("products[sku=\"DEF456\"].price"));
 }
 
@@ -138,7 +138,7 @@ fn test_optimize_with_path_filter() {
         .arg("--path")
         .arg("config.database")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("config.database.port"))
         .stdout(predicate::str::contains("other").not());
 }
@@ -171,7 +171,7 @@ fn test_optimize_with_ignore_regex() {
         .arg("--ignore-keys-regex")
         .arg("^(timestamp|_.*)")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("config.host"))
         .stdout(predicate::str::contains("timestamp").not())
         .stdout(predicate::str::contains("_internal").not());
@@ -196,7 +196,7 @@ fn test_optimize_json_output() {
         .arg("--output")
         .arg("json")
         .assert()
-        .success()
+        .code(1) // Differences found
         .get_output()
         .stdout
         .clone();
@@ -234,7 +234,7 @@ fn test_optimize_directory_comparison() {
         .arg("--recursive")
         .arg("--optimize")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("config.value"));
 }
 
@@ -269,7 +269,7 @@ fn test_standard_vs_optimize_same_results() {
         .arg("--output")
         .arg("json")
         .assert()
-        .success()
+        .code(1) // Differences found
         .get_output()
         .stdout
         .clone();
@@ -282,7 +282,7 @@ fn test_standard_vs_optimize_same_results() {
         .arg("--output")
         .arg("json")
         .assert()
-        .success()
+        .code(1) // Differences found
         .get_output()
         .stdout
         .clone();
@@ -315,6 +315,6 @@ fn test_batch_size_without_optimize_ignored() {
         .arg("--batch-size")
         .arg("2000")
         .assert()
-        .success()
+        .code(1) // Differences found
         .stdout(predicate::str::contains("key"));
 }

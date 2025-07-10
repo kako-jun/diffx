@@ -228,9 +228,7 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/data2.json")
         .arg("--epsilon")
         .arg("0.00001");
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::is_empty()); // No differences expected within epsilon (empty output)
+    cmd.assert().success().stdout(predicate::str::is_empty()); // No differences expected within epsilon (empty output)
     Ok(())
 }
 
