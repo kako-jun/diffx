@@ -39,8 +39,6 @@
 ### 📋 项目信息
 *项目治理和开发信息*
 
-- **[变更日志](project/changelog_zh.md)** - 版本历史和发布说明
-- **[路线图](project/roadmap_zh.md)** - 未来开发计划
 - **[贡献指南](../CONTRIBUTING.md)** - 如何为项目做贡献
 
 ## diffx 有何不同？
