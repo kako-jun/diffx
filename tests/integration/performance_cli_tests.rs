@@ -40,39 +40,6 @@ fn test_optimize_flag_basic() {
 }
 
 #[test]
-fn test_optimize_with_batch_size() {
-    let mut large_array = Vec::new();
-    for i in 0..1000 {
-        large_array.push(serde_json::json!({
-            "id": i,
-            "name": format!("user_{}", i),
-            "data": format!("value_{}", i)
-        }));
-    }
-
-    let data1 = serde_json::json!({"items": large_array});
-    let mut data2 = data1.clone();
-    data2["items"][500]["name"] = serde_json::json!("modified_user");
-
-    let file1 = NamedTempFile::with_suffix(".json").unwrap();
-    let file2 = NamedTempFile::with_suffix(".json").unwrap();
-
-    fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
-    fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
-
-    // Test optimize with custom batch size
-    diffx_cmd()
-        .arg(file1.path())
-        .arg(file2.path())
-        .arg("--optimize")
-        .arg("--batch-size")
-        .arg("500")
-        .assert()
-        .code(1) // Differences found
-        .stdout(predicate::str::contains("items[500].name"));
-}
-
-#[test]
 fn test_optimize_with_array_id_key() {
     let data1 = serde_json::json!({
         "products": [
@@ -295,26 +262,4 @@ fn test_standard_vs_optimize_same_results() {
         standard_json.as_array().unwrap().len(),
         optimized_json.as_array().unwrap().len()
     );
-}
-
-#[test]
-fn test_batch_size_without_optimize_ignored() {
-    let data1 = serde_json::json!({"key": "value1"});
-    let data2 = serde_json::json!({"key": "value2"});
-
-    let file1 = NamedTempFile::with_suffix(".json").unwrap();
-    let file2 = NamedTempFile::with_suffix(".json").unwrap();
-
-    fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
-    fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
-
-    // Batch size without optimize should work (but be ignored)
-    diffx_cmd()
-        .arg(file1.path())
-        .arg(file2.path())
-        .arg("--batch-size")
-        .arg("2000")
-        .assert()
-        .code(1) // Differences found
-        .stdout(predicate::str::contains("key"));
 }

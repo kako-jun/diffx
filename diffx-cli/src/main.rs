@@ -14,7 +14,6 @@ use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -54,13 +53,29 @@ struct Args {
     #[arg(long)]
     array_id_key: Option<String>,
 
-    /// Enable memory optimization for large files (explicitly requested)
+    /// Enable memory optimization for large files (auto-detect by default)
     #[arg(long)]
     optimize: bool,
 
-    /// Batch size for processing large data structures (default: 1000)
+    /// Show N lines of context around differences (unified diff style)
     #[arg(long)]
-    batch_size: Option<usize>,
+    context: Option<usize>,
+
+    /// Ignore whitespace differences in string values
+    #[arg(long)]
+    ignore_whitespace: bool,
+
+    /// Ignore case differences in string values
+    #[arg(long)]
+    ignore_case: bool,
+
+    /// Suppress normal output; return only exit status (diff -q style)
+    #[arg(short, long)]
+    quiet: bool,
+
+    /// Report only filenames, not the differences (diff --brief style)
+    #[arg(long)]
+    brief: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
@@ -104,6 +119,25 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
     }
 }
 
+fn should_auto_optimize(input1: &Path, input2: &Path) -> Result<bool> {
+    // Auto-optimize for files larger than 1MB
+    const LARGE_FILE_THRESHOLD: u64 = 1024 * 1024; // 1MB
+
+    let size1 = if input1.to_str() == Some("-") {
+        0 // stdin - can't determine size
+    } else {
+        input1.metadata().map(|m| m.len()).unwrap_or(0)
+    };
+
+    let size2 = if input2.to_str() == Some("-") {
+        0 // stdin - can't determine size
+    } else {
+        input2.metadata().map(|m| m.len()).unwrap_or(0)
+    };
+
+    Ok(size1 > LARGE_FILE_THRESHOLD || size2 > LARGE_FILE_THRESHOLD)
+}
+
 fn read_input(file_path: &Path) -> Result<String> {
     if file_path.to_str() == Some("-") {
         let mut buffer = String::new();
@@ -128,7 +162,46 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
     }
 }
 
-fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) {
+fn print_cli_output_basic(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) {
+    if differences.is_empty() {
+        // Follow diff convention: output nothing when no differences
+        return;
+    }
+
+    let get_key = |d: &DiffResult| -> String {
+        match d {
+            DiffResult::Added(k, _) => k.clone(),
+            DiffResult::Removed(k, _) => k.clone(),
+            DiffResult::Modified(k, _, _) => k.clone(),
+            DiffResult::TypeChanged(k, _, _) => k.clone(),
+        }
+    };
+
+    differences.sort_by_key(get_key);
+
+    for diff in &differences {
+        let key = get_key(diff);
+        // Indent based on the depth of the key
+        let depth = key.chars().filter(|&c| c == '.' || c == '[').count();
+        let indent = "  ".repeat(depth);
+
+        let diff_str = match diff {
+            DiffResult::Added(k, value) => format!("+ {k}: {value}").blue(),
+            DiffResult::Removed(k, value) => format!("- {k}: {value}").yellow(),
+            DiffResult::Modified(k, v1, v2) => format!("~ {k}: {v1} -> {v2}").cyan(),
+            DiffResult::TypeChanged(k, v1, v2) => format!(
+                "! {k}: {v1} ({}) -> {v2} ({})",
+                value_type_name(v1),
+                value_type_name(v2)
+            )
+            .magenta(),
+        };
+
+        println!("{indent}{diff_str}");
+    }
+}
+
+fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value, _args: &Args) {
     if differences.is_empty() {
         // Follow diff convention: output nothing when no differences
         return;
@@ -232,7 +305,7 @@ fn extract_path_value(value: &Value, path: &str) -> Option<Value> {
     Some(current.clone())
 }
 
-fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
+fn print_unified_output_basic(v1: &Value, v2: &Value) -> Result<()> {
     let content1_pretty = serde_json::to_string_pretty(v1)?;
     let content2_pretty = serde_json::to_string_pretty(v2)?;
 
@@ -245,6 +318,40 @@ fn print_unified_output(v1: &Value, v2: &Value) -> Result<()> {
             similar::ChangeTag::Equal => " ",
         };
         print!("{sign}{change}");
+    }
+    Ok(())
+}
+
+fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
+    let content1_pretty = serde_json::to_string_pretty(v1)?;
+    let content2_pretty = serde_json::to_string_pretty(v2)?;
+
+    let diff = similar::TextDiff::from_lines(&content1_pretty, &content2_pretty);
+
+    if let Some(context_lines) = args.context {
+        // Use unified_diff with custom context
+        for group in diff.grouped_ops(context_lines) {
+            for op in group {
+                for change in diff.iter_changes(&op) {
+                    let sign = match change.tag() {
+                        similar::ChangeTag::Delete => "-",
+                        similar::ChangeTag::Insert => "+",
+                        similar::ChangeTag::Equal => " ",
+                    };
+                    print!("{sign}{change}");
+                }
+            }
+        }
+    } else {
+        // Default behavior - show all changes
+        for change in diff.iter_all_changes() {
+            let sign = match change.tag() {
+                similar::ChangeTag::Delete => "-",
+                similar::ChangeTag::Insert => "+",
+                similar::ChangeTag::Equal => " ",
+            };
+            print!("{sign}{change}");
+        }
     }
     Ok(())
 }
@@ -270,9 +377,10 @@ fn run() -> Result<()> {
     let epsilon = args.epsilon;
     let array_id_key = args.array_id_key.as_deref();
 
-    // Memory optimization settings
-    let use_memory_optimization = args.optimize;
-    let batch_size = args.batch_size.unwrap_or(1000);
+    // Memory optimization settings - auto-detect based on file size
+    let use_memory_optimization =
+        args.optimize || should_auto_optimize(&args.input1, &args.input2)?;
+    let batch_size = 1000; // Fixed batch size for optimization
 
     // Handle directory comparison
     if args.recursive {
@@ -315,19 +423,18 @@ fn run() -> Result<()> {
     let v1: Value = parse_content(&content1, input_format)?;
     let v2: Value = parse_content(&content2, input_format)?;
 
-    let differences = if use_memory_optimization {
-        // Use optimized diff configuration
+    let differences = {
+        // Always use configuration-based diff to support all options
         let config = DiffConfig {
             ignore_keys_regex: ignore_keys_regex.clone(),
             epsilon,
             array_id_key: array_id_key.map(|s| s.to_string()),
-            use_memory_optimization: true,
+            use_memory_optimization,
             batch_size,
+            ignore_whitespace: args.ignore_whitespace,
+            ignore_case: args.ignore_case,
         };
         diff_with_config(&v1, &v2, &config)
-    } else {
-        // Use standard diff for compatibility
-        diff(&v1, &v2, ignore_keys_regex.as_ref(), epsilon, array_id_key)
     };
 
     let mut differences = differences;
@@ -349,21 +456,36 @@ fn run() -> Result<()> {
     // Check if differences were found
     let has_differences = !differences.is_empty();
 
-    match output_format {
-        OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
-        OutputFormat::Json => print_json_output(differences)?,
-        OutputFormat::Yaml => print_yaml_output(differences)?,
-        OutputFormat::Unified => {
-            // For unified output with path filtering, extract the filtered portion
-            if let Some(path) = filter_path {
-                let filtered_v1 = extract_path_value(&v1, path);
-                let filtered_v2 = extract_path_value(&v2, path);
-                match (filtered_v1, filtered_v2) {
-                    (Some(fv1), Some(fv2)) => print_unified_output(&fv1, &fv2)?,
-                    _ => print_unified_output(&v1, &v2)?,
+    // Handle quiet mode - only return exit code
+    if args.quiet {
+        // Don't print anything, just exit with appropriate code
+    } else if args.brief {
+        // Only print file names if there are differences
+        if has_differences {
+            println!(
+                "Files {} and {} differ",
+                args.input1.display(),
+                args.input2.display()
+            );
+        }
+    } else {
+        // Normal output
+        match output_format {
+            OutputFormat::Cli => print_cli_output(differences, &v1, &v2, &args),
+            OutputFormat::Json => print_json_output(differences)?,
+            OutputFormat::Yaml => print_yaml_output(differences)?,
+            OutputFormat::Unified => {
+                // For unified output with path filtering, extract the filtered portion
+                if let Some(path) = filter_path {
+                    let filtered_v1 = extract_path_value(&v1, path);
+                    let filtered_v2 = extract_path_value(&v2, path);
+                    match (filtered_v1, filtered_v2) {
+                        (Some(fv1), Some(fv2)) => print_unified_output(&fv1, &fv2, &args)?,
+                        _ => print_unified_output(&v1, &v2, &args)?,
+                    }
+                } else {
+                    print_unified_output(&v1, &v2, &args)?
                 }
-            } else {
-                print_unified_output(&v1, &v2)?
             }
         }
     }
@@ -433,7 +555,10 @@ fn compare_directories(
                 } else {
                     infer_format_from_path(path1)
                         .or_else(|| infer_format_from_path(path2))
-                        .context(format!("Could not infer format for {}. Please specify --format.", relative_path.display()))?
+                        .context(format!(
+                            "Could not infer format for {}. Please specify --format.",
+                            relative_path.display()
+                        ))?
                 };
 
                 let v1: Value = parse_content(&content1, input_format)?;
@@ -447,6 +572,8 @@ fn compare_directories(
                         array_id_key: array_id_key.map(|s| s.to_string()),
                         use_memory_optimization: true,
                         batch_size,
+                        ignore_whitespace: false, // Directory comparison uses basic options
+                        ignore_case: false,
                     };
                     diff_with_config(&v1, &v2, &config)
                 } else {
@@ -474,10 +601,13 @@ fn compare_directories(
                 }
 
                 match output {
-                    OutputFormat::Cli => print_cli_output(differences, &v1, &v2),
+                    OutputFormat::Cli => {
+                        // For directory comparison, use basic output without new options
+                        print_cli_output_basic(differences, &v1, &v2);
+                    }
                     OutputFormat::Json => print_json_output(differences)?,
                     OutputFormat::Yaml => print_yaml_output(differences)?,
-                    OutputFormat::Unified => print_unified_output(&v1, &v2)?,
+                    OutputFormat::Unified => print_unified_output_basic(&v1, &v2)?,
                 }
                 compared_files += 1;
             }

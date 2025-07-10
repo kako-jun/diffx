@@ -523,7 +523,6 @@ fn test_combined_array_id_and_epsilon() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
-
 #[test]
 fn test_format_specification_with_stdin() -> Result<(), Box<dyn std::error::Error>> {
     use std::io::Write;
@@ -627,3 +626,224 @@ fn test_environment_config_comparison() -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+// ===== NEW OPTIONS TESTS =====
+
+#[test]
+fn test_ignore_case_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test ignore-case option - should not show differences for case-only changes
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/case_test1.json")
+        .arg("../tests/fixtures/case_test2.json")
+        .arg("--ignore-case");
+    cmd.assert()
+        .code(0) // No differences when ignoring case
+        .stdout(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_ignore_case_option_shows_differences_without_flag() -> Result<(), Box<dyn std::error::Error>>
+{
+    // Test that case differences are shown without the ignore-case flag
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/case_test1.json")
+        .arg("../tests/fixtures/case_test2.json");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains(
+            "~ status: \"Active\" -> \"ACTIVE\"",
+        ))
+        .stdout(predicate::str::contains("~ level: \"Info\" -> \"INFO\""));
+    Ok(())
+}
+
+#[test]
+fn test_ignore_whitespace_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test ignore-whitespace option - should not show differences for whitespace-only changes
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/whitespace_test1.json")
+        .arg("../tests/fixtures/whitespace_test2.json")
+        .arg("--ignore-whitespace");
+    cmd.assert()
+        .code(0) // No differences when ignoring whitespace
+        .stdout(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_ignore_whitespace_option_shows_differences_without_flag(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Test that whitespace differences are shown without the ignore-whitespace flag
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/whitespace_test1.json")
+        .arg("../tests/fixtures/whitespace_test2.json");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains(
+            "~ text: \"Hello  World\" -> \"Hello World\"",
+        ))
+        .stdout(predicate::str::contains(
+            "~ message: \"Test\\tValue\" -> \"Test Value\"",
+        ));
+    Ok(())
+}
+
+#[test]
+fn test_combined_ignore_options() -> Result<(), Box<dyn std::error::Error>> {
+    // Test combining ignore-case and ignore-whitespace options
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/case_test1.json")
+        .arg("../tests/fixtures/whitespace_test2.json") // Mix case and whitespace differences
+        .arg("--ignore-case")
+        .arg("--ignore-whitespace");
+    cmd.assert()
+        .code(1) // Still differences (different keys)
+        .stdout(predicate::str::contains("- level: \"Info\""))
+        .stdout(predicate::str::contains("+ message: \"Test Value\""));
+    Ok(())
+}
+
+#[test]
+fn test_quiet_option_no_differences() -> Result<(), Box<dyn std::error::Error>> {
+    // Test quiet option with identical files - should output nothing and exit 0
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file1.json") // Same file
+        .arg("--quiet");
+    cmd.assert()
+        .code(0) // No differences
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_quiet_option_with_differences() -> Result<(), Box<dyn std::error::Error>> {
+    // Test quiet option with different files - should output nothing and exit 1
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--quiet");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::is_empty())
+        .stderr(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_brief_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test brief option - should only show filenames, not differences
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--brief");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains(
+            "Files ../tests/fixtures/file1.json and ../tests/fixtures/file2.json differ",
+        ))
+        .stdout(predicate::str::contains("age").not()) // Should not show actual differences
+        .stdout(predicate::str::contains("city").not());
+    Ok(())
+}
+
+#[test]
+fn test_brief_option_no_differences() -> Result<(), Box<dyn std::error::Error>> {
+    // Test brief option with identical files - should output nothing
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file1.json") // Same file
+        .arg("--brief");
+    cmd.assert()
+        .code(0) // No differences
+        .stdout(predicate::str::is_empty());
+    Ok(())
+}
+
+#[test]
+fn test_context_option_unified_output() -> Result<(), Box<dyn std::error::Error>> {
+    // Test context option with unified output format
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/context_test1.json")
+        .arg("../tests/fixtures/context_test2.json")
+        .arg("--output")
+        .arg("unified")
+        .arg("--context")
+        .arg("2");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("-      \"port\": 5432"))
+        .stdout(predicate::str::contains("+      \"port\": 5433"))
+        .stdout(predicate::str::contains("\"host\": \"localhost\"")) // Context line
+        .stdout(predicate::str::contains("\"name\": \"myapp\"")); // Context line
+    Ok(())
+}
+
+#[test]
+fn test_context_option_zero_context() -> Result<(), Box<dyn std::error::Error>> {
+    // Test context option with zero context - should show only changed lines
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/context_test1.json")
+        .arg("../tests/fixtures/context_test2.json")
+        .arg("--output")
+        .arg("unified")
+        .arg("--context")
+        .arg("0");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("-      \"port\": 5432"))
+        .stdout(predicate::str::contains("+      \"port\": 5433"))
+        .stdout(predicate::str::contains("\"host\": \"localhost\"").not()) // No context
+        .stdout(predicate::str::contains("\"name\": \"myapp\"").not()); // No context
+    Ok(())
+}
+
+#[test]
+fn test_auto_optimization_detection() -> Result<(), Box<dyn std::error::Error>> {
+    // Test that small files use standard mode, large files auto-optimize
+    // Since we can't easily test large files, we test that small files work normally
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("~ age: 30 -> 31"));
+    Ok(())
+}
+
+#[test]
+fn test_manual_optimization_flag() -> Result<(), Box<dyn std::error::Error>> {
+    // Test manual optimization flag on small files
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--optimize");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains("~ age: 30 -> 31")); // Same output as standard mode
+    Ok(())
+}
+
+#[test]
+fn test_complex_options_combination() -> Result<(), Box<dyn std::error::Error>> {
+    // Test combination of multiple new options
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_dev.json")
+        .arg("../tests/fixtures/config_prod.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(timestamp|version)$")
+        .arg("--path")
+        .arg("application")
+        .arg("--ignore-case")
+        .arg("--ignore-whitespace");
+    cmd.assert()
+        .code(1) // Differences found
+        .stdout(predicate::str::contains(
+            "~ application.debug: true -> false",
+        ))
+        .stdout(predicate::str::contains(
+            "~ application.environment: \"development\" -> \"production\"",
+        ));
+    Ok(())
+}
