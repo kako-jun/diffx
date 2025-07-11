@@ -48,3 +48,25 @@ htmlcov/
 # Binary downloads
 **/packages/*/bin/
 **/packages/*/temp/
+
+# Configuration files with sensitive data
+.config/
+**/claude_desktop_config.json
+**/.config/claude-desktop/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Local development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Documentation consistency check outputs
+docs-consistency-*.log
+docs-consistency-*.json
