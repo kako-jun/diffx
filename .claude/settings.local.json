@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh workflow:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo test:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh release edit:*)",
+      "Bash(npm publish:*)",
+      "Bash(python:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(rg:*)",
+      "Bash(cargo run:*)",
+      "Bash(npm test)",
+      "Bash(node:*)",
+      "Bash(DIFFX_CONFIG_PATH=/home/kako-jun/repos/2025/diffx/test-config.toml cargo run --bin diffx -- --help)",
+      "Bash(DIFFX_CONFIG_PATH=/home/kako-jun/repos/2025/diffx/debug-config.toml cargo run --bin diffx -- debug-file1 debug-file2 --format json)",
+      "Bash(echo:*)",
+      "Bash(DIFFX_CONFIG_PATH=/home/kako-jun/repos/2025/diffx/exact-test-config.toml cargo run --bin diffx -- exact-file1 exact-file2 --format json)",
+      "Bash(./scripts/ci-local.sh:*)",
+      "Bash(timeout 10s cargo run --bin diffx:*)",
+      "Bash(true)",
+      "Bash(rm:*)",
+      "Bash(source:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(gh issue create:*)",
+      "Bash(timeout:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": []
+  }
+}
