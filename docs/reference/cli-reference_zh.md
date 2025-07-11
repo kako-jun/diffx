@@ -634,6 +634,119 @@ done
    diffx problematic.yaml reference.yaml --output unified
    ```
 
+### 目录操作
+
+```bash
+# 递归目录比较
+diffx config_dir1/ config_dir2/ --recursive
+
+# 带输出格式的递归比较
+diffx environments/dev/ environments/prod/ -r --output json
+
+# 带过滤的递归比较
+diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
+```
+
+### 集成示例
+
+```bash
+# Git 集成
+git show HEAD~1:config.json > old_config.json
+diffx old_config.json config.json --output unified
+
+# CI/CD 管道
+diffx expected_config.json actual_config.json \
+  --ignore-keys-regex "^(deployment_time|build_id)" \
+  --output json > config_validation.json
+```
+
+### 常见错误
+
+**文件未找到:**
+```bash
+$ diffx nonexistent.json config.json
+Error: No such file or directory (os error 2)
+```
+
+**无效格式:**
+```bash
+$ diffx invalid.json valid.json
+Error: Failed to parse JSON: expected `,` or `}` at line 1 column 15
+```
+
+### 调试
+
+```bash
+# 验证格式检测
+diffx --format json file1.txt file2.txt
+```
+
+### 大文件
+
+```bash
+# 使用路径过滤处理大文件
+diffx huge1.json huge2.json --path "critical_section"
+
+# 忽略非必要数据
+diffx large1.json large2.json --ignore-keys-regex "logs|debug|metadata"
+```
+
+### 批处理
+
+```bash
+# 并行处理多个文件
+find configs/ -name "*.json" -print0 | \
+  xargs -0 -P $(nproc) -I {} \
+  sh -c 'diffx {} {}.backup || echo "Diff in {}"'
+```
+
+### 内存使用
+
+对于非常大的文件，考虑：
+- 使用 `--path` 专注于特定部分
+- 使用 `--ignore-keys-regex` 过滤大的不相关部分
+- 如果可能，分块处理文件
+
+### 配置管理
+
+```bash
+# 环境比较
+diffx prod.json staging.json --ignore-keys-regex "^(host|port|secret_.*)"
+
+# Kubernetes 清单
+diffx deployment.yaml deployment.new.yaml --ignore-keys-regex "^metadata\\\\.(creation.*|resource.*)"
+```
+
+### API 测试
+
+```bash
+# 响应验证
+diffx expected_response.json actual_response.json --ignore-keys-regex "^(timestamp|request_id)"
+
+# 模式比较
+diffx api_v1_schema.json api_v2_schema.json --path "definitions"
+```
+
+### 数据处理
+
+```bash
+# ETL 验证
+diffx input_data.json output_data.json --array-id-key "record_id" --epsilon 0.001
+
+# 数据库导出比较
+diffx export1.json export2.json --array-id-key "id" --ignore-keys-regex "^(updated_at|sync_time)"
+```
+
+### 安全审计
+
+```bash
+# 策略比较
+diffx security_policy.json security_policy.new.json --path "permissions"
+
+# 访问控制验证
+diffx rbac.yaml rbac.new.yaml --array-id-key "name"
+```
+
 ---
 
 **注意**: 此参考涵盖所有可用选项。对于快速入门，请参阅[入门指南](../user-guide/getting-started_zh.md)和[示例](../user-guide/examples_zh.md)。
