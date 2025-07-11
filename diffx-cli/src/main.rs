@@ -73,6 +73,10 @@ struct Args {
     /// Report only filenames, not the differences (diff --brief style)
     #[arg(long)]
     brief: bool,
+
+    /// Show optimization information (for debugging)
+    #[arg(long)]
+    debug: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
@@ -117,8 +121,10 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
 }
 
 fn should_auto_optimize(input1: &Path, input2: &Path) -> Result<bool> {
-    // Auto-optimize for files larger than 1MB
-    const LARGE_FILE_THRESHOLD: u64 = 1024 * 1024; // 1MB
+    // Auto-optimize for files larger than 1MB (configurable for testing)
+    let large_file_threshold = std::env::var("DIFFX_OPTIMIZE_THRESHOLD")
+        .and_then(|s| s.parse::<u64>().map_err(|_| std::env::VarError::InvalidValue))
+        .unwrap_or(1024 * 1024); // Default 1MB
 
     let size1 = if input1.to_str() == Some("-") {
         0 // stdin - can't determine size
@@ -132,7 +138,7 @@ fn should_auto_optimize(input1: &Path, input2: &Path) -> Result<bool> {
         input2.metadata().map(|m| m.len()).unwrap_or(0)
     };
 
-    Ok(size1 > LARGE_FILE_THRESHOLD || size2 > LARGE_FILE_THRESHOLD)
+    Ok(size1 > large_file_threshold || size2 > large_file_threshold)
 }
 
 fn read_input(file_path: &Path) -> Result<String> {
@@ -377,6 +383,12 @@ fn run() -> Result<()> {
     // Memory optimization settings - auto-detect based on file size
     let use_memory_optimization = should_auto_optimize(&args.input1, &args.input2)?;
     let batch_size = 1000; // Fixed batch size for optimization
+
+    // Debug information
+    if args.debug {
+        eprintln!("Debug: Optimization enabled: {}", use_memory_optimization);
+        eprintln!("Debug: Batch size: {}", batch_size);
+    }
 
     // Handle directory comparison
     if args.recursive {

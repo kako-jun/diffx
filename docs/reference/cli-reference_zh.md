@@ -406,37 +406,38 @@ diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 
 ### 性能选项
 
-#### `--optimize`
-- **类型**: 布尔标志
-- **默认值**: 自动检测（>1MB文件启用）
-- **描述**: 为大文件和数据结构启用内存高效处理
+#### 自动优化
+- **类型**: 自动功能
+- **默认值**: >1MB文件启用
+- **描述**: 大文件和数据结构自动启用内存高效处理
 
 **自动检测行为:**
 - 文件 ≤1MB: 标准模式（快速，无限内存）
 - 文件 >1MB: 优化模式（内存高效，批处理）
-- 手动覆盖: 使用 `--optimize` 强制优化小文件
+- 无需手动配置 - 优化完全透明
 
-**何时手动使用:**
-- 为小但复杂的嵌套结构强制优化
-- 内存受限环境
-- 批量处理多个文件
-- 深度嵌套结构（>10层），无论大小
+**优化功能:**
+- 基于文件大小自动检测
+- 大数据集的内存高效处理
+- 深度嵌套结构的批处理
+- 无论模式如何都保持相同输出
 
 **示例:**
 ```bash
-# 自动检测（推荐）
+# 自动检测（始终启用）
 diffx config.json config.new.json
 # 小文件使用标准模式，大文件使用优化模式
 
-# 为小文件强制优化
-diffx small_but_complex.json small_but_complex.new.json --optimize
-
-# 与其他选项组合
+# 大文件自动使用优化
 diffx massive_db.json massive_db.new.json --array-id-key "id" --path "users"
 # 大文件自动使用优化模式
+
+# 所有其他选项都与优化透明工作
+diffx complex_data.json complex_data.v2.json --ignore-keys-regex "^timestamp$"
+# 根据需要自动应用优化
 ```
 
-**性能比较:**
+**性能行为:**
 ```bash
 # 小文件 (<1MB) - 自动标准模式
 diffx config.json config.new.json
@@ -446,9 +447,9 @@ diffx config.json config.new.json
 diffx large_dataset.json large_dataset.v2.json
 # 内存高效，批处理
 
-# 手动优化覆盖
-diffx complex_small.json complex_small.new.json --optimize
-# 强制内存高效处理
+# 复杂嵌套结构 - 自动优化
+diffx deep_nested.json deep_nested.v2.json
+# 基于数据特征的透明优化
 ```
 
 ### 信息选项

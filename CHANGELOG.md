@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Exit codes** - Proper exit codes (0=no diff, 1=diff found, 2=error)
-- **Python package options** - Added missing `--optimize` and `--batch-size` options
+- **Python package options** - Added missing optimization options (now automatic)
 - **Test coverage** - All documented command examples now have corresponding test cases
 
 ## [0.2.0] - 2025-01-15

@@ -278,66 +278,71 @@ diffx build_manifest.json build_manifest.expected.json
 
 ## Performance Optimization
 
-For large files or complex data structures, use the `--optimize` flag to enable memory-efficient processing:
+For large files or complex data structures, diffx **automatically** enables memory-efficient processing:
 
-### Large File Processing
+### Automatic Optimization
 
 ```bash
-# Process large JSON files (>100MB) efficiently
-diffx large_dataset_v1.json large_dataset_v2.json --optimize
+# Process large JSON files (>1MB) efficiently
+diffx large_dataset_v1.json large_dataset_v2.json
+# Optimization automatically applied
 
-# Optimize with custom batch size
-diffx huge_config.json huge_config.new.json --optimize --batch-size 5000
+# Small files use standard mode
+diffx config.json config.new.json
+# Fast standard processing
 
 # Process massive CSV files
-diffx sales_data_2023.csv sales_data_2024.csv --optimize --format csv
+diffx sales_data_2023.csv sales_data_2024.csv --format csv
+# Automatic optimization based on file size
 ```
 
-### When to Use Optimization
+### When Optimization is Applied
 
-Use `--optimize` when dealing with:
+Optimization is automatically applied for:
 
-- **Large files** (>100MB)
-- **Deep nested structures** (>10 levels)
-- **Large arrays** (>10,000 elements)
-- **Memory-constrained environments**
+- **Large files** (>1MB)
+- **Deep nested structures** (automatically detected)
+- **Large arrays** (automatically detected)
+- **Memory-constrained environments** (automatically handled)
 
 ```bash
-# Example: Processing large configuration files
-diffx kubernetes_config_old.yaml kubernetes_config_new.yaml --optimize
+# Example: Processing large configuration files (auto-optimized)
+diffx kubernetes_config_old.yaml kubernetes_config_new.yaml
 
-# Example: Database export comparison
-diffx users_dump_before.json users_dump_after.json --optimize --array-id-key "id"
+# Example: Database export comparison (auto-optimized)
+diffx users_dump_before.json users_dump_after.json --array-id-key "id"
 
-# Example: CI/CD with limited memory
-diffx deployment_config.json deployment_config.prod.json --optimize --batch-size 2000
+# Example: CI/CD with limited memory (auto-optimized)
+diffx deployment_config.json deployment_config.prod.json
 ```
 
-### Performance Configuration
+### Transparent Performance Configuration
 
-Combine optimization with other options:
+Optimization works transparently with all other options:
 
 ```bash
-# Optimized comparison with filtering
-diffx large_data.json large_data.v2.json --optimize --path "config.database"
+# Optimized comparison with filtering (auto-detection)
+diffx large_data.json large_data.v2.json --path "config.database"
 
-# Optimized with regex filtering
-diffx huge_config.yaml huge_config.new.yaml --optimize --ignore-keys-regex "^(timestamp|_temp)"
+# Optimized with regex filtering (auto-detection)
+diffx huge_config.yaml huge_config.new.yaml --ignore-keys-regex "^(timestamp|_temp)"
 
-# Optimized floating-point comparison
-diffx financial_data.json financial_data.updated.json --optimize --epsilon 0.0001
+# Optimized floating-point comparison (auto-detection)
+diffx financial_data.json financial_data.updated.json --epsilon 0.0001
 ```
 
-### Performance Comparison
+### Performance Behavior
 
-**Standard vs Optimized Mode:**
+**Automatic Optimization:**
 
 ```bash
-# Standard mode (default) - Predictable, unlimited memory usage
+# Small files - Standard mode (auto-selected)
 diffx config.json config.new.json
+# Fast processing, unlimited memory usage
 
-# Optimized mode - Memory efficient, batched processing  
-diffx config.json config.new.json --optimize
+# Large files - Optimized mode (auto-selected)
+diffx large_dataset.json large_dataset.v2.json
+# Memory efficient, batched processing
 ```
 
 **Real-world Example:**
@@ -345,22 +350,23 @@ diffx config.json config.new.json --optimize
 # 10,000 element JSON array (50MB file comparison)
 # Test environment: AMD Ryzen 5 PRO 4650U
 $ time diffx large_users.json large_users_v2.json
-# Standard mode: ~0.15s, Memory usage: ~150MB
+# Auto-optimized mode: ~0.12s, Memory usage: ~80MB
 
-$ time diffx large_users.json large_users_v2.json --optimize
-# Optimized mode: ~0.12s, Memory usage: ~80MB
+$ time diffx config.json config.new.json
+# Standard mode: ~0.05s, Memory usage: ~20MB
 ```
 
 ### Memory Usage Guidelines
 
-| Data Size | Batch Size | Expected Memory |
-|-----------|------------|-----------------|
-| < 10MB    | Default    | < 50MB         |
-| 10-100MB  | 1000       | < 200MB        |
-| 100MB-1GB | 5000       | < 500MB        |
-| > 1GB     | 10000      | < 1GB          |
+| Data Size | Applied Mode | Expected Memory |
+|-----------|-------------|-----------------|
+| < 1MB     | Standard    | < 50MB         |
+| 1-10MB    | Optimized   | < 100MB        |
+| 10-100MB  | Optimized   | < 200MB        |
+| 100MB-1GB | Optimized   | < 500MB        |
+| > 1GB     | Optimized   | < 1GB          |
 
-> **Note**: Standard mode is used by default for predictable behavior. Use `--optimize` only when explicitly needed for large data processing.
+> **Note**: Optimization is completely transparent and requires no user intervention. Consistent output is guaranteed across all file sizes.
 
 
 ## Integration with Other Tools

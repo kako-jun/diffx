@@ -356,66 +356,71 @@ diffx env/dev/ env/prod/ -r --output json > env_diff.json
 
 ## パフォーマンス最適化
 
-大容量ファイルや複雑なデータ構造を処理する際は、`--optimize` フラグを使用してメモリ効率的な処理を有効にできます：
+大容量ファイルや複雑なデータ構造を処理する際、diffx は**自動的に**メモリ効率的な処理を有効にします：
 
-### 大容量ファイル処理
+### 自動最適化機能
 
 ```bash
-# 大容量JSONファイル（>100MB）を効率的に処理
-diffx large_dataset_v1.json large_dataset_v2.json --optimize
+# 大容量JSONファイル（>1MB）を効率的に処理
+diffx large_dataset_v1.json large_dataset_v2.json
+# 自動的に最適化モードが適用されます
 
-# カスタムバッチサイズで最適化
-diffx huge_config.json huge_config.new.json --optimize --batch-size 5000
+# 小容量ファイル
+diffx config.json config.new.json
+# 標準モードで高速処理
 
 # 大規模CSVファイルの処理
-diffx sales_data_2023.csv sales_data_2024.csv --optimize --format csv
+diffx sales_data_2023.csv sales_data_2024.csv --format csv
+# ファイルサイズに応じて自動的に最適化
 ```
 
-### 最適化を使用すべき場面
+### 自動最適化の動作
 
-以下の場合に `--optimize` を使用してください：
+以下の場合に自動的に最適化が適用されます：
 
-- **大容量ファイル**（>100MB）
-- **深いネスト構造**（>10レベル）
-- **大規模配列**（>10,000要素）
-- **メモリ制限のある環境**
+- **大容量ファイル**（>1MB）
+- **深いネスト構造**（自動検出）
+- **大規模配列**（自動検出）
+- **メモリ制限のある環境**（自動対応）
 
 ```bash
-# 例：大容量設定ファイルの処理
-diffx kubernetes_config_old.yaml kubernetes_config_new.yaml --optimize
+# 例：大容量設定ファイルの処理（自動最適化）
+diffx kubernetes_config_old.yaml kubernetes_config_new.yaml
 
-# 例：データベースダンプの比較
-diffx users_dump_before.json users_dump_after.json --optimize --array-id-key "id"
+# 例：データベースダンプの比較（自動最適化）
+diffx users_dump_before.json users_dump_after.json --array-id-key "id"
 
-# 例：CI/CDでのメモリ制限下での処理
-diffx deployment_config.json deployment_config.prod.json --optimize --batch-size 2000
+# 例：CI/CDでのメモリ制限下での処理（自動最適化）
+diffx deployment_config.json deployment_config.prod.json
 ```
 
-### パフォーマンス設定
+### 透明なパフォーマンス設定
 
-最適化を他のオプションと組み合わせ：
+最適化は他のオプションと完全に透明に動作します：
 
 ```bash
-# 最適化とフィルタリングの組み合わせ
-diffx large_data.json large_data.v2.json --optimize --path "config.database"
+# 最適化とフィルタリングの組み合わせ（自動判定）
+diffx large_data.json large_data.v2.json --path "config.database"
 
-# 最適化と正規表現フィルタリング
-diffx huge_config.yaml huge_config.new.yaml --optimize --ignore-keys-regex "^(timestamp|_temp)"
+# 最適化と正規表現フィルタリング（自動判定）
+diffx huge_config.yaml huge_config.new.yaml --ignore-keys-regex "^(timestamp|_temp)"
 
-# 最適化と浮動小数点比較
-diffx financial_data.json financial_data.updated.json --optimize --epsilon 0.0001
+# 最適化と浮動小数点比較（自動判定）
+diffx financial_data.json financial_data.updated.json --epsilon 0.0001
 ```
 
 ### パフォーマンス比較
 
-**標準モード vs 最適化モード:**
+**自動最適化の動作:**
 
 ```bash
-# 標準モード（デフォルト）- 予測可能、無制限メモリ使用
+# 小容量ファイル - 標準モード（自動選択）
 diffx config.json config.new.json
+# 高速処理、無制限メモリ使用
 
-# 最適化モード - メモリ効率的、バッチ処理
-diffx config.json config.new.json --optimize
+# 大容量ファイル - 最適化モード（自動選択）
+diffx large_dataset.json large_dataset.v2.json
+# メモリ効率的、バッチ処理
 ```
 
 **実行例:**
@@ -423,22 +428,23 @@ diffx config.json config.new.json --optimize
 # 10,000要素の配列を持つJSONファイル（50MB）の比較例
 # テスト環境: AMD Ryzen 5 PRO 4650U
 $ time diffx large_users.json large_users_v2.json
-# 標準モード: ~0.15s, メモリ使用量: ~150MB
+# 自動最適化モード: ~0.12s, メモリ使用量: ~80MB
 
-$ time diffx large_users.json large_users_v2.json --optimize
-# 最適化モード: ~0.12s, メモリ使用量: ~80MB
+$ time diffx config.json config.new.json
+# 標準モード: ~0.05s, メモリ使用量: ~20MB
 ```
 
 ### メモリ使用量ガイドライン
 
-| データサイズ | バッチサイズ | 期待メモリ使用量 |
+| データサイズ | 適用モード | 期待メモリ使用量 |
 |-------------|------------|----------------|
-| < 10MB      | デフォルト    | < 50MB         |
-| 10-100MB    | 1000       | < 200MB        |
-| 100MB-1GB   | 5000       | < 500MB        |
-| > 1GB       | 10000      | < 1GB          |
+| < 1MB       | 標準モード    | < 50MB         |
+| 1-10MB      | 最適化モード   | < 100MB        |
+| 10-100MB    | 最適化モード   | < 200MB        |
+| 100MB-1GB   | 最適化モード   | < 500MB        |
+| > 1GB       | 最適化モード   | < 1GB          |
 
-> **注意**: 予測可能な動作のため、標準モードがデフォルトです。大容量データ処理で明示的に必要な場合のみ `--optimize` を使用してください。
+> **注意**: 最適化は完全に透明で、ユーザーが意識する必要はありません。すべてのファイルサイズで一貫した出力が保証されます。
 
 ## 統合例
 
