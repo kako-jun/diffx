@@ -10,12 +10,12 @@ version = "0.4.1"
 edition = "2021"
 authors = ["kako-jun"]
 license = "MIT"
-description = "Fast semantic diff tool for structured data (JSON/YAML/TOML/XML/INI/CSV) with advanced features like array tracking, regex filtering, and floating-point tolerance"
+description = "Blazing fast semantic diff for JSON/YAML/TOML/XML/INI/CSV. Features: array tracking, regex filters, float tolerance, directory compare, UNIX-compatible options"
 homepage = "https://github.com/kako-jun/diffx"
 repository = "https://github.com/kako-jun/diffx"
 documentation = "https://docs.rs/diffx"
 readme = "README.md"
-keywords = ["diff", "semantic", "json", "yaml", "configuration"]
+keywords = ["diff", "json", "yaml", "toml", "semantic-diff"]
 categories = ["command-line-utilities", "development-tools", "text-processing", "parsing", "data-structures"]
 exclude = [
     ".github/",
