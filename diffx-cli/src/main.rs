@@ -386,8 +386,8 @@ fn run() -> Result<()> {
 
     // Debug information
     if args.debug {
-        eprintln!("Debug: Optimization enabled: {}", use_memory_optimization);
-        eprintln!("Debug: Batch size: {}", batch_size);
+        eprintln!("Debug: Optimization enabled: {use_memory_optimization}");
+        eprintln!("Debug: Batch size: {batch_size}");
     }
 
     // Handle directory comparison
