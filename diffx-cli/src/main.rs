@@ -53,9 +53,6 @@ struct Args {
     #[arg(long)]
     array_id_key: Option<String>,
 
-    /// Enable memory optimization for large files (auto-detect by default)
-    #[arg(long)]
-    optimize: bool,
 
     /// Show N lines of context around differences (unified diff style)
     #[arg(long)]
@@ -378,8 +375,7 @@ fn run() -> Result<()> {
     let array_id_key = args.array_id_key.as_deref();
 
     // Memory optimization settings - auto-detect based on file size
-    let use_memory_optimization =
-        args.optimize || should_auto_optimize(&args.input1, &args.input2)?;
+    let use_memory_optimization = should_auto_optimize(&args.input1, &args.input2)?;
     let batch_size = 1000; // Fixed batch size for optimization
 
     // Handle directory comparison
