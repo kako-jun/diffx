@@ -123,7 +123,8 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
 fn should_auto_optimize(input1: &Path, input2: &Path) -> Result<bool> {
     // Auto-optimize for files larger than 1MB (configurable for testing)
     let large_file_threshold = std::env::var("DIFFX_OPTIMIZE_THRESHOLD")
-        .and_then(|s| s.parse::<u64>().map_err(|_| std::env::VarError::InvalidValue))
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
         .unwrap_or(1024 * 1024); // Default 1MB
 
     let size1 = if input1.to_str() == Some("-") {
