@@ -55,40 +55,81 @@ Thank you for your interest in contributing to `diffx`! This document provides c
    cargo bench --package diffx-core
    ```
 
-## 🔧 Development Workflow
+## 🔧 Development Workflow (GitHub Flow)
 
-### 1. Fork and Branch
+We use GitHub Flow for all development. Main branch is protected and requires PR reviews.
+
+### 1. Fork and Create Feature Branch
 ```bash
+# Always branch from latest main
+git checkout main
+git pull origin main
 git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/your-bug-fix-name
+# Branch naming conventions:
+# - feature/add-binary-support
+# - fix/yaml-parsing-error
+# - docs/update-chinese-translation
+# - refactor/optimize-diff-algorithm
+# - test/add-xml-benchmarks
 ```
 
 ### 2. Make Changes
 - Follow Rust conventions and project patterns
 - Add comprehensive tests for new features
 - Update relevant documentation
+- Keep commits atomic and focused
 
-### 3. Test Locally
+### 3. Pre-Push Validation
 ```bash
-# All CI checks (must pass)
-cargo fmt --all --check
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo build --workspace
-cargo test --workspace
+# Run our CI validation script (required)
+./scripts/ci-local.sh
+
+# This script runs exactly what GitHub CI runs:
+# - cargo fmt --all --check
+# - cargo clippy --workspace --all-targets --all-features -- -D warnings  
+# - cargo build --workspace
+# - cargo test --workspace
+# - diffx CLI smoke tests
 ```
 
 ### 4. Commit and Push
 ```bash
+# Stage changes
 git add .
-git commit -m "feat(scope): description of change"
+
+# Commit with conventional format
+git commit -m "feat(core): add binary format support"
+
+# Push to your fork
 git push origin feature/your-feature-name
 ```
 
 ### 5. Create Pull Request
-- Use descriptive title and description
-- Reference related issues
-- Ensure all CI checks pass
+```bash
+# Using GitHub CLI (recommended)
+gh pr create --title "feat: add binary format support" \
+  --body "Description of changes"
+
+# Or via GitHub web interface
+```
+
+**PR Guidelines:**
+- Title should follow conventional commit format
+- Reference related issues with "Fixes #123" or "Closes #123"
+- Fill out the PR template completely
+- Ensure all CI checks pass before requesting review
+- Link to relevant documentation updates
+
+### 6. Code Review Process
+- At least 1 approval required before merge
+- Address all feedback comments
+- Keep PR updated with main branch
+- Squash commits if requested
+
+### 7. After Merge
+- Delete your feature branch
+- Pull latest main to stay updated
+- Celebrate your contribution! 🎉
 
 ## 📁 Project Structure
 

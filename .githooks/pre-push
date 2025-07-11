@@ -1,0 +1,23 @@
+#!/bin/bash
+# Pre-push hook to ensure code quality before pushing
+# This mimics the CI environment exactly
+
+set -e
+
+echo "🔍 Running pre-push validation..."
+echo "=================================="
+
+# Check if we're in the correct directory
+if [ ! -f "scripts/ci-local.sh" ]; then
+    echo "❌ Error: scripts/ci-local.sh not found"
+    echo "Make sure you're in the diffx project root directory"
+    exit 1
+fi
+
+# Run the same checks as CI
+echo "📋 Running CI validation script..."
+./scripts/ci-local.sh
+
+echo ""
+echo "✅ Pre-push validation completed successfully!"
+echo "Your code is ready to be pushed. 🚀"
