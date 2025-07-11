@@ -53,7 +53,6 @@ struct Args {
     #[arg(long)]
     array_id_key: Option<String>,
 
-
     /// Show N lines of context around differences (unified diff style)
     #[arg(long)]
     context: Option<usize>,
