@@ -26,12 +26,12 @@ const { tmpdir } = require('os');
  * @property {string} [ignoreKeysRegex] - Ignore keys matching regex
  * @property {number} [epsilon] - Tolerance for float comparisons
  * @property {string} [arrayIdKey] - Key to use for array element identification
- * @property {boolean} [optimize=false] - Enable memory optimization
  * @property {number} [context] - Number of context lines in unified output
  * @property {boolean} [ignoreWhitespace=false] - Ignore whitespace differences
  * @property {boolean} [ignoreCase=false] - Ignore case differences
  * @property {boolean} [quiet=false] - Suppress output (exit code only)
  * @property {boolean} [brief=false] - Show only filenames
+ * @property {boolean} [debug=false] - Show optimization information
  */
 
 /**
@@ -194,11 +194,6 @@ async function diff(input1, input2, options = {}) {
     args.push('--array-id-key', options.arrayIdKey);
   }
   
-  // Add optimize option
-  if (options.optimize) {
-    args.push('--optimize');
-  }
-  
   // Add context option
   if (options.context !== undefined) {
     args.push('--context', options.context.toString());
@@ -222,6 +217,11 @@ async function diff(input1, input2, options = {}) {
   // Add brief option
   if (options.brief) {
     args.push('--brief');
+  }
+  
+  // Add debug option
+  if (options.debug) {
+    args.push('--debug');
   }
   
   const { stdout, stderr } = await executeDiffx(args);

@@ -27,12 +27,12 @@ class DiffOptions:
     ignore_keys_regex: Optional[str] = None
     epsilon: Optional[float] = None
     array_id_key: Optional[str] = None
-    optimize: bool = False
     context: Optional[int] = None
     ignore_whitespace: bool = False
     ignore_case: bool = False
     quiet: bool = False
     brief: bool = False
+    debug: bool = False
 
 
 class DiffResult:
@@ -173,10 +173,6 @@ def diff(
     if options.array_id_key:
         args.extend(["--array-id-key", options.array_id_key])
     
-    # Add optimize option
-    if options.optimize:
-        args.append("--optimize")
-    
     # Add context option
     if options.context is not None:
         args.extend(["--context", str(options.context)])
@@ -196,6 +192,10 @@ def diff(
     # Add brief option
     if options.brief:
         args.append("--brief")
+    
+    # Add debug option
+    if options.debug:
+        args.append("--debug")
     
     stdout, stderr = _execute_diffx(args)
     
