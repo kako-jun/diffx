@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Setting up GitHub Flow for diffx project"
-echo "=========================================="
+echo "🚀 Setting up Simplified GitHub Workflow for diffx project"
+echo "========================================================="
 
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
@@ -55,20 +55,16 @@ else
 fi
 
 echo ""
-echo "🔒 Step 2: Setting up Branch Protection"
+echo "🔒 Step 2: Branch Protection (DISABLED)"
 echo "--------------------------------------"
-if [ -f ".github/branch-protection.json" ]; then
-    echo "Applying branch protection rules..."
-    REPO_FULL_NAME=$(gh repo view --json nameWithOwner -q .nameWithOwner)
-    if gh api "repos/$REPO_FULL_NAME/branches/main/protection" --method PUT --input .github/branch-protection.json > /dev/null 2>&1; then
-        echo "✅ Branch protection rules applied successfully"
-    else
-        echo "❌ Failed to apply branch protection rules"
-        echo "   You may need admin permissions or the repository may not exist"
-        echo "   Manual command: gh api repos/$REPO_FULL_NAME/branches/main/protection --method PUT --input .github/branch-protection.json"
-    fi
+echo "⚠️  Branch protection is intentionally disabled for fast development"
+echo "   Direct pushes to main are allowed for urgent situations"
+echo "   This prioritizes development speed over process enforcement"
+REPO_FULL_NAME=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+if gh api "repos/$REPO_FULL_NAME/branches/main/protection" --method DELETE > /dev/null 2>&1; then
+    echo "✅ Branch protection removed successfully"
 else
-    echo "❌ .github/branch-protection.json not found"
+    echo "ℹ️  No branch protection to remove (already disabled)"
 fi
 
 echo ""
@@ -96,81 +92,79 @@ else
 fi
 
 echo ""
-echo "🔧 Step 4: Setting up Git Hooks"
+echo "🔧 Step 4: Git Hooks (DISABLED)"
 echo "-------------------------------"
-if [ -f ".githooks/pre-push" ]; then
-    echo "Enabling pre-push hooks..."
-    git config core.hooksPath .githooks
-    chmod +x .githooks/pre-push
-    echo "✅ Git hooks enabled successfully"
-    echo "   Pre-push validation will run ./scripts/ci-local.sh before each push"
+echo "⚠️  Pre-push hooks are intentionally disabled"
+echo "   Pushes should be fast and unrestricted when urgent"
+echo "   Validation can be run manually with: ./scripts/ci-local.sh"
+if git config core.hooksPath | grep -q ".githooks"; then
+    git config --unset core.hooksPath
+    echo "✅ Git hooks disabled successfully"
 else
-    echo "❌ .githooks/pre-push not found"
+    echo "ℹ️  Git hooks already disabled"
 fi
 
 echo ""
 echo "📚 Step 5: Validation and Testing"
 echo "---------------------------------"
-echo "Testing GitHub Flow setup..."
+echo "Testing simplified workflow setup..."
 
-# Test if branch protection is working
+# Test if branch protection is disabled (as intended)
 if gh api "repos/$REPO_FULL_NAME/branches/main/protection" > /dev/null 2>&1; then
-    echo "✅ Branch protection is active"
+    echo "⚠️  Branch protection is still active (should be disabled)"
 else
-    echo "⚠️  Branch protection may not be fully configured"
+    echo "✅ Branch protection is disabled (as intended)"
 fi
 
 # Test if labels were created
-LABEL_COUNT=$(gh label list --json name | jq '. | length')
-if [ "$LABEL_COUNT" -gt 15 ]; then
-    echo "✅ Labels created successfully ($LABEL_COUNT labels found)"
-else
-    echo "⚠️  Limited labels found ($LABEL_COUNT labels)"
+if [ "$SKIP_LABELS" != "true" ]; then
+    LABEL_COUNT=$(gh label list --json name | jq '. | length' 2>/dev/null || echo "0")
+    if [ "$LABEL_COUNT" -gt 15 ]; then
+        echo "✅ Labels created successfully ($LABEL_COUNT labels found)"
+    else
+        echo "⚠️  Limited labels found ($LABEL_COUNT labels)"
+    fi
 fi
 
-# Test if git hooks are working
+# Test if git hooks are disabled (as intended)
 if git config core.hooksPath | grep -q ".githooks"; then
-    echo "✅ Git hooks configured correctly"
+    echo "⚠️  Git hooks are still active (should be disabled)"
 else
-    echo "⚠️  Git hooks may not be configured"
+    echo "✅ Git hooks are disabled (as intended)"
 fi
 
 echo ""
 echo "🎯 Step 6: Workflow Summary"
 echo "---------------------------"
-echo "GitHub Flow is now configured with the following features:"
-echo ""
-echo "✅ Branch Protection:"
-echo "   - PR reviews required (1 approval)"
-echo "   - CI checks must pass"
-echo "   - Direct push to main blocked"
+echo "Simplified GitHub Workflow is now configured with the following features:"
 echo ""
 echo "✅ Repository Settings:"
 echo "   - Automatic branch deletion after merge"
 echo "   - All merge types enabled (merge, squash, rebase)"
+echo "   - Structured labels for issue management"
 echo ""
-echo "✅ Quality Automation:"
-echo "   - Pre-push hooks run CI validation"
-echo "   - 21 structured labels for issue management"
-echo "   - Issue templates updated with new labels"
+echo "⚠️  Intentionally Disabled (for fast development):"
+echo "   - Branch protection (direct push to main allowed)"
+echo "   - Pre-push hooks (no validation blocking pushes)"
+echo "   - PR review requirements (optional)"
 echo ""
-echo "📋 Development Workflow:"
-echo "1. Create feature branch: git checkout -b feature/your-feature-name"
-echo "2. Make changes and commit: git commit -m \"feat: your changes\""
-echo "3. Push (triggers pre-push validation): git push origin feature/your-feature-name"
-echo "4. Create PR: gh pr create --title \"feat: your feature\" --body \"Description\""
-echo "5. Review and merge (branch auto-deleted after merge)"
+echo "📋 Simplified Development Workflow:"
+echo "1. Option A - Direct to main: git push origin main (fast, for urgent fixes)"
+echo "2. Option B - Feature branch: git checkout -b feature/name && git push && gh pr create"
+echo "3. Manual validation: ./scripts/ci-local.sh (run when convenient)"
+echo "4. CI/CD runs automatically on push (but doesn't block merges)"
 echo ""
-echo "🔧 Troubleshooting:"
-echo "   - Pre-push failing? Run: ./scripts/ci-local.sh"
-echo "   - Need to bypass hooks? Use: git push --no-verify"
-echo "   - Check branch protection: gh api repos/$REPO_FULL_NAME/branches/main/protection"
+echo "🔧 Philosophy:"
+echo "   - Prioritize development speed over process enforcement"
+echo "   - Allow unrestricted pushes when urgent"
+echo "   - Optional validation rather than mandatory blocks"
+echo "   - Developers can choose their workflow based on urgency"
 
 echo ""
-echo "🎉 GitHub Flow setup completed successfully!"
+echo "🎉 Simplified GitHub Workflow setup completed successfully!"
 echo ""
-echo "Your repository is now ready for collaborative development with:"
-echo "- Protected main branch"
-echo "- Automated quality checks" 
+echo "Your repository is now ready for fast, flexible development with:"
+echo "- Unrestricted push access"
+echo "- Optional quality checks"
 echo "- Structured issue management"
-echo "- Complete CI/CD integration"
+echo "- Flexible CI/CD integration"
