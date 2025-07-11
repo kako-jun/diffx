@@ -5,7 +5,7 @@ const path = require('path');
 const https = require('https');
 const { execSync } = require('child_process');
 
-const DIFFX_VERSION = '0.3.0';
+const DIFFX_VERSION = require('../package.json').version;
 const BINARY_DIR = path.join(__dirname, '..', 'bin');
 
 function getPlatform() {

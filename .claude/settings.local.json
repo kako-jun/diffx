@@ -32,7 +32,8 @@
       "Bash(gh issue create:*)",
       "Bash(timeout:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git tag:*)"
     ],
     "deny": []
   }
