@@ -73,7 +73,7 @@ JSON, YAML, TOML, XML, INI, CSV
 8. **数値許容誤差** - 浮動小数点数の微小差を無視
 9. **型変更検出** - 数値⇔文字列の型変換を明確に報告
 10. **パスフィルタリング** - 特定パスの差分のみ表示
-11. **パフォーマンス最適化** - --optimize フラグによる高速モード
+11. **パフォーマンス最適化** - 自動最適化による高速モード
 12. **出力形式** - CLI/JSON/YAML/Unified形式対応
 13. **高需要オプション** - --context, --ignore-whitespace, --ignore-case, --quiet, --brief
 
@@ -88,7 +88,7 @@ JSON, YAML, TOML, XML, INI, CSV
 
 ### 🚀 高需要CLIオプション実装完了
 - **新オプション追加**: --context, --ignore-whitespace, --ignore-case, --quiet, --brief
-- **batch-size削除**: --optimizeに統合、自動判定機能として改良
+- **最適化自動化**: 手動フラグを削除し、自動判定機能として改良
 - **UNIX互換性**: diff -q, -i, -w, -C3 相当の機能実装
 - **CI/CD最適化**: プッシュ前の自動検証（97テスト成功）
 

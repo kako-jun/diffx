@@ -8,7 +8,7 @@ fn diffx_cmd() -> Command {
 }
 
 #[test]
-fn test_optimize_flag_basic() {
+fn test_auto_optimize_basic() {
     let data1 = serde_json::json!({
         "users": [
             {"id": 1, "name": "Alice", "score": 100},
@@ -29,18 +29,17 @@ fn test_optimize_flag_basic() {
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
-    // Test optimize flag works
+    // Test auto-optimization works
     diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
-        .arg("--optimize")
         .assert()
         .code(1) // Differences found
         .stdout(predicate::str::contains("users[0].score"));
 }
 
 #[test]
-fn test_optimize_with_array_id_key() {
+fn test_auto_optimize_with_array_id_key() {
     let data1 = serde_json::json!({
         "products": [
             {"sku": "ABC123", "name": "Product A", "price": 100},
@@ -61,11 +60,10 @@ fn test_optimize_with_array_id_key() {
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
-    // Test optimize with array ID key
+    // Test auto-optimization with array ID key
     diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
-        .arg("--optimize")
         .arg("--array-id-key")
         .arg("sku")
         .assert()
@@ -74,7 +72,7 @@ fn test_optimize_with_array_id_key() {
 }
 
 #[test]
-fn test_optimize_with_path_filter() {
+fn test_auto_optimize_with_path_filter() {
     let data1 = serde_json::json!({
         "config": {
             "database": {"host": "localhost", "port": 5432},
@@ -97,11 +95,10 @@ fn test_optimize_with_path_filter() {
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
-    // Test optimize with path filtering
+    // Test auto-optimization with path filtering
     diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
-        .arg("--optimize")
         .arg("--path")
         .arg("config.database")
         .assert()
@@ -111,7 +108,7 @@ fn test_optimize_with_path_filter() {
 }
 
 #[test]
-fn test_optimize_with_ignore_regex() {
+fn test_auto_optimize_with_ignore_regex() {
     let data1 = serde_json::json!({
         "config": {"host": "localhost", "port": 5432},
         "timestamp": "2023-01-01T00:00:00Z",
@@ -130,11 +127,10 @@ fn test_optimize_with_ignore_regex() {
     fs::write(&file1, serde_json::to_string_pretty(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string_pretty(&data2).unwrap()).unwrap();
 
-    // Test optimize with regex ignore
+    // Test auto-optimization with regex ignore
     diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
-        .arg("--optimize")
         .arg("--ignore-keys-regex")
         .arg("^(timestamp|_.*)")
         .assert()
@@ -145,7 +141,7 @@ fn test_optimize_with_ignore_regex() {
 }
 
 #[test]
-fn test_optimize_json_output() {
+fn test_auto_optimize_json_output() {
     let data1 = serde_json::json!({"key": "value1"});
     let data2 = serde_json::json!({"key": "value2"});
 
@@ -155,11 +151,10 @@ fn test_optimize_json_output() {
     fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
 
-    // Test optimize with JSON output
+    // Test auto-optimization with JSON output
     let output = diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
-        .arg("--optimize")
         .arg("--output")
         .arg("json")
         .assert()
@@ -174,7 +169,7 @@ fn test_optimize_json_output() {
 }
 
 #[test]
-fn test_optimize_directory_comparison() {
+fn test_auto_optimize_directory_comparison() {
     let temp_dir1 = tempfile::tempdir().unwrap();
     let temp_dir2 = tempfile::tempdir().unwrap();
 
@@ -194,19 +189,18 @@ fn test_optimize_directory_comparison() {
     )
     .unwrap();
 
-    // Test optimize with directory comparison
+    // Test auto-optimization with directory comparison
     diffx_cmd()
         .arg(temp_dir1.path())
         .arg(temp_dir2.path())
         .arg("--recursive")
-        .arg("--optimize")
         .assert()
         .code(1) // Differences found
         .stdout(predicate::str::contains("config.value"));
 }
 
 #[test]
-fn test_standard_vs_optimize_same_results() {
+fn test_auto_optimize_consistency() {
     let data1 = serde_json::json!({
         "array": [
             {"id": 1, "value": "a"},
@@ -229,8 +223,8 @@ fn test_standard_vs_optimize_same_results() {
     fs::write(&file1, serde_json::to_string(&data1).unwrap()).unwrap();
     fs::write(&file2, serde_json::to_string(&data2).unwrap()).unwrap();
 
-    // Get standard mode output
-    let standard_output = diffx_cmd()
+    // Get auto-optimized output (should be consistent)
+    let output1 = diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
         .arg("--output")
@@ -241,11 +235,9 @@ fn test_standard_vs_optimize_same_results() {
         .stdout
         .clone();
 
-    // Get optimized mode output
-    let optimized_output = diffx_cmd()
+    let output2 = diffx_cmd()
         .arg(file1.path())
         .arg(file2.path())
-        .arg("--optimize")
         .arg("--output")
         .arg("json")
         .assert()
@@ -254,12 +246,9 @@ fn test_standard_vs_optimize_same_results() {
         .stdout
         .clone();
 
-    // Parse and compare (results should be functionally equivalent)
-    let standard_json: serde_json::Value = serde_json::from_slice(&standard_output).unwrap();
-    let optimized_json: serde_json::Value = serde_json::from_slice(&optimized_output).unwrap();
+    // Parse and compare (results should be identical)
+    let json1: serde_json::Value = serde_json::from_slice(&output1).unwrap();
+    let json2: serde_json::Value = serde_json::from_slice(&output2).unwrap();
 
-    assert_eq!(
-        standard_json.as_array().unwrap().len(),
-        optimized_json.as_array().unwrap().len()
-    );
+    assert_eq!(json1, json2);
 }

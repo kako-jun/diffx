@@ -230,8 +230,7 @@ diffx file1.json file2.json --quiet && echo "ファイルが同じ"  # スクリ
 diffx dir1/ dir2/ --recursive --brief                    # 高速ファイル変更チェック
 
 # 大きなファイルの性能最適化
-diffx huge_dataset.json huge_dataset_v2.json --optimize
-
+diffx huge_dataset.json huge_dataset_v2.json
 # ディレクトリ比較
 diffx config_dir1/ config_dir2/ --recursive
 
@@ -264,7 +263,7 @@ diffx diff1.json diff2.json  # 変更の変更を比較！
 
 - name: 大きなデータセットの効率的比較
   run: |
-    diffx large_prod_data.json large_staging_data.json --optimize --output json > data_changes.json
+    diffx large_prod_data.json large_staging_data.json --output json > data_changes.json
     # CIでの大きなファイルの最適化処理
 ```
 

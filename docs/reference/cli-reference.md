@@ -397,37 +397,38 @@ diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 
 ### Performance Options
 
-#### `--optimize`
-- **Type**: Boolean flag
-- **Default**: Auto-detected (enabled for files >1MB)
-- **Description**: Enable memory-efficient processing for large files and data structures
+#### Automatic Optimization
+- **Type**: Automatic feature
+- **Default**: Enabled for files >1MB
+- **Description**: Memory-efficient processing is automatically enabled for large files and data structures
 
 **Auto-Detection Behavior:**
 - Files ≤1MB: Standard mode (fast, unlimited memory)
 - Files >1MB: Optimized mode (memory-efficient, batched processing)
-- Manual override: Use `--optimize` to force optimization for small files
+- No manual configuration needed - optimization is completely transparent
 
-**When to Use Manually:**
-- Force optimization for small but complex nested structures
-- Memory-constrained environments
-- Processing many files in batch
-- Deep nested structures (>10 levels) regardless of size
+**Optimization Features:**
+- Automatic detection based on file size
+- Memory-efficient processing for large datasets
+- Batched processing for deep nested structures
+- Maintains identical output regardless of mode
 
 **Examples:**
 ```bash
-# Auto-detection (recommended)
+# Auto-detection (always enabled)
 diffx config.json config.new.json
 # Uses standard mode for small files, optimized for large files
 
-# Force optimization for small files
-diffx small_but_complex.json small_but_complex.new.json --optimize
-
-# Combine with other options
+# Large files automatically use optimization
 diffx massive_db.json massive_db.new.json --array-id-key "id" --path "users"
 # Automatically uses optimized mode for large files
+
+# All other options work transparently with optimization
+diffx complex_data.json complex_data.v2.json --ignore-keys-regex "^timestamp$"
+# Optimization is automatically applied if needed
 ```
 
-**Performance Comparison:**
+**Performance Behavior:**
 ```bash
 # Small files (<1MB) - automatic standard mode
 diffx config.json config.new.json
@@ -437,9 +438,9 @@ diffx config.json config.new.json
 diffx large_dataset.json large_dataset.v2.json
 # Memory-efficient, batched processing
 
-# Manual optimization override
-diffx complex_small.json complex_small.new.json --optimize
-# Forces memory-efficient processing
+# Complex nested structures - automatic optimization
+diffx deep_nested.json deep_nested.v2.json
+# Transparent optimization based on data characteristics
 ```
 
 ### Information Options

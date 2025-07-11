@@ -625,8 +625,7 @@ fi
 2. **处理大文件**
    ```bash
    # 内存效率
-   diffx large1.json large2.json --optimize
-   ```
+   diffx large1.json large2.json   ```
 
 3. **调试比较问题**
    ```bash

@@ -236,8 +236,7 @@ diffx file1.json file2.json --quiet && echo "Files identical"  # Script automati
 diffx dir1/ dir2/ --recursive --brief                    # Quick file change check
 
 # Performance optimization for large files
-diffx huge_dataset.json huge_dataset_v2.json --optimize
-
+diffx huge_dataset.json huge_dataset_v2.json
 # Directory comparison
 diffx config_dir1/ config_dir2/ --recursive
 
@@ -270,7 +269,7 @@ diffx diff1.json diff2.json  # Compare the changes themselves!
 
 - name: Compare large datasets efficiently  
   run: |
-    diffx large_prod_data.json large_staging_data.json --optimize --output json > data_changes.json
+    diffx large_prod_data.json large_staging_data.json --output json > data_changes.json
     # Optimized processing for large files in CI
 ```
 
