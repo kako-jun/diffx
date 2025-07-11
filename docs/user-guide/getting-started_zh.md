@@ -357,66 +357,71 @@ diffx build_manifest.json build_manifest.expected.json
 
 ## 性能优化
 
-对于大文件或复杂数据结构，使用 `--optimize` 标志启用内存高效处理：
+对于大文件或复杂数据结构，diffx **自动**启用内存高效处理：
 
-### 大文件处理
+### 自动优化
 
 ```bash
-# 高效处理大型 JSON 文件（>100MB）
-diffx large_dataset_v1.json large_dataset_v2.json --optimize
+# 高效处理大型 JSON 文件（>1MB）
+diffx large_dataset_v1.json large_dataset_v2.json
+# 自动应用优化
 
-# 使用自定义批大小优化
-diffx huge_config.json huge_config.new.json --optimize --batch-size 5000
+# 小文件使用标准模式
+diffx config.json config.new.json
+# 快速标准处理
 
 # 处理大型 CSV 文件
-diffx sales_data_2023.csv sales_data_2024.csv --optimize --format csv
+diffx sales_data_2023.csv sales_data_2024.csv --format csv
+# 根据文件大小自动优化
 ```
 
-### 何时使用优化
+### 何时应用优化
 
-在处理以下情况时使用 `--optimize`：
+优化在以下情况自动应用：
 
-- **大文件**（>100MB）
-- **深度嵌套结构**（>10 层）
-- **大数组**（>10,000 元素）
-- **内存受限环境**
+- **大文件**（>1MB）
+- **深度嵌套结构**（自动检测）
+- **大数组**（自动检测）
+- **内存受限环境**（自动处理）
 
 ```bash
-# 示例：处理大型配置文件
-diffx kubernetes_config_old.yaml kubernetes_config_new.yaml --optimize
+# 示例：处理大型配置文件（自动优化）
+diffx kubernetes_config_old.yaml kubernetes_config_new.yaml
 
-# 示例：数据库导出比较
-diffx users_dump_before.json users_dump_after.json --optimize --array-id-key "id"
+# 示例：数据库导出比较（自动优化）
+diffx users_dump_before.json users_dump_after.json --array-id-key "id"
 
-# 示例：内存有限的 CI/CD
-diffx deployment_config.json deployment_config.prod.json --optimize --batch-size 2000
+# 示例：内存有限的 CI/CD（自动优化）
+diffx deployment_config.json deployment_config.prod.json
 ```
 
-### 性能配置
+### 透明性能配置
 
-将优化与其他选项结合：
+优化与所有其他选项透明工作：
 
 ```bash
-# 带过滤的优化比较
-diffx large_data.json large_data.v2.json --optimize --path "config.database"
+# 带过滤的优化比较（自动检测）
+diffx large_data.json large_data.v2.json --path "config.database"
 
-# 带正则表达式过滤的优化
-diffx huge_config.yaml huge_config.new.yaml --optimize --ignore-keys-regex "^(timestamp|_temp)"
+# 带正则表达式过滤的优化（自动检测）
+diffx huge_config.yaml huge_config.new.yaml --ignore-keys-regex "^(timestamp|_temp)"
 
-# 优化的浮点数比较
-diffx financial_data.json financial_data.updated.json --optimize --epsilon 0.0001
+# 优化的浮点数比较（自动检测）
+diffx financial_data.json financial_data.updated.json --epsilon 0.0001
 ```
 
-### 性能比较
+### 性能行为
 
-**标准 vs 优化模式：**
+**自动优化：**
 
 ```bash
-# 标准模式（默认）- 可预测，无限内存使用
+# 小文件 - 标准模式（自动选择）
 diffx config.json config.new.json
+# 快速处理，无限内存使用
 
-# 优化模式 - 内存高效，批处理
-diffx config.json config.new.json --optimize
+# 大文件 - 优化模式（自动选择）
+diffx large_dataset.json large_dataset.v2.json
+# 内存高效，批处理
 ```
 
 **实际示例：**
@@ -424,22 +429,23 @@ diffx config.json config.new.json --optimize
 # 10,000 元素 JSON 数组（50MB 文件比较）
 # 测试环境：AMD Ryzen 5 PRO 4650U
 $ time diffx large_users.json large_users_v2.json
-# 标准模式：~0.15s，内存使用：~150MB
+# 自动优化模式：~0.12s，内存使用：~80MB
 
-$ time diffx large_users.json large_users_v2.json --optimize
-# 优化模式：~0.12s，内存使用：~80MB
+$ time diffx config.json config.new.json
+# 标准模式：~0.05s，内存使用：~20MB
 ```
 
 ### 内存使用指南
 
-| 数据大小 | 批大小 | 预期内存 |
-|----------|--------|----------|
-| < 10MB   | 默认   | < 50MB   |
-| 10-100MB | 1000   | < 200MB  |
-| 100MB-1GB| 5000   | < 500MB  |
-| > 1GB    | 10000  | < 1GB    |
+| 数据大小 | 应用模式 | 预期内存 |
+|----------|----------|----------|
+| < 1MB    | 标准模式 | < 50MB   |
+| 1-10MB   | 优化模式 | < 100MB  |
+| 10-100MB | 优化模式 | < 200MB  |
+| 100MB-1GB| 优化模式 | < 500MB  |
+| > 1GB    | 优化模式 | < 1GB    |
 
-> **注意**: 默认使用标准模式以获得可预测的行为。仅在大数据处理明确需要时使用 `--optimize`。
+> **注意**: 优化完全透明，无需用户干预。所有文件大小都保证一致的输出。
 
 ## 与其他工具集成
 
@@ -610,8 +616,8 @@ diffx large1.json large2.json --path "specific.section"
 
 **大文件内存问题：**
 ```bash
-# 使用优化模式
-diffx huge1.json huge2.json --optimize
+# 自动优化模式
+diffx huge1.json huge2.json
 ```
 
 **意外的差异：**

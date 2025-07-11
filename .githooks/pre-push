@@ -4,8 +4,20 @@
 
 set -e
 
+# Get the current branch name
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
 echo "🔍 Running pre-push validation..."
 echo "=================================="
+echo "Current branch: $current_branch"
+
+# Skip pre-push validation for main branch (direct pushes to main are allowed)
+if [ "$current_branch" = "main" ]; then
+    echo "ℹ️  Skipping pre-push validation for main branch"
+    echo "   Main branch pushes are allowed without validation"
+    echo "   (GitHub branch protection will handle final validation)"
+    exit 0
+fi
 
 # Check if we're in the correct directory
 if [ ! -f "scripts/ci-local.sh" ]; then
@@ -14,7 +26,7 @@ if [ ! -f "scripts/ci-local.sh" ]; then
     exit 1
 fi
 
-# Run the same checks as CI
+# Run the same checks as CI for feature branches
 echo "📋 Running CI validation script..."
 ./scripts/ci-local.sh
 

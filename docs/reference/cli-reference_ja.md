@@ -395,6 +395,54 @@ diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 - 出力でディレクトリ構造を維持
 - 各ファイルのフォーマット自動検出を尊重
 
+### パフォーマンスオプション
+
+#### 自動最適化
+- **型**: 自動機能
+- **デフォルト**: >1MBファイルで有効
+- **説明**: 大きなファイルやデータ構造に対して自動的にメモリ効率的な処理を有効化
+
+**自動検出の動作:**
+- ファイル ≤1MB: 標準モード（高速、無制限メモリ）
+- ファイル >1MB: 最適化モード（メモリ効率、バッチ処理）
+- 手動設定不要 - 最適化は完全に透明
+
+**最適化機能:**
+- ファイルサイズに基づく自動検出
+- 大きなデータセットでのメモリ効率的処理
+- 深いネスト構造でのバッチ処理
+- モードに関係なく同一出力を維持
+
+**例:**
+```bash
+# 自動検出（常に有効）
+diffx config.json config.new.json
+# 小ファイルは標準モード、大ファイルは最適化モード
+
+# 大きなファイルは自動的に最適化を使用
+diffx massive_db.json massive_db.new.json --array-id-key "id" --path "users"
+# 大きなファイルは自動的に最適化モードを使用
+
+# 他の全オプションは最適化と透明に動作
+diffx complex_data.json complex_data.v2.json --ignore-keys-regex "^timestamp$"
+# 必要に応じて自動的に最適化を適用
+```
+
+**パフォーマンス動作:**
+```bash
+# 小ファイル (<1MB) - 自動標準モード
+diffx config.json config.new.json
+# 高速処理、無制限メモリ使用
+
+# 大ファイル (>1MB) - 自動最適化モード
+diffx large_dataset.json large_dataset.v2.json
+# メモリ効率、バッチ処理
+
+# 複雑なネスト構造 - 自動最適化
+diffx deep_nested.json deep_nested.v2.json
+# データ特性に基づく透明な最適化
+```
+
 ### 情報オプション
 
 #### `-h, --help`

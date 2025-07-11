@@ -236,8 +236,7 @@ diffx file1.json file2.json --quiet && echo "文件相同"    # 脚本自动化
 diffx dir1/ dir2/ --recursive --brief                    # 快速文件变更检查
 
 # 大文件性能优化
-diffx huge_dataset.json huge_dataset_v2.json --optimize
-
+diffx huge_dataset.json huge_dataset_v2.json
 # 目录比较
 diffx config_dir1/ config_dir2/ --recursive
 
@@ -270,7 +269,7 @@ diffx diff1.json diff2.json  # 比较变更本身！
 
 - name: 高效比较大数据集  
   run: |
-    diffx large_prod_data.json large_staging_data.json --optimize --output json > data_changes.json
+    diffx large_prod_data.json large_staging_data.json --output json > data_changes.json
     # 在 CI 中优化处理大文件
 ```
 
