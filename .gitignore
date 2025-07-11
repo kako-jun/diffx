@@ -54,6 +54,12 @@ htmlcov/
 **/claude_desktop_config.json
 **/.config/claude-desktop/
 
+# Claude CLI cache and logs
+~/.cache/claude-cli-nodejs/
+**/.cache/claude-cli-nodejs/
+**/mcp-logs-ide/
+**/*mcp-logs-ide*
+
 # Temporary files
 *.tmp
 *.temp
