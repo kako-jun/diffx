@@ -1,7 +1,7 @@
 name: ❓ Question
 description: Ask a question about diffx usage or functionality
 title: "[Question]: "
-labels: ["question", "triage"]
+labels: ["type: question", "status: needs-triage"]
 assignees: []
 body:
   - type: markdown

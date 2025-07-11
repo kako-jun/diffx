@@ -1,7 +1,7 @@
 name: 🐛 Bug Report
 description: Report a bug or unexpected behavior
 title: "[Bug]: "
-labels: ["bug", "triage"]
+labels: ["type: bug", "status: needs-triage"]
 assignees: []
 body:
   - type: markdown
