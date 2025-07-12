@@ -332,7 +332,7 @@ fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
     if let Some(context_lines) = args.context {
         if args.verbose {
             eprintln!("Context display configuration:");
-            eprintln!("  Context lines: {}", context_lines);
+            eprintln!("  Context lines: {context_lines}");
         }
 
         // Use unified_diff with custom context
@@ -353,7 +353,7 @@ fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
 
         if args.verbose {
             eprintln!("Context display results:");
-            eprintln!("  Difference blocks shown: {}", block_count);
+            eprintln!("  Difference blocks shown: {block_count}");
         }
     } else {
         // Default behavior - show all changes
@@ -385,7 +385,7 @@ fn run() -> Result<()> {
         let regex = Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?;
         if args.verbose {
             eprintln!("Key filtering configuration:");
-            eprintln!("  Regex pattern: {}", regex_str);
+            eprintln!("  Regex pattern: {regex_str}");
         }
         Some(regex)
     } else {
@@ -396,7 +396,7 @@ fn run() -> Result<()> {
     if let Some(eps) = epsilon {
         if args.verbose {
             eprintln!("Numerical tolerance configuration:");
-            eprintln!("  Epsilon value: {}", eps);
+            eprintln!("  Epsilon value: {eps}");
         }
     }
 
@@ -404,7 +404,7 @@ fn run() -> Result<()> {
     if let Some(id_key) = array_id_key {
         if args.verbose {
             eprintln!("Array tracking configuration:");
-            eprintln!("  ID key for array elements: {}", id_key);
+            eprintln!("  ID key for array elements: {id_key}");
         }
     }
 
@@ -472,8 +472,8 @@ fn run() -> Result<()> {
         };
 
         eprintln!("Input file information:");
-        eprintln!("  Input 1 size: {} bytes", size1);
-        eprintln!("  Input 2 size: {} bytes", size2);
+        eprintln!("  Input 1 size: {size1} bytes");
+        eprintln!("  Input 2 size: {size2} bytes");
     }
 
     let input_format = if let Some(fmt) = args.format {
@@ -490,7 +490,7 @@ fn run() -> Result<()> {
     let parse_time = parse_start.elapsed();
 
     if args.verbose {
-        eprintln!("Parse time: {:?}", parse_time);
+        eprintln!("Parse time: {parse_time:?}");
     }
 
     let diff_start = Instant::now();
@@ -510,7 +510,7 @@ fn run() -> Result<()> {
     let diff_time = diff_start.elapsed();
 
     if args.verbose {
-        eprintln!("Diff computation time: {:?}", diff_time);
+        eprintln!("Diff computation time: {diff_time:?}");
         eprintln!("Total differences found: {}", differences.len());
     }
 
@@ -532,11 +532,8 @@ fn run() -> Result<()> {
 
         if args.verbose {
             eprintln!("Path filtering results:");
-            eprintln!("  Filter path: {}", path);
-            eprintln!(
-                "  Total differences before filter: {}",
-                total_differences_before_filter
-            );
+            eprintln!("  Filter path: {path}");
+            eprintln!("  Total differences before filter: {total_differences_before_filter}");
             eprintln!("  Differences after filter: {}", differences.len());
         }
     }
@@ -582,7 +579,7 @@ fn run() -> Result<()> {
     if args.verbose {
         let total_time = start_time.elapsed();
         eprintln!("Performance summary:");
-        eprintln!("  Total processing time: {:?}", total_time);
+        eprintln!("  Total processing time: {total_time:?}");
         eprintln!(
             "  Memory optimization: {}",
             if use_memory_optimization {
@@ -695,7 +692,7 @@ fn compare_directories(
                 subdirs1.intersection(&subdirs2).count()
             );
         }
-        eprintln!("  Recursive mode: {}", recursive);
+        eprintln!("  Recursive mode: {recursive}");
     }
 
     let mut compared_files = 0;
@@ -808,8 +805,8 @@ fn compare_directories(
     // Verbose summary for directory comparison
     if verbose {
         eprintln!("Directory comparison summary:");
-        eprintln!("  Files compared: {}", compared_files);
-        eprintln!("  Files only in one directory: {}", skipped_files);
+        eprintln!("  Files compared: {compared_files}");
+        eprintln!("  Files only in one directory: {skipped_files}");
         eprintln!(
             "  Differences found: {}",
             if has_any_differences { "Yes" } else { "No" }
