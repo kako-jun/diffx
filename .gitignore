@@ -59,6 +59,7 @@ htmlcov/
 **/.cache/claude-cli-nodejs/
 **/mcp-logs-ide/
 **/*mcp-logs-ide*
+**/.claude/settings.local.json
 
 # Temporary files
 *.tmp
