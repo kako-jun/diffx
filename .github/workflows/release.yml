@@ -97,7 +97,7 @@ jobs:
         TAG_NAME="${{ github.event.inputs.tag || github.ref_name }}"
         gh release create "$TAG_NAME" \
           --title "Release $TAG_NAME" \
-          --notes "Release $TAG_NAME"
+          --generate-notes
         
         # Upload all artifacts
         for dir in artifacts/*/; do
