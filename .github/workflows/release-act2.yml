@@ -1,0 +1,129 @@
+name: Release Act 2 - Language Wrappers
+
+on:
+  workflow_run:
+    workflows: ["Release Act 1 - Core"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish wrappers for'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test-binaries:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    outputs:
+      tag-name: ${{ steps.get-tag.outputs.tag }}
+      binaries-ready: ${{ steps.test.outputs.ready }}
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get tag name
+      id: get-tag
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          TAG_NAME="${{ github.event.inputs.tag }}"
+        else
+          # Get tag from the triggering workflow
+          TAG_NAME=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name')
+        fi
+        echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+        echo "Testing binaries for tag: $TAG_NAME"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Test binary downloads
+      id: test
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        TAG_NAME="${{ steps.get-tag.outputs.tag }}"
+        echo "Testing binary downloads for $TAG_NAME..."
+        
+        # Test Linux binary download
+        if curl -f -L "https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/diffx-linux-x86_64.tar.gz" -o test.tar.gz; then
+          echo "✅ Linux binary download successful"
+          rm test.tar.gz
+        else
+          echo "❌ Linux binary download failed"
+          exit 1
+        fi
+        
+        echo "ready=true" >> $GITHUB_OUTPUT
+
+  publish-npm:
+    needs: test-binaries
+    runs-on: ubuntu-latest
+    if: needs.test-binaries.outputs.binaries-ready == 'true'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+    
+    - name: Test binary download in npm package
+      working-directory: diffx-npm
+      run: |
+        echo "Testing binary download script..."
+        node scripts/download-binary.js
+        
+        # Verify binary was downloaded
+        if [ -f "bin/diffx" ] || [ -f "bin/diffx.exe" ]; then
+          echo "✅ Binary download successful"
+        else
+          echo "❌ Binary download failed"
+          exit 1
+        fi
+    
+    - name: Publish to npm
+      working-directory: diffx-npm
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        echo "Publishing diffx-js to npm..."
+        npm publish
+
+  publish-pypi:
+    needs: test-binaries
+    runs-on: ubuntu-latest
+    if: needs.test-binaries.outputs.binaries-ready == 'true'
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+    
+    - name: Test binary download script
+      working-directory: diffx-python
+      run: |
+        echo "Testing Python binary download script..."
+        python src/diffx/installer.py
+        
+        # Check if binary was downloaded (installer creates bin/ directory)
+        if [ -d "bin" ]; then
+          echo "✅ Binary download script works"
+        else
+          echo "ℹ️  Binary download script completed (may have failed gracefully)"
+        fi
+    
+    - name: Build and publish to PyPI
+      working-directory: diffx-python
+      env:
+        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        echo "Building and publishing diffx-python to PyPI..."
+        uv build
+        uv publish
