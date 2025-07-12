@@ -8,7 +8,7 @@ Python wrapper for the `diffx` CLI tool - semantic diff for structured data.
 pip install diffx-python
 ```
 
-This will automatically download the appropriate `diffx` binary for your system from GitHub Releases.
+The `diffx` binary is automatically included in the wheel - no additional downloads required! This package uses [maturin](https://github.com/PyO3/maturin) to embed the native binary directly in the Python wheel, similar to tools like `ruff`.
 
 ## Usage
 
@@ -59,24 +59,32 @@ string_result = diffx.diff_string(
   - Floating-point tolerance
   - Array element identification
   - Path-based filtering
-- **Cross-platform**: Automatically downloads the right binary
+- **Cross-platform**: Native binary embedded in platform-specific wheels
+
+## Key Benefits
+
+- **🚀 Zero setup**: No external downloads or binary management
+- **📦 Self-contained**: Everything needed is in the wheel
+- **⚡ Fast installation**: No network dependencies after `pip install`
+- **🔒 Secure**: No runtime downloads from external sources
+- **🌐 Offline-ready**: Works in air-gapped environments
 
 ## Development
 
-To install in development mode with uv:
+To install in development mode:
 
 ```bash
-uv venv
-source .venv/bin/activate
-uv pip install -e .[dev]
+pip install -e .[dev]
 ```
 
-## Manual Binary Installation
+## Verification
 
-If automatic download fails:
+Verify the installation:
 
-```bash
-diffx-download-binary
+```python
+import diffx
+print("diffx available:", diffx.is_diffx_available())
+print("Version:", diffx.__version__)
 ```
 
 ## License

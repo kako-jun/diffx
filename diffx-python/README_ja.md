@@ -8,7 +8,7 @@
 pip install diffx-python
 ```
 
-これにより、GitHub Releasesからお使いのシステムに適した `diffx` バイナリが自動的にダウンロードされます。
+`diffx` バイナリはwheelに自動的に含まれているため、追加のダウンロードは不要です！このパッケージは [maturin](https://github.com/PyO3/maturin) を使用してネイティブバイナリをPython wheelに直接埋め込んでおり、`ruff` などのツールと同様の仕組みです。
 
 ## 使い方
 
@@ -75,24 +75,32 @@ else:
   - 浮動小数点許容誤差
   - 配列要素識別
   - パスベースフィルタリング
-- **クロスプラットフォーム**: 適切なバイナリを自動ダウンロード
+- **クロスプラットフォーム**: プラットフォーム固有のwheelにネイティブバイナリを埋め込み
+
+## 主な利点
+
+- **🚀 ゼロセットアップ**: 外部ダウンロードやバイナリ管理が不要
+- **📦 完全自己完結**: 必要なものはすべてwheelに含まれています
+- **⚡ 高速インストール**: `pip install` 後のネットワーク依存なし
+- **🔒 セキュア**: 外部ソースからの実行時ダウンロードなし
+- **🌐 オフライン対応**: エアギャップ環境でも動作
 
 ## 開発
 
-uv を使用して開発モードでインストールするには：
+開発モードでインストールするには：
 
 ```bash
-uv venv
-source .venv/bin/activate
-uv pip install -e .[dev]
+pip install -e .[dev]
 ```
 
-## 手動バイナリインストール
+## 動作確認
 
-自動ダウンロードが失敗した場合：
+インストールを確認：
 
-```bash
-diffx-download-binary
+```python
+import diffx
+print("diffx 利用可能:", diffx.is_diffx_available())
+print("バージョン:", diffx.__version__)
 ```
 
 ## ライセンス
