@@ -197,7 +197,7 @@ cargo install diffx
 # Node.js 生态系统
 npm install diffx-js
 
-# Python 生态系统
+# Python 生态系统（🆕 内嵌二进制的自包含 wheel）
 pip install diffx-python
 
 # 或从 GitHub Releases 下载预构建的二进制文件

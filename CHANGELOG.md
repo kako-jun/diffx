@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-07-12
+
 ### Added
+- **🆕 Self-contained Python wheel distribution**: Python package now uses maturin to embed diffx binary directly in wheel
 - Comprehensive documentation overhaul with hierarchical structure
 - Performance benchmarks and optimization guide
 - Integration guide with CI/CD platforms and development tools
@@ -15,11 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Real-world examples across 8 industry categories
 
 ### Changed
+- **BREAKING CHANGE**: Python package distribution method changed from external binary download to embedded binary in wheel
+- Python package now follows ruff-style distribution with maturin build system
+- GitHub Actions updated to build platform-specific Python wheels (Linux/Windows/macOS)
 - Documentation structure reorganized into user-guide, reference, guides, and project sections
 - README simplified and made more accessible with softer language
 - Badge links updated to point to GitHub documentation instead of docs.rs
+- Python installation now requires no external downloads or network dependencies
 
 ### Fixed
+- Python package binary path detection for maturin wheel structure
+- Exit code handling in Python wrapper (exit code 1 = differences found, not error)
 - Corrected unified format explanation to remove contradictory statements
 - Updated format support information to reflect current implementation status
 - Exit code implementation following diff conventions (0=no diff, 1=diff found, 2=error)
@@ -28,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **Configuration file support** - `~/.config/diffx/config.toml` configuration file loading
 - **Environment variable support** - `DIFFX_*` environment variable overrides
+- Python package external binary download mechanism (replaced with embedded binary)
 - Removed for consistency with sibling apps (diffai, lawkit) and adherence to UNIX philosophy
 
 ## [0.3.2] - 2025-01-15

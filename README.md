@@ -197,7 +197,7 @@ cargo install diffx
 # Node.js ecosystem
 npm install diffx-js
 
-# Python ecosystem  
+# Python ecosystem (🆕 self-contained wheel with embedded binary)
 pip install diffx-python
 
 # Or download pre-built binaries from GitHub Releases

@@ -163,23 +163,44 @@ docker build -t diffx .
 docker run --rm -v $(pwd):/workspace diffx /workspace/file1.json /workspace/file2.json
 ```
 
-## Package Managers (Future Plans)
+## Package Managers
 
 ### Node.js Ecosystem
 
 ```bash
-# Coming soon
+# Install Node.js wrapper
 npm install diffx-js
-npx diffx-js file1.json file2.json
+
+# Use in your Node.js projects
+const diffx = require('diffx-js');
+const result = diffx.diff('file1.json', 'file2.json');
 ```
 
 ### Python Ecosystem
 
 ```bash
-# Coming soon
+# 🆕 Self-contained wheel with embedded binary (v0.5.1+)
 pip install diffx-python
-diffx file1.json file2.json
+
+# Use in your Python projects
+import diffx
+result = diffx.diff('file1.json', 'file2.json')
+print(result)
+
+# Verify installation
+import diffx
+print("diffx available:", diffx.is_diffx_available())
+print("Version:", diffx.__version__)
 ```
+
+**Key Benefits of Python Package (v0.5.1+):**
+- **🚀 Zero setup**: No external downloads or binary management
+- **📦 Self-contained**: Everything needed is in the wheel
+- **⚡ Fast installation**: No network dependencies after `pip install`
+- **🔒 Secure**: No runtime downloads from external sources
+- **🌐 Offline-ready**: Works in air-gapped environments
+
+The Python package uses [maturin](https://github.com/PyO3/maturin) to embed the native `diffx` binary directly in the Python wheel, similar to tools like `ruff`.
 
 ## Verification
 

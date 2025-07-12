@@ -191,7 +191,7 @@ cargo install diffx
 # Node.jsエコシステム
 npm install diffx-js
 
-# Pythonエコシステム
+# Pythonエコシステム（🆕 バイナリ埋め込みの完全自己完結型wheel）
 pip install diffx-python
 
 # またはGitHub Releasesから事前ビルド済みバイナリをダウンロード
