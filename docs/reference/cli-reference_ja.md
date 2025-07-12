@@ -447,12 +447,25 @@ diffx configs/ configs.backup/ --recursive --verbose
 #### `-r, --recursive`
 - **型**: ブールフラグ
 - **デフォルト**: False
-- **説明**: 再帰的ディレクトリ比較を有効化
+- **説明**: サブディレクトリまで再帰的にディレクトリ比較を実行（Unix diff互換）
 
 **例:**
 ```bash
-# ディレクトリ内のすべてのファイルを比較
+# --recursiveなしのディレクトリ比較（Unix diff互換）
+# ディレクトリ直下のファイルのみ比較、サブディレクトリは「Common subdirectories」として表示
+diffx config_dir1/ config_dir2/
+# 出力:
+# Common subdirectories: config_dir1/subdir and config_dir2/subdir
+# --- Comparing config.json ---
+# ~ version: "1.0" -> "1.1"
+
+# 再帰比較 - サブディレクトリ内のファイルも含めて比較
 diffx config_dir1/ config_dir2/ --recursive
+# 出力:
+# --- Comparing config.json ---
+# ~ version: "1.0" -> "1.1"
+# --- Comparing subdir/nested.json ---
+# ~ data: "old" -> "new"
 
 # 出力形式付きの再帰比較
 diffx environments/dev/ environments/prod/ -r --output json
@@ -461,11 +474,23 @@ diffx environments/dev/ environments/prod/ -r --output json
 diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**動作:**
-- ディレクトリ間で対応するファイルを比較
-- 両方のディレクトリに存在しないファイルをスキップ
+**Unix diff互換動作:**
+
+**`--recursive` フラグなし（デフォルト）:**
+- 指定されたディレクトリ直下のファイルのみを比較
+- 両方の場所に存在するサブディレクトリに対して「Common subdirectories」メッセージを表示
+- サブディレクトリ内のファイルは比較しない
+- 標準Unix `diff`コマンドとの互換性を維持
+
+**`--recursive` フラグあり:**
+- サブディレクトリを通してすべてのファイルを再帰的に比較
 - 出力でディレクトリ構造を維持
+- `diff -r`の動作と同等
+
+**共通動作:**
+- 両方のディレクトリに存在しないファイルをスキップ
 - 各ファイルのフォーマット自動検出を尊重
+- 一方のディレクトリにのみ存在するファイルを報告
 
 ### パフォーマンスオプション
 

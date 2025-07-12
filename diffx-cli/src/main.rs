@@ -418,10 +418,10 @@ fn run() -> Result<()> {
         eprintln!("Batch size: {batch_size}");
     }
 
-    // Handle directory comparison
-    if args.recursive {
+    // Handle directory comparison (Unix diff compatible)
+    if args.input1.is_dir() || args.input2.is_dir() {
         if !args.input1.is_dir() || !args.input2.is_dir() {
-            bail!("Both inputs must be directories for recursive comparison.");
+            bail!("Cannot compare directory and file. Both inputs must be directories or both must be files.");
         }
         let has_differences = compare_directories(
             &args.input1,
@@ -434,6 +434,7 @@ fn run() -> Result<()> {
             array_id_key,
             use_memory_optimization,
             batch_size,
+            args.recursive,
             args.verbose,
         )?;
 
@@ -596,23 +597,54 @@ fn compare_directories(
     array_id_key: Option<&str>,
     use_memory_optimization: bool,
     batch_size: usize,
+    recursive: bool,
     verbose: bool,
 ) -> Result<bool> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
-    for entry in WalkDir::new(dir1).into_iter().filter_map(|e| e.ok()) {
+    let mut subdirs1: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
+    
+    let walker1 = if recursive {
+        WalkDir::new(dir1)
+    } else {
+        WalkDir::new(dir1).max_depth(1)
+    };
+    
+    for entry in walker1.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
+        if path == dir1 {
+            continue; // Skip the root directory itself
+        }
+        
         if path.is_file() {
             let relative_path = path.strip_prefix(dir1)?.to_path_buf();
             files1.insert(relative_path, path.to_path_buf());
+        } else if path.is_dir() && !recursive {
+            let relative_path = path.strip_prefix(dir1)?.to_path_buf();
+            subdirs1.insert(relative_path);
         }
     }
 
     let mut files2: HashMap<PathBuf, PathBuf> = HashMap::new();
-    for entry in WalkDir::new(dir2).into_iter().filter_map(|e| e.ok()) {
+    let mut subdirs2: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
+    
+    let walker2 = if recursive {
+        WalkDir::new(dir2)
+    } else {
+        WalkDir::new(dir2).max_depth(1)
+    };
+    
+    for entry in walker2.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
+        if path == dir2 {
+            continue; // Skip the root directory itself
+        }
+        
         if path.is_file() {
             let relative_path = path.strip_prefix(dir2)?.to_path_buf();
             files2.insert(relative_path, path.to_path_buf());
+        } else if path.is_dir() && !recursive {
+            let relative_path = path.strip_prefix(dir2)?.to_path_buf();
+            subdirs2.insert(relative_path);
         }
     }
 
@@ -620,12 +652,28 @@ fn compare_directories(
         files1.keys().cloned().collect();
     all_relative_paths.extend(files2.keys().cloned());
 
+    // Handle common subdirectories (Unix diff behavior)
+    if !recursive {
+        let common_subdirs: std::collections::HashSet<_> = subdirs1.intersection(&subdirs2).collect();
+        for subdir in &common_subdirs {
+            println!("Common subdirectories: {} and {}", 
+                dir1.join(subdir).display(), 
+                dir2.join(subdir).display());
+        }
+    }
+    
     // Verbose information for directory comparison
     if verbose {
         eprintln!("Directory scan results:");
         eprintln!("  Files in {}: {}", dir1.display(), files1.len());
         eprintln!("  Files in {}: {}", dir2.display(), files2.len());
         eprintln!("  Total files to compare: {}", all_relative_paths.len());
+        if !recursive {
+            eprintln!("  Subdirectories in {}: {}", dir1.display(), subdirs1.len());
+            eprintln!("  Subdirectories in {}: {}", dir2.display(), subdirs2.len());
+            eprintln!("  Common subdirectories: {}", subdirs1.intersection(&subdirs2).count());
+        }
+        eprintln!("  Recursive mode: {}", recursive);
     }
 
     let mut compared_files = 0;

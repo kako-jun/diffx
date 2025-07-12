@@ -32,7 +32,7 @@ diffx config.json config.new.json
 # Compare with stdin
 cat config.json | diffx - config.new.json
 
-# Compare directories
+# Compare directories (Unix diff compatible - non-recursive by default)
 diffx config_dir1/ config_dir2/
 ```
 
@@ -447,12 +447,25 @@ diffx configs/ configs.backup/ --recursive --verbose
 #### `-r, --recursive`
 - **Type**: Boolean flag
 - **Default**: False
-- **Description**: Enable recursive directory comparison
+- **Description**: Compare directories recursively through subdirectories (Unix diff compatible)
 
 **Examples:**
 ```bash
-# Compare all files in directories
+# Directory comparison without --recursive (Unix diff compatible)
+# Compares files in directories directly, shows "Common subdirectories" for subdirs
+diffx config_dir1/ config_dir2/
+# Output:
+# Common subdirectories: config_dir1/subdir and config_dir2/subdir
+# --- Comparing config.json ---
+# ~ version: "1.0" -> "1.1"
+
+# Recursive comparison - compares all files including subdirectories
 diffx config_dir1/ config_dir2/ --recursive
+# Output:
+# --- Comparing config.json ---
+# ~ version: "1.0" -> "1.1"
+# --- Comparing subdir/nested.json ---
+# ~ data: "old" -> "new"
 
 # Recursive comparison with output format
 diffx environments/dev/ environments/prod/ -r --output json
@@ -461,11 +474,23 @@ diffx environments/dev/ environments/prod/ -r --output json
 diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**Behavior:**
-- Compares corresponding files between directories
-- Skips files that don't exist in both directories
+**Unix diff Compatible Behavior:**
+
+**Without `--recursive` flag (default):**
+- Compares files directly in the specified directories only
+- Shows "Common subdirectories" message for subdirectories found in both locations
+- Does NOT compare files inside subdirectories
+- Maintains compatibility with standard Unix `diff` command
+
+**With `--recursive` flag:**
+- Compares all files recursively through subdirectories
 - Maintains directory structure in output
+- Equivalent to `diff -r` behavior
+
+**Common behavior:**
+- Skips files that don't exist in both directories
 - Respects format auto-detection for each file
+- Reports files that exist in only one directory
 
 ### Performance Options
 
@@ -603,6 +628,10 @@ diffx users.json users.new.json \
 ### Directory Operations
 
 ```bash
+# Unix diff compatible directory comparison (non-recursive)
+diffx configs/ configs.backup/
+# Shows files in directories and "Common subdirectories" message
+
 # Recursive directory comparison
 diffx configs/ configs.backup/ --recursive
 
