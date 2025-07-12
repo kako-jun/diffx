@@ -31,8 +31,9 @@ info() {
 }
 
 # Extract versions
-CORE_VERSION=$(grep '^version = ' diffx-core/Cargo.toml | head -1 | cut -d'"' -f2)
-CLI_VERSION=$(grep '^version = ' diffx-cli/Cargo.toml | head -1 | cut -d'"' -f2)
+WORKSPACE_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
+CORE_VERSION=$WORKSPACE_VERSION
+CLI_VERSION=$WORKSPACE_VERSION
 
 if [ -f "diffx-npm/package.json" ]; then
     NPM_VERSION=$(node -p "require('./diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
@@ -41,7 +42,7 @@ else
 fi
 
 if [ -f "diffx-python/pyproject.toml" ]; then
-    PYTHON_VERSION=$(python -c "import tomli; print(tomli.load(open('diffx-python/pyproject.toml', 'rb'))['project']['version'])" 2>/dev/null || echo "unknown")
+    PYTHON_VERSION=$(grep '^version = ' diffx-python/pyproject.toml | head -1 | cut -d'"' -f2)
 else
     PYTHON_VERSION="not found"
 fi
@@ -91,14 +92,8 @@ else
     success "Python package version found: $PYTHON_VERSION"
 fi
 
-# Check if core dependency versions in CLI match
-CLI_CORE_DEP=$(grep 'diffx-core.*version' diffx-cli/Cargo.toml | grep -o '"[^"]*"' | tr -d '"' || echo "not found")
-if [ "$CLI_CORE_DEP" != "not found" ] && [ "$CLI_CORE_DEP" != "$CORE_VERSION" ]; then
-    error "CLI references wrong core version:"
-    echo "   Core version: $CORE_VERSION"
-    echo "   CLI dependency: $CLI_CORE_DEP"
-    ISSUES_FOUND=$((ISSUES_FOUND + 1))
-fi
+# Check if core dependency versions in CLI match (workspace uses unified versioning)
+# This check is skipped for workspace configurations as they share the same version
 
 # Summary
 echo ""
