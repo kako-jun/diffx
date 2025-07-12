@@ -456,12 +456,25 @@ diffx configs/ configs.backup/ --recursive --verbose
 #### `-r, --recursive`
 - **类型**: 布尔标志
 - **默认值**: False
-- **描述**: 启用递归目录比较
+- **描述**: 递归比较目录及其子目录（Unix diff 兼容）
 
 **示例:**
 ```bash
-# 比较目录中的所有文件
+# 不使用 --recursive 的目录比较（Unix diff 兼容）
+# 仅比较目录直下文件，对子目录显示 "Common subdirectories" 消息
+diffx config_dir1/ config_dir2/
+# 输出:
+# Common subdirectories: config_dir1/subdir and config_dir2/subdir
+# --- Comparing config.json ---
+# ~ version: "1.0" -> "1.1"
+
+# 递归比较 - 包括子目录内的文件
 diffx config_dir1/ config_dir2/ --recursive
+# 输出:
+# --- Comparing config.json ---
+# ~ version: "1.0" -> "1.1"
+# --- Comparing subdir/nested.json ---
+# ~ data: "old" -> "new"
 
 # 带输出格式的递归比较
 diffx environments/dev/ environments/prod/ -r --output json
@@ -470,11 +483,23 @@ diffx environments/dev/ environments/prod/ -r --output json
 diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**行为:**
-- 比较目录间的对应文件
-- 跳过两个目录中都不存在的文件
+**Unix diff 兼容行为:**
+
+**不使用 `--recursive` 标志（默认）:**
+- 仅比较指定目录直下的文件
+- 对于两个位置都存在的子目录，显示 "Common subdirectories" 消息
+- 不比较子目录内的文件
+- 与标准 Unix `diff` 命令保持兼容性
+
+**使用 `--recursive` 标志:**
+- 递归比较所有文件，包括子目录内的文件
 - 在输出中维护目录结构
+- 等同于 `diff -r` 的行为
+
+**共同行为:**
+- 跳过两个目录中都不存在的文件
 - 尊重每个文件的格式自动检测
+- 报告仅存在于一个目录中的文件
 
 ### 性能选项
 

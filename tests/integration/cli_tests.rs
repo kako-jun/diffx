@@ -1279,3 +1279,102 @@ fn test_verbose_performance_metrics() -> Result<(), Box<dyn std::error::Error>> 
         .stderr(predicate::str::contains("Memory optimization:"));
     Ok(())
 }
+
+// Unix diff compatibility tests
+#[test]
+fn test_directory_comparison_without_recursive() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2");
+    cmd.assert()
+        .code(1)
+        .stdout(predicate::str::contains("--- Comparing"))
+        .stdout(predicate::str::contains("Common subdirectories")); // Shows subdirs but doesn't compare them
+    Ok(())
+}
+
+#[test]
+fn test_directory_comparison_with_recursive() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2")
+        .arg("--recursive");
+    cmd.assert()
+        .code(1)
+        .stdout(predicate::str::contains("--- Comparing"));
+    Ok(())
+}
+
+#[test]
+fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/file1.json");
+    cmd.assert()
+        .code(2)
+        .stderr(predicate::str::contains("Cannot compare directory and file"));
+    Ok(())
+}
+
+#[test]
+fn test_directory_comparison_verbose_non_recursive() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2")
+        .arg("--verbose");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Directory scan results:"))
+        .stderr(predicate::str::contains("Recursive mode: false"));
+    Ok(())
+}
+
+#[test]
+fn test_directory_comparison_verbose_recursive() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2")
+        .arg("--recursive")
+        .arg("--verbose");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Directory scan results:"))
+        .stderr(predicate::str::contains("Recursive mode: true"));
+    Ok(())
+}
+
+#[test]
+fn test_directory_with_common_subdirectories() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2");
+    cmd.assert()
+        .code(1)
+        .stdout(predicate::str::contains("Common subdirectories:"))
+        .stdout(predicate::str::contains("subdir")); // Should show common subdir but not compare files inside
+    Ok(())
+}
+
+#[test]
+fn test_recursive_compares_nested_files() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2")
+        .arg("--recursive");
+    cmd.assert()
+        .code(1)
+        .stdout(predicate::str::contains("--- Comparing subdir/nested.json ---")) // Should compare nested files
+        .stdout(predicate::str::contains("data:").and(predicate::str::contains("value1").and(predicate::str::contains("value2"))));
+    Ok(())
+}
+
+#[test]
+fn test_non_recursive_does_not_compare_nested_files() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2");
+    cmd.assert()
+        .code(1)
+        .stdout(predicate::str::contains("--- Comparing subdir/nested.json ---").not()); // Should NOT compare nested files
+    Ok(())
+}
