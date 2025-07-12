@@ -98,32 +98,94 @@ jobs:
 
   publish-pypi:
     needs: test-binaries
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            binary-url: diffx-linux-x86_64.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            binary-url: diffx-windows-x86_64.zip
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary-url: diffx-macos-x86_64.tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary-url: diffx-macos-aarch64.tar.gz
+    runs-on: ${{ matrix.os }}
     if: needs.test-binaries.outputs.binaries-ready == 'true'
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
     
-    - name: Test binary download script
-      working-directory: diffx-python
-      run: |
-        echo "Testing Python binary download script..."
-        python src/diffx/installer.py
-        
-        # Check if binary was downloaded (installer creates bin/ directory)
-        if [ -d "bin" ]; then
-          echo "✅ Binary download script works"
-        else
-          echo "ℹ️  Binary download script completed (may have failed gracefully)"
-        fi
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.8'
     
-    - name: Build and publish to PyPI
+    - name: Install maturin
+      run: pip install maturin
+    
+    - name: Download diffx binary for embedding
       working-directory: diffx-python
       env:
-        UV_PUBLISH_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "Building and publishing diffx-python to PyPI..."
-        uv build
-        uv publish
+        TAG_NAME="${{ needs.test-binaries.outputs.tag-name }}"
+        BINARY_URL="https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/${{ matrix.binary-url }}"
+        
+        echo "Downloading diffx binary from: $BINARY_URL"
+        mkdir -p target/release
+        
+        if [[ "${{ matrix.binary-url }}" == *.zip ]]; then
+          curl -L "$BINARY_URL" -o binary.zip
+          if command -v unzip &> /dev/null; then
+            unzip binary.zip
+            mv diffx.exe target/release/
+          else
+            # Windows fallback
+            powershell -Command "Expand-Archive -Path binary.zip -DestinationPath ."
+            mv diffx.exe target/release/
+          fi
+          rm binary.zip
+        else
+          curl -L "$BINARY_URL" -o binary.tar.gz
+          tar -xzf binary.tar.gz
+          mv diffx target/release/
+          rm binary.tar.gz
+        fi
+        
+        # Verify binary exists
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          ls -la target/release/diffx.exe
+        else
+          ls -la target/release/diffx
+          chmod +x target/release/diffx
+        fi
+    
+    - name: Build wheel with maturin
+      working-directory: diffx-python
+      run: |
+        echo "Building wheel with embedded binary..."
+        maturin build --release --target ${{ matrix.target }} --out dist --find-interpreter
+    
+    - name: Test wheel installation
+      working-directory: diffx-python
+      run: |
+        echo "Testing wheel installation..."
+        pip install dist/*.whl
+        python -c "import diffx; print('Import successful')"
+        python -c "import diffx; print('Binary available:', diffx.is_diffx_available())"
+    
+    - name: Publish to PyPI
+      working-directory: diffx-python
+      env:
+        MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        echo "Publishing wheel to PyPI..."
+        maturin publish --skip-existing
