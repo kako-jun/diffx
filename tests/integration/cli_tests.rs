@@ -1157,7 +1157,9 @@ fn test_verbose_epsilon_configuration() -> Result<(), Box<dyn std::error::Error>
         .arg("0.1");
     cmd.assert()
         .code(1)
-        .stderr(predicate::str::contains("Numerical tolerance configuration:"))
+        .stderr(predicate::str::contains(
+            "Numerical tolerance configuration:",
+        ))
         .stderr(predicate::str::contains("Epsilon value: 0.1"));
     Ok(())
 }
@@ -1184,7 +1186,7 @@ fn test_verbose_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/config_v2.json")
         .arg("--verbose")
         .arg("--path")
-        .arg("app");  // Use "app" path which should have differences
+        .arg("app"); // Use "app" path which should have differences
     cmd.assert()
         .stderr(predicate::str::contains("Path filtering results:"))
         .stderr(predicate::str::contains("Filter path: app"))
@@ -1238,13 +1240,15 @@ fn test_verbose_combined_options() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--verbose")
         .arg("--ignore-keys-regex")
-        .arg("nonexistent")  // Use a regex that won't filter out differences
+        .arg("nonexistent") // Use a regex that won't filter out differences
         .arg("--epsilon")
         .arg("0.01");
     cmd.assert()
         .code(1)
         .stderr(predicate::str::contains("Key filtering configuration:"))
-        .stderr(predicate::str::contains("Numerical tolerance configuration:"))
+        .stderr(predicate::str::contains(
+            "Numerical tolerance configuration:",
+        ))
         .stderr(predicate::str::contains("Performance summary:"));
     Ok(())
 }
@@ -1310,9 +1314,9 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/file1.json");
-    cmd.assert()
-        .code(2)
-        .stderr(predicate::str::contains("Cannot compare directory and file"));
+    cmd.assert().code(2).stderr(predicate::str::contains(
+        "Cannot compare directory and file",
+    ));
     Ok(())
 }
 
@@ -1363,8 +1367,13 @@ fn test_recursive_compares_nested_files() -> Result<(), Box<dyn std::error::Erro
         .arg("--recursive");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("--- Comparing subdir/nested.json ---")) // Should compare nested files
-        .stdout(predicate::str::contains("data:").and(predicate::str::contains("value1").and(predicate::str::contains("value2"))));
+        .stdout(predicate::str::contains(
+            "--- Comparing subdir/nested.json ---",
+        )) // Should compare nested files
+        .stdout(
+            predicate::str::contains("data:")
+                .and(predicate::str::contains("value1").and(predicate::str::contains("value2"))),
+        );
     Ok(())
 }
 
