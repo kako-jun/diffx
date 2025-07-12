@@ -73,9 +73,9 @@ struct Args {
     #[arg(long)]
     brief: bool,
 
-    /// Show optimization information (for debugging)
-    #[arg(long)]
-    debug: bool,
+    /// Show verbose processing information
+    #[arg(short, long)]
+    verbose: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
@@ -381,10 +381,10 @@ fn run() -> Result<()> {
     let use_memory_optimization = should_auto_optimize(&args.input1, &args.input2)?;
     let batch_size = 1000; // Fixed batch size for optimization
 
-    // Debug information
-    if args.debug {
-        eprintln!("Debug: Optimization enabled: {use_memory_optimization}");
-        eprintln!("Debug: Batch size: {batch_size}");
+    // Verbose information
+    if args.verbose {
+        eprintln!("Optimization enabled: {use_memory_optimization}");
+        eprintln!("Batch size: {batch_size}");
     }
 
     // Handle directory comparison
