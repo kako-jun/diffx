@@ -379,6 +379,78 @@ diffx data.json data.new.json --brief --ignore-keys-regex "^timestamp$"
 - 自动化测试管道
 - 文件同步验证
 
+#### `-v, --verbose`
+- **类型**: 布尔标志
+- **默认值**: False
+- **描述**: 显示包括性能指标、配置详情和处理统计在内的综合诊断信息
+
+**示例:**
+```bash
+# 基本详细输出
+diffx config.json config.new.json --verbose
+# 输出包含:
+# Input file information: 
+#   Input 1 size: 245 bytes
+#   Input 2 size: 267 bytes
+# Parse time: 15.2µs
+# Diff computation time: 23.8µs
+# Total differences found: 3
+# Performance summary:
+#   Total processing time: 125.4µs
+#   Memory optimization: disabled
+
+# 详细输出与过滤选项结合
+diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilon 0.1
+# 额外输出:
+# Key filtering configuration:
+#   Regex pattern: timestamp
+# Numerical tolerance configuration:
+#   Epsilon value: 0.1
+
+# 目录比较的详细输出
+diffx configs/ configs.backup/ --recursive --verbose
+# 额外输出:
+# Directory scan results:
+#   Files in configs/: 12
+#   Files in configs.backup/: 11
+#   Total files to compare: 12
+# Directory comparison summary:
+#   Files compared: 11
+#   Files only in one directory: 1
+#   Differences found: Yes
+```
+
+**详细信息类别:**
+
+1. **性能指标**
+   - 文件大小和内存使用
+   - 解析时间、差异计算时间
+   - 总处理时间
+   - 内存优化状态
+
+2. **配置详情**
+   - 活动过滤模式（正则表达式、容差、数组ID键）
+   - 路径过滤设置
+   - 上下文显示配置
+
+3. **处理统计**
+   - 过滤前后的差异总数
+   - 目录扫描结果
+   - 比较效果指标
+
+4. **诊断输出**
+   - 优化决策
+   - 处理批次信息
+   - 错误上下文和故障排除数据
+
+**用例:**
+- 性能分析和优化
+- 慢速比较故障排除
+- 理解过滤器效果
+- 调试配置问题
+- CI/CD 管道诊断
+- 支持和维护任务
+
 ### 目录选项
 
 #### `-r, --recursive`

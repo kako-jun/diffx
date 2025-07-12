@@ -12,6 +12,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Read};
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 use walkdir::WalkDir;
 
 #[derive(Parser, Debug)]
@@ -73,7 +74,7 @@ struct Args {
     #[arg(long)]
     brief: bool,
 
-    /// Show verbose processing information
+    /// Show verbose processing information including performance metrics, configuration details, and diagnostic output
     #[arg(short, long)]
     verbose: bool,
 }
@@ -329,8 +330,15 @@ fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
     let diff = similar::TextDiff::from_lines(&content1_pretty, &content2_pretty);
 
     if let Some(context_lines) = args.context {
+        if args.verbose {
+            eprintln!("Context display configuration:");
+            eprintln!("  Context lines: {}", context_lines);
+        }
+        
         // Use unified_diff with custom context
+        let mut block_count = 0;
         for group in diff.grouped_ops(context_lines) {
+            block_count += 1;
             for op in group {
                 for change in diff.iter_changes(&op) {
                     let sign = match change.tag() {
@@ -341,6 +349,11 @@ fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
                     print!("{sign}{change}");
                 }
             }
+        }
+        
+        if args.verbose {
+            eprintln!("Context display results:");
+            eprintln!("  Difference blocks shown: {}", block_count);
         }
     } else {
         // Default behavior - show all changes
@@ -369,13 +382,31 @@ fn run() -> Result<()> {
     let output_format = args.output.unwrap_or(OutputFormat::Cli);
 
     let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
-        Some(Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?)
+        let regex = Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?;
+        if args.verbose {
+            eprintln!("Key filtering configuration:");
+            eprintln!("  Regex pattern: {}", regex_str);
+        }
+        Some(regex)
     } else {
         None
     };
 
     let epsilon = args.epsilon;
+    if let Some(eps) = epsilon {
+        if args.verbose {
+            eprintln!("Numerical tolerance configuration:");
+            eprintln!("  Epsilon value: {}", eps);
+        }
+    }
+    
     let array_id_key = args.array_id_key.as_deref();
+    if let Some(id_key) = array_id_key {
+        if args.verbose {
+            eprintln!("Array tracking configuration:");
+            eprintln!("  ID key for array elements: {}", id_key);
+        }
+    }
 
     // Memory optimization settings - auto-detect based on file size
     let use_memory_optimization = should_auto_optimize(&args.input1, &args.input2)?;
@@ -403,6 +434,7 @@ fn run() -> Result<()> {
             array_id_key,
             use_memory_optimization,
             batch_size,
+            args.verbose,
         )?;
 
         // Exit with appropriate code following diff tool conventions
@@ -414,8 +446,28 @@ fn run() -> Result<()> {
     }
 
     // Handle single file/stdin comparison
+    let start_time = Instant::now();
+    
     let content1 = read_input(&args.input1)?;
     let content2 = read_input(&args.input2)?;
+    
+    // Verbose file size information
+    if args.verbose {
+        let size1 = if args.input1.to_str() == Some("-") {
+            content1.len()
+        } else {
+            args.input1.metadata().map(|m| m.len() as usize).unwrap_or(content1.len())
+        };
+        let size2 = if args.input2.to_str() == Some("-") {
+            content2.len()
+        } else {
+            args.input2.metadata().map(|m| m.len() as usize).unwrap_or(content2.len())
+        };
+        
+        eprintln!("Input file information:");
+        eprintln!("  Input 1 size: {} bytes", size1);
+        eprintln!("  Input 2 size: {} bytes", size2);
+    }
 
     let input_format = if let Some(fmt) = args.format {
         fmt
@@ -425,9 +477,16 @@ fn run() -> Result<()> {
             .context("Could not infer format from file extensions. Please specify --format.")?
     };
 
+    let parse_start = Instant::now();
     let v1: Value = parse_content(&content1, input_format)?;
     let v2: Value = parse_content(&content2, input_format)?;
+    let parse_time = parse_start.elapsed();
+    
+    if args.verbose {
+        eprintln!("Parse time: {:?}", parse_time);
+    }
 
+    let diff_start = Instant::now();
     let differences = {
         // Always use configuration-based diff to support all options
         let config = DiffConfig {
@@ -441,10 +500,17 @@ fn run() -> Result<()> {
         };
         diff_with_config(&v1, &v2, &config)
     };
+    let diff_time = diff_start.elapsed();
+    
+    if args.verbose {
+        eprintln!("Diff computation time: {:?}", diff_time);
+        eprintln!("Total differences found: {}", differences.len());
+    }
 
     let mut differences = differences;
 
     let filter_path = args.path.as_deref();
+    let total_differences_before_filter = differences.len();
 
     if let Some(path) = filter_path {
         differences.retain(|d| {
@@ -456,6 +522,13 @@ fn run() -> Result<()> {
             };
             key.starts_with(path)
         });
+        
+        if args.verbose {
+            eprintln!("Path filtering results:");
+            eprintln!("  Filter path: {}", path);
+            eprintln!("  Total differences before filter: {}", total_differences_before_filter);
+            eprintln!("  Differences after filter: {}", differences.len());
+        }
     }
 
     // Check if differences were found
@@ -495,6 +568,14 @@ fn run() -> Result<()> {
         }
     }
 
+    // Final performance summary
+    if args.verbose {
+        let total_time = start_time.elapsed();
+        eprintln!("Performance summary:");
+        eprintln!("  Total processing time: {:?}", total_time);
+        eprintln!("  Memory optimization: {}", if use_memory_optimization { "enabled" } else { "disabled" });
+    }
+
     // Exit with appropriate code following diff tool conventions
     if has_differences {
         std::process::exit(1); // Differences found
@@ -515,6 +596,7 @@ fn compare_directories(
     array_id_key: Option<&str>,
     use_memory_optimization: bool,
     batch_size: usize,
+    verbose: bool,
 ) -> Result<bool> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
     for entry in WalkDir::new(dir1).into_iter().filter_map(|e| e.ok()) {
@@ -538,7 +620,16 @@ fn compare_directories(
         files1.keys().cloned().collect();
     all_relative_paths.extend(files2.keys().cloned());
 
+    // Verbose information for directory comparison
+    if verbose {
+        eprintln!("Directory scan results:");
+        eprintln!("  Files in {}: {}", dir1.display(), files1.len());
+        eprintln!("  Files in {}: {}", dir2.display(), files2.len());
+        eprintln!("  Total files to compare: {}", all_relative_paths.len());
+    }
+
     let mut compared_files = 0;
+    let mut skipped_files = 0;
     let mut has_any_differences = false;
 
     for relative_path in &all_relative_paths {
@@ -624,6 +715,7 @@ fn compare_directories(
                     relative_path.display()
                 );
                 has_any_differences = true;
+                skipped_files += 1;
             }
             (None, Some(_)) => {
                 println!(
@@ -633,6 +725,7 @@ fn compare_directories(
                     relative_path.display()
                 );
                 has_any_differences = true;
+                skipped_files += 1;
             }
             (None, None) => { /* Should not happen */ }
         }
@@ -640,6 +733,14 @@ fn compare_directories(
 
     if compared_files == 0 && all_relative_paths.is_empty() {
         println!("No comparable files found in directories.");
+    }
+
+    // Verbose summary for directory comparison
+    if verbose {
+        eprintln!("Directory comparison summary:");
+        eprintln!("  Files compared: {}", compared_files);
+        eprintln!("  Files only in one directory: {}", skipped_files);
+        eprintln!("  Differences found: {}", if has_any_differences { "Yes" } else { "No" });
     }
 
     Ok(has_any_differences)

@@ -370,6 +370,78 @@ diffx data.json data.new.json --brief --ignore-keys-regex "^timestamp$"
 - Automated testing pipelines
 - File synchronization verification
 
+#### `-v, --verbose`
+- **Type**: Boolean flag
+- **Default**: False
+- **Description**: Show comprehensive diagnostic information including performance metrics, configuration details, and processing statistics
+
+**Examples:**
+```bash
+# Basic verbose output
+diffx config.json config.new.json --verbose
+# Output includes:
+# Input file information: 
+#   Input 1 size: 245 bytes
+#   Input 2 size: 267 bytes
+# Parse time: 15.2µs
+# Diff computation time: 23.8µs
+# Total differences found: 3
+# Performance summary:
+#   Total processing time: 125.4µs
+#   Memory optimization: disabled
+
+# Verbose with filtering options
+diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilon 0.1
+# Additional output:
+# Key filtering configuration:
+#   Regex pattern: timestamp
+# Numerical tolerance configuration:
+#   Epsilon value: 0.1
+
+# Verbose directory comparison
+diffx configs/ configs.backup/ --recursive --verbose
+# Additional output:
+# Directory scan results:
+#   Files in configs/: 12
+#   Files in configs.backup/: 11
+#   Total files to compare: 12
+# Directory comparison summary:
+#   Files compared: 11
+#   Files only in one directory: 1
+#   Differences found: Yes
+```
+
+**Verbose Information Categories:**
+
+1. **Performance Metrics**
+   - File sizes and memory usage
+   - Parse time, diff computation time
+   - Total processing time
+   - Memory optimization status
+
+2. **Configuration Details**
+   - Active filtering patterns (regex, epsilon, array-id-key)
+   - Path filtering settings
+   - Context display configuration
+
+3. **Processing Statistics**
+   - Total differences found before/after filtering
+   - Directory scan results
+   - Comparison effectiveness metrics
+
+4. **Diagnostic Output**
+   - Optimization decisions
+   - Processing batch information
+   - Error context and troubleshooting data
+
+**Use Cases:**
+- Performance analysis and optimization
+- Troubleshooting slow comparisons
+- Understanding filter effectiveness
+- Debugging configuration issues
+- CI/CD pipeline diagnostics
+- Support and maintenance tasks
+
 ### Directory Options
 
 #### `-r, --recursive`

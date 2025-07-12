@@ -370,6 +370,78 @@ diffx data.json data.new.json --brief --ignore-keys-regex "^timestamp$"
 - 自動テストパイプライン
 - ファイル同期検証
 
+#### `-v, --verbose`
+- **型**: ブールフラグ
+- **デフォルト**: False
+- **説明**: パフォーマンス指標、設定詳細、処理統計を含む包括的な診断情報を表示
+
+**例:**
+```bash
+# 基本的な詳細出力
+diffx config.json config.new.json --verbose
+# 出力例:
+# Input file information: 
+#   Input 1 size: 245 bytes
+#   Input 2 size: 267 bytes
+# Parse time: 15.2µs
+# Diff computation time: 23.8µs
+# Total differences found: 3
+# Performance summary:
+#   Total processing time: 125.4µs
+#   Memory optimization: disabled
+
+# フィルタリングオプションと詳細出力の組み合わせ
+diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilon 0.1
+# 追加出力:
+# Key filtering configuration:
+#   Regex pattern: timestamp
+# Numerical tolerance configuration:
+#   Epsilon value: 0.1
+
+# ディレクトリ比較での詳細出力
+diffx configs/ configs.backup/ --recursive --verbose
+# 追加出力:
+# Directory scan results:
+#   Files in configs/: 12
+#   Files in configs.backup/: 11
+#   Total files to compare: 12
+# Directory comparison summary:
+#   Files compared: 11
+#   Files only in one directory: 1
+#   Differences found: Yes
+```
+
+**詳細情報カテゴリ:**
+
+1. **パフォーマンス指標**
+   - ファイルサイズとメモリ使用量
+   - パース時間、差分計算時間
+   - 総処理時間
+   - メモリ最適化状態
+
+2. **設定詳細**
+   - アクティブなフィルタリングパターン（正規表現、許容誤差、配列IDキー）
+   - パスフィルタリング設定
+   - コンテキスト表示設定
+
+3. **処理統計**
+   - フィルタリング前後の差分総数
+   - ディレクトリスキャン結果
+   - 比較効果指標
+
+4. **診断出力**
+   - 最適化決定
+   - 処理バッチ情報
+   - エラーコンテキストとトラブルシューティングデータ
+
+**使用ケース:**
+- パフォーマンス分析と最適化
+- 遅い比較のトラブルシューティング
+- フィルタ効果の理解
+- 設定問題のデバッグ
+- CI/CDパイプライン診断
+- サポートとメンテナンス作業
+
 ### ディレクトリオプション
 
 #### `-r, --recursive`
