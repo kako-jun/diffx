@@ -6,6 +6,16 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 
 # 🚨 重要な開発ルール (Important Development Rules)
 
+## Claude対応時の必須ルール (Claude Response Rules)
+**技術質問への回答では以下を必ず守ること:**
+- **完全な仕様を最初から提供**: 条件・制限・例外をすべて含める
+- **小出し回答の禁止**: 「確認が必要」「追加質問待ち」の姿勢を取らない
+- **具体例を複数提示**: 動作例・制限例・エラー例を網羅
+- **背景情報も同時提供**: なぜその仕様なのか、他の選択肢との違い
+- **例**: `--context`なら「unified形式専用、CLI/JSON/YAML無効、前後N行表示、具体例3パターン」を一度に報告
+
+# 🚨 重要な開発ルール (Important Development Rules)
+
 ## プッシュ前の必須チェック (Pre-Push Requirements)
 **必ずプッシュ前に以下を実行すること:**
 ```bash
