@@ -334,7 +334,7 @@ fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
             eprintln!("Context display configuration:");
             eprintln!("  Context lines: {}", context_lines);
         }
-        
+
         // Use unified_diff with custom context
         let mut block_count = 0;
         for group in diff.grouped_ops(context_lines) {
@@ -350,7 +350,7 @@ fn print_unified_output(v1: &Value, v2: &Value, args: &Args) -> Result<()> {
                 }
             }
         }
-        
+
         if args.verbose {
             eprintln!("Context display results:");
             eprintln!("  Difference blocks shown: {}", block_count);
@@ -399,7 +399,7 @@ fn run() -> Result<()> {
             eprintln!("  Epsilon value: {}", eps);
         }
     }
-    
+
     let array_id_key = args.array_id_key.as_deref();
     if let Some(id_key) = array_id_key {
         if args.verbose {
@@ -448,23 +448,29 @@ fn run() -> Result<()> {
 
     // Handle single file/stdin comparison
     let start_time = Instant::now();
-    
+
     let content1 = read_input(&args.input1)?;
     let content2 = read_input(&args.input2)?;
-    
+
     // Verbose file size information
     if args.verbose {
         let size1 = if args.input1.to_str() == Some("-") {
             content1.len()
         } else {
-            args.input1.metadata().map(|m| m.len() as usize).unwrap_or(content1.len())
+            args.input1
+                .metadata()
+                .map(|m| m.len() as usize)
+                .unwrap_or(content1.len())
         };
         let size2 = if args.input2.to_str() == Some("-") {
             content2.len()
         } else {
-            args.input2.metadata().map(|m| m.len() as usize).unwrap_or(content2.len())
+            args.input2
+                .metadata()
+                .map(|m| m.len() as usize)
+                .unwrap_or(content2.len())
         };
-        
+
         eprintln!("Input file information:");
         eprintln!("  Input 1 size: {} bytes", size1);
         eprintln!("  Input 2 size: {} bytes", size2);
@@ -482,7 +488,7 @@ fn run() -> Result<()> {
     let v1: Value = parse_content(&content1, input_format)?;
     let v2: Value = parse_content(&content2, input_format)?;
     let parse_time = parse_start.elapsed();
-    
+
     if args.verbose {
         eprintln!("Parse time: {:?}", parse_time);
     }
@@ -502,7 +508,7 @@ fn run() -> Result<()> {
         diff_with_config(&v1, &v2, &config)
     };
     let diff_time = diff_start.elapsed();
-    
+
     if args.verbose {
         eprintln!("Diff computation time: {:?}", diff_time);
         eprintln!("Total differences found: {}", differences.len());
@@ -523,11 +529,14 @@ fn run() -> Result<()> {
             };
             key.starts_with(path)
         });
-        
+
         if args.verbose {
             eprintln!("Path filtering results:");
             eprintln!("  Filter path: {}", path);
-            eprintln!("  Total differences before filter: {}", total_differences_before_filter);
+            eprintln!(
+                "  Total differences before filter: {}",
+                total_differences_before_filter
+            );
             eprintln!("  Differences after filter: {}", differences.len());
         }
     }
@@ -574,7 +583,14 @@ fn run() -> Result<()> {
         let total_time = start_time.elapsed();
         eprintln!("Performance summary:");
         eprintln!("  Total processing time: {:?}", total_time);
-        eprintln!("  Memory optimization: {}", if use_memory_optimization { "enabled" } else { "disabled" });
+        eprintln!(
+            "  Memory optimization: {}",
+            if use_memory_optimization {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        );
     }
 
     // Exit with appropriate code following diff tool conventions
@@ -602,19 +618,19 @@ fn compare_directories(
 ) -> Result<bool> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
     let mut subdirs1: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
-    
+
     let walker1 = if recursive {
         WalkDir::new(dir1)
     } else {
         WalkDir::new(dir1).max_depth(1)
     };
-    
+
     for entry in walker1.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path == dir1 {
             continue; // Skip the root directory itself
         }
-        
+
         if path.is_file() {
             let relative_path = path.strip_prefix(dir1)?.to_path_buf();
             files1.insert(relative_path, path.to_path_buf());
@@ -626,19 +642,19 @@ fn compare_directories(
 
     let mut files2: HashMap<PathBuf, PathBuf> = HashMap::new();
     let mut subdirs2: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
-    
+
     let walker2 = if recursive {
         WalkDir::new(dir2)
     } else {
         WalkDir::new(dir2).max_depth(1)
     };
-    
+
     for entry in walker2.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path == dir2 {
             continue; // Skip the root directory itself
         }
-        
+
         if path.is_file() {
             let relative_path = path.strip_prefix(dir2)?.to_path_buf();
             files2.insert(relative_path, path.to_path_buf());
@@ -654,14 +670,17 @@ fn compare_directories(
 
     // Handle common subdirectories (Unix diff behavior)
     if !recursive {
-        let common_subdirs: std::collections::HashSet<_> = subdirs1.intersection(&subdirs2).collect();
+        let common_subdirs: std::collections::HashSet<_> =
+            subdirs1.intersection(&subdirs2).collect();
         for subdir in &common_subdirs {
-            println!("Common subdirectories: {} and {}", 
-                dir1.join(subdir).display(), 
-                dir2.join(subdir).display());
+            println!(
+                "Common subdirectories: {} and {}",
+                dir1.join(subdir).display(),
+                dir2.join(subdir).display()
+            );
         }
     }
-    
+
     // Verbose information for directory comparison
     if verbose {
         eprintln!("Directory scan results:");
@@ -671,7 +690,10 @@ fn compare_directories(
         if !recursive {
             eprintln!("  Subdirectories in {}: {}", dir1.display(), subdirs1.len());
             eprintln!("  Subdirectories in {}: {}", dir2.display(), subdirs2.len());
-            eprintln!("  Common subdirectories: {}", subdirs1.intersection(&subdirs2).count());
+            eprintln!(
+                "  Common subdirectories: {}",
+                subdirs1.intersection(&subdirs2).count()
+            );
         }
         eprintln!("  Recursive mode: {}", recursive);
     }
@@ -788,7 +810,10 @@ fn compare_directories(
         eprintln!("Directory comparison summary:");
         eprintln!("  Files compared: {}", compared_files);
         eprintln!("  Files only in one directory: {}", skipped_files);
-        eprintln!("  Differences found: {}", if has_any_differences { "Yes" } else { "No" });
+        eprintln!(
+            "  Differences found: {}",
+            if has_any_differences { "Yes" } else { "No" }
+        );
     }
 
     Ok(has_any_differences)
