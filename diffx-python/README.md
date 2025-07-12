@@ -12,8 +12,6 @@ This will automatically download the appropriate `diffx` binary for your system 
 
 ## Usage
 
-### Modern API (Recommended)
-
 ```python
 import diffx
 
@@ -50,20 +48,6 @@ string_result = diffx.diff_string(
 )
 ```
 
-### Legacy API (Backward Compatibility)
-
-```python
-from diffx import run_diffx
-
-# Compare two JSON files (legacy)
-result = run_diffx(["file1.json", "file2.json"])
-
-if result.returncode == 0:
-    print("No differences found.")
-else:
-    print("Differences found:")
-    print(result.stdout)
-```
 
 ## Features
 
