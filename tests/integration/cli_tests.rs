@@ -1108,3 +1108,174 @@ fn test_kubernetes_config_drift_pattern() -> Result<(), Box<dyn std::error::Erro
         .stdout(predicate::str::starts_with("["));
     Ok(())
 }
+
+// ===============================================
+// Verbose Output Tests
+// ===============================================
+
+#[test]
+fn test_verbose_basic_output() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--verbose");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Optimization enabled:"))
+        .stderr(predicate::str::contains("Batch size:"))
+        .stderr(predicate::str::contains("Input file information:"))
+        .stderr(predicate::str::contains("Parse time:"))
+        .stderr(predicate::str::contains("Diff computation time:"))
+        .stderr(predicate::str::contains("Total differences found:"))
+        .stderr(predicate::str::contains("Performance summary:"))
+        .stderr(predicate::str::contains("Total processing time:"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_key_filtering() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--verbose")
+        .arg("--ignore-keys-regex")
+        .arg("age");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Key filtering configuration:"))
+        .stderr(predicate::str::contains("Regex pattern: age"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_epsilon_configuration() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--verbose")
+        .arg("--epsilon")
+        .arg("0.1");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Numerical tolerance configuration:"))
+        .stderr(predicate::str::contains("Epsilon value: 0.1"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/users1.json")
+        .arg("../tests/fixtures/users2.json")
+        .arg("--verbose")
+        .arg("--array-id-key")
+        .arg("id");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Array tracking configuration:"))
+        .stderr(predicate::str::contains("ID key for array elements: id"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_v1.json")
+        .arg("../tests/fixtures/config_v2.json")
+        .arg("--verbose")
+        .arg("--path")
+        .arg("app");  // Use "app" path which should have differences
+    cmd.assert()
+        .stderr(predicate::str::contains("Path filtering results:"))
+        .stderr(predicate::str::contains("Filter path: app"))
+        .stderr(predicate::str::contains("Total differences before filter:"))
+        .stderr(predicate::str::contains("Differences after filter:"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_context_display() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/context_test1.json")
+        .arg("../tests/fixtures/context_test2.json")
+        .arg("--verbose")
+        .arg("--output")
+        .arg("unified")
+        .arg("--context")
+        .arg("3");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Context display configuration:"))
+        .stderr(predicate::str::contains("Context lines: 3"))
+        .stderr(predicate::str::contains("Context display results:"))
+        .stderr(predicate::str::contains("Difference blocks shown:"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_directory_comparison() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/dir1")
+        .arg("../tests/fixtures/dir2")
+        .arg("--recursive")
+        .arg("--verbose");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Directory scan results:"))
+        .stderr(predicate::str::contains("Files in ../tests/fixtures/dir1:"))
+        .stderr(predicate::str::contains("Files in ../tests/fixtures/dir2:"))
+        .stderr(predicate::str::contains("Total files to compare:"))
+        .stderr(predicate::str::contains("Directory comparison summary:"))
+        .stderr(predicate::str::contains("Files compared:"))
+        .stderr(predicate::str::contains("Differences found:"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_combined_options() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--verbose")
+        .arg("--ignore-keys-regex")
+        .arg("nonexistent")  // Use a regex that won't filter out differences
+        .arg("--epsilon")
+        .arg("0.01");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Key filtering configuration:"))
+        .stderr(predicate::str::contains("Numerical tolerance configuration:"))
+        .stderr(predicate::str::contains("Performance summary:"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_no_differences() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file1.json")
+        .arg("--verbose");
+    cmd.assert()
+        .code(0)
+        .stderr(predicate::str::contains("Total differences found: 0"))
+        .stderr(predicate::str::contains("Performance summary:"));
+    Ok(())
+}
+
+#[test]
+fn test_verbose_performance_metrics() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_v1.json")
+        .arg("../tests/fixtures/config_v2.json")
+        .arg("--verbose");
+    cmd.assert()
+        .code(1)
+        .stderr(predicate::str::contains("Input file information:"))
+        .stderr(predicate::str::contains("bytes"))
+        .stderr(predicate::str::contains("Parse time:"))
+        .stderr(predicate::str::contains("µs").or(predicate::str::contains("ms")))
+        .stderr(predicate::str::contains("Diff computation time:"))
+        .stderr(predicate::str::contains("Total processing time:"))
+        .stderr(predicate::str::contains("Memory optimization:"));
+    Ok(())
+}
