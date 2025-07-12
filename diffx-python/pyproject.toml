@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "diffx-python"
-version = "0.4.1"
+version = "0.4.2"
 description = "Python wrapper for diffx - semantic diffing of JSON, YAML, TOML, XML, INI, and CSV files. Focuses on structural meaning rather than formatting."
 readme = "README.md"
 license = "MIT"

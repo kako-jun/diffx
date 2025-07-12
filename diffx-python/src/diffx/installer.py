@@ -18,7 +18,7 @@ try:
     DIFFX_VERSION = importlib.metadata.version("diffx-python")
 except importlib.metadata.PackageNotFoundError:
     # Fallback for development
-    DIFFX_VERSION = "0.4.1"
+    DIFFX_VERSION = "0.4.2"
 
 
 def get_platform_info():
