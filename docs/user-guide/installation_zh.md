@@ -176,10 +176,28 @@ npx diffx-js file1.json file2.json
 ### Python 生态系统
 
 ```bash
-# 即将推出
+# 🆕 内嵌二进制的自包含 wheel（v0.5.1+）
 pip install diffx-python
-diffx file1.json file2.json
+
+# 在 Python 项目中使用
+import diffx
+result = diffx.diff('file1.json', 'file2.json')
+print(result)
+
+# 验证安装
+import diffx
+print("diffx 可用:", diffx.is_diffx_available())
+print("版本:", diffx.__version__)
 ```
+
+**Python 包的主要优势（v0.5.1+）:**
+- **🚀 零配置**: 无需外部下载或二进制管理
+- **📦 完全自包含**: wheel 包含所有必需文件
+- **⚡ 快速安装**: `pip install` 后无网络依赖
+- **🔒 安全**: 无运行时外部源下载
+- **🌐 离线就绪**: 在隔离环境中工作
+
+Python 包使用 [maturin](https://github.com/PyO3/maturin) 将原生 `diffx` 二进制直接嵌入到 Python wheel 中，类似于 `ruff` 等工具的机制。
 
 ## 验证
 

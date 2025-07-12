@@ -229,10 +229,28 @@ npx diffx-js file1.json file2.json
 ### Pythonエコシステム
 
 ```bash
-# 近日対応予定
+# 🆕 バイナリ埋め込み完全自己完結型wheel（v0.5.1+）
 pip install diffx-python
-diffx file1.json file2.json
+
+# Pythonプロジェクトで使用
+import diffx
+result = diffx.diff('file1.json', 'file2.json')
+print(result)
+
+# インストール確認
+import diffx
+print("diffx 利用可能:", diffx.is_diffx_available())
+print("バージョン:", diffx.__version__)
 ```
+
+**Pythonパッケージの主な利点（v0.5.1+）:**
+- **🚀 ゼロセットアップ**: 外部ダウンロードやバイナリ管理が不要
+- **📦 完全自己完結**: 必要なものはすべてwheelに含まれています
+- **⚡ 高速インストール**: `pip install` 後のネットワーク依存なし
+- **🔒 セキュア**: 外部ソースからの実行時ダウンロードなし
+- **🌐 オフライン対応**: エアギャップ環境でも動作
+
+Pythonパッケージは [maturin](https://github.com/PyO3/maturin) を使用してネイティブ `diffx` バイナリをPython wheelに直接埋め込んでおり、`ruff` などのツールと同様の仕組みです。
 
 ## ソースからのビルド
 
