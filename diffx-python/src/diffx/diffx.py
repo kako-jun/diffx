@@ -73,16 +73,29 @@ class DiffError(Exception):
 
 
 def _get_diffx_binary_path() -> str:
-    """Get the path to the diffx binary"""
-    # Check if local binary exists (installed via postinstall)
-    package_dir = Path(__file__).parent.parent.parent
+    """Get the path to the diffx binary embedded in the wheel"""
+    import sys
     binary_name = "diffx.exe" if platform.system() == "Windows" else "diffx"
-    local_binary_path = package_dir / "bin" / binary_name
     
-    if local_binary_path.exists():
-        return str(local_binary_path)
+    # For maturin wheel, the binary is typically in the package's Scripts/bin directory
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller case
+        wheel_binary_path = Path(sys._MEIPASS) / binary_name
+    else:
+        # Try various common locations in maturin wheel
+        package_dir = Path(__file__).parent.parent.parent
+        possible_paths = [
+            package_dir / "Scripts" / binary_name,  # Windows
+            package_dir / "bin" / binary_name,      # Unix
+            package_dir / "diffx_python" / binary_name,
+            package_dir / "diffx_python.libs" / binary_name,
+        ]
+        
+        for path in possible_paths:
+            if path.exists():
+                return str(path)
     
-    # Fall back to system PATH
+    # Fall back to system PATH (for development)
     return "diffx"
 
 

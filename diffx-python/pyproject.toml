@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
 
 [project]
 name = "diffx-python"
-version = "0.4.6"
+version = "0.5.0"
 description = "Python wrapper for diffx - semantic diffing of JSON, YAML, TOML, XML, INI, and CSV files. Focuses on structural meaning rather than formatting."
 readme = "README.md"
 license = "MIT"
@@ -62,18 +62,10 @@ dev = [
     "ruff"
 ]
 
-[project.scripts]
-diffx-download-binary = "diffx.installer:main"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/diffx"]
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "/src",
-    "/scripts",
-    "/README.md"
-]
+[tool.maturin]
+# This package includes a binary (diffx CLI) in the wheel
+python-source = "src"
+bindings = "bin"
 
 [tool.ruff]
 line-length = 88

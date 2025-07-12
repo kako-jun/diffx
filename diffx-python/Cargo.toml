@@ -1,0 +1,28 @@
+[package]
+name = "diffx-python"
+version = "0.5.0"
+edition = "2021"
+authors = ["kako-jun"]
+license = "MIT"
+description = "Python wrapper for diffx - includes diffx CLI binary in wheel"
+
+# This is a binary-only package for maturin
+# The actual diffx binary is built separately and included
+[[bin]]
+name = "diffx"
+path = "src/main.rs"
+
+[dependencies]
+# Reference to the actual diffx dependencies
+diffx-core = { version = "0.5.0", path = "../diffx-core" }
+clap = { workspace = true }
+colored = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yml = { workspace = true }
+similar = { workspace = true }
+toml = { workspace = true }
+walkdir = { workspace = true }
+dirs = { workspace = true }
+regex = { workspace = true }
+anyhow = { workspace = true }
