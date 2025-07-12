@@ -77,23 +77,23 @@ def _get_diffx_binary_path() -> str:
     import sys
     binary_name = "diffx.exe" if platform.system() == "Windows" else "diffx"
     
-    # For maturin wheel, the binary is typically in the package's Scripts/bin directory
-    if hasattr(sys, '_MEIPASS'):
-        # PyInstaller case
-        wheel_binary_path = Path(sys._MEIPASS) / binary_name
-    else:
-        # Try various common locations in maturin wheel
-        package_dir = Path(__file__).parent.parent.parent
-        possible_paths = [
-            package_dir / "Scripts" / binary_name,  # Windows
-            package_dir / "bin" / binary_name,      # Unix
-            package_dir / "diffx_python" / binary_name,
-            package_dir / "diffx_python.libs" / binary_name,
+    # For maturin wheel with bindings = "bin", binary is installed in Scripts/bin
+    # Check the Python environment's Scripts/bin directory first
+    if hasattr(sys, 'prefix'):
+        env_scripts_paths = [
+            Path(sys.prefix) / "Scripts" / binary_name,  # Windows
+            Path(sys.prefix) / "bin" / binary_name,      # Unix
         ]
         
-        for path in possible_paths:
+        for path in env_scripts_paths:
             if path.exists():
                 return str(path)
+    
+    # PyInstaller case
+    if hasattr(sys, '_MEIPASS'):
+        wheel_binary_path = Path(sys._MEIPASS) / binary_name
+        if wheel_binary_path.exists():
+            return str(wheel_binary_path)
     
     # Fall back to system PATH (for development)
     return "diffx"
@@ -108,15 +108,21 @@ def _execute_diffx(args: List[str]) -> tuple[str, str]:
             [diffx_path] + args,
             capture_output=True,
             text=True,
-            check=True
+            check=False  # Don't raise exception on non-zero exit
         )
-        return result.stdout, result.stderr
-    except subprocess.CalledProcessError as e:
-        raise DiffError(
-            f"diffx exited with code {e.returncode}",
-            e.returncode,
-            e.stderr or ""
-        )
+        
+        # Exit codes:
+        # 0 = No differences found
+        # 1 = Differences found (normal diff result)
+        # 2+ = Error conditions
+        if result.returncode in (0, 1):
+            return result.stdout, result.stderr
+        else:
+            raise DiffError(
+                f"diffx exited with code {result.returncode}",
+                result.returncode,
+                result.stderr or ""
+            )
     except FileNotFoundError:
         raise DiffError(
             "diffx command not found. Please install diffx CLI tool.",

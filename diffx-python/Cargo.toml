@@ -1,6 +1,9 @@
+[workspace]
+# This is an independent package, not part of the parent workspace
+
 [package]
 name = "diffx-python"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2021"
 authors = ["kako-jun"]
 license = "MIT"
@@ -14,15 +17,15 @@ path = "src/main.rs"
 
 [dependencies]
 # Reference to the actual diffx dependencies
-diffx-core = { version = "0.5.0", path = "../diffx-core" }
-clap = { workspace = true }
-colored = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_yml = { workspace = true }
-similar = { workspace = true }
-toml = { workspace = true }
-walkdir = { workspace = true }
-dirs = { workspace = true }
-regex = { workspace = true }
-anyhow = { workspace = true }
+diffx-core = { version = "0.5.1", path = "../diffx-core" }
+clap = { version = "4.0", features = ["derive"] }
+colored = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yml = "0.0.12"
+similar = "2.0"
+toml = "0.8"
+walkdir = "2.0"
+dirs = "5.0"
+regex = "1.0"
+anyhow = "1.0"

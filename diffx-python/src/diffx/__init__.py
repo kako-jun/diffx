@@ -21,7 +21,7 @@ from .diffx import (
 # For backward compatibility with existing diffx_python users
 from .compat import run_diffx
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 __all__ = [
     "diff",
     "diff_string", 

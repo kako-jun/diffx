@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "diffx-python"
-version = "0.5.0"
+version = "0.5.1"
 description = "Python wrapper for diffx - semantic diffing of JSON, YAML, TOML, XML, INI, and CSV files. Focuses on structural meaning rather than formatting."
 readme = "README.md"
 license = "MIT"
@@ -63,9 +63,12 @@ dev = [
 ]
 
 [tool.maturin]
-# This package includes a binary (diffx CLI) in the wheel
+# This package includes both Python code and a binary (diffx CLI) in the wheel
 python-source = "src"
+module-name = "diffx"
 bindings = "bin"
+# Find Python interpreters automatically
+find-interpreter = true
 
 [tool.ruff]
 line-length = 88
