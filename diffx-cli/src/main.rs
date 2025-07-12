@@ -73,9 +73,9 @@ struct Args {
     #[arg(long)]
     brief: bool,
 
-    /// Show optimization information (for debugging)
-    #[arg(long)]
-    debug: bool,
+    /// Show verbose processing information
+    #[arg(short, long)]
+    verbose: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
@@ -120,11 +120,8 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
 }
 
 fn should_auto_optimize(input1: &Path, input2: &Path) -> Result<bool> {
-    // Auto-optimize for files larger than 1MB (configurable for testing)
-    let large_file_threshold = std::env::var("DIFFX_OPTIMIZE_THRESHOLD")
-        .ok()
-        .and_then(|s| s.parse::<u64>().ok())
-        .unwrap_or(1024 * 1024); // Default 1MB
+    // Auto-optimize for files larger than 1MB
+    let large_file_threshold = 1024 * 1024; // 1MB
 
     let size1 = if input1.to_str() == Some("-") {
         0 // stdin - can't determine size
@@ -384,10 +381,10 @@ fn run() -> Result<()> {
     let use_memory_optimization = should_auto_optimize(&args.input1, &args.input2)?;
     let batch_size = 1000; // Fixed batch size for optimization
 
-    // Debug information
-    if args.debug {
-        eprintln!("Debug: Optimization enabled: {use_memory_optimization}");
-        eprintln!("Debug: Batch size: {batch_size}");
+    // Verbose information
+    if args.verbose {
+        eprintln!("Optimization enabled: {use_memory_optimization}");
+        eprintln!("Batch size: {batch_size}");
     }
 
     // Handle directory comparison
