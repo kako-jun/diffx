@@ -1,29 +1,29 @@
 # TODOリスト
 
-## 🚀 次期リリース向け改善 (Next Release)
+## 🚀 優先度: マーケティング (Product is Ready - Focus on Awareness)
 
-### 🧹 コードクリーンアップ
-- [ ] `diffx-python/examples.py`の`temp_feature`フラグを適切な名前に変更
-- [ ] `ci-local.sh`のTODO/FIXME警告処理の見直し（厳格化 or 削除）
-- [ ] `monitor-release.sh`のハードコードされたリトライ回数を設定可能に
-
-### 📦 パッケージ改善
-- [x] npmパッケージのpostinstall関連コード削除（v0.5.3で完了）
-- [ ] `--skip-existing`フラグの必要性再検討
-
-## 🌍 コミュニティ展開 (Community)
-
-### 📢 戦略的マーケティングキャンペーン
-- [ ] プロモーション戦略策定・原稿作成
+### 📢 戦略的マーケティングキャンペーン (最優先)
+- [x] プロモーション戦略策定・原稿作成
 - [ ] グローバル同時投稿キャンペーン実行
 - [ ] 投稿効果測定・改善サイクル構築
 - [ ] Docker Hub公開（DevOpsコミュニティ向け）
 
 ### 🎯 マーケティング管理（コードベース）
-- [ ] `.claude/marketing/` ディレクトリ作成
-- [ ] プラットフォーム別投稿戦略・原稿管理
+- [x] `.claude/marketing/` ディレクトリ作成
+- [x] プラットフォーム別投稿戦略・原稿管理
 - [ ] 効果測定スクリプト作成
 - [ ] 多言語・多地域対応戦略
+
+## 🔧 低優先度: 機能改善 (After Market Success)
+
+### 🧹 コードクリーンアップ (後回し)
+- [ ] `diffx-python/examples.py`の`temp_feature`フラグを適切な名前に変更
+- [ ] `ci-local.sh`のTODO/FIXME警告処理の見直し（厳格化 or 削除）
+- [ ] `monitor-release.sh`のハードコードされたリトライ回数を設定可能に
+
+### 📦 パッケージ改善 (後回し)
+- [x] npmパッケージのpostinstall関連コード削除（v0.5.3で完了）
+- [ ] `--skip-existing`フラグの必要性再検討
 
 ### 🔧 エコシステム拡張
 - [ ] Homebrew Formula作成
