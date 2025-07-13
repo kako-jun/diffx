@@ -81,19 +81,6 @@ cargo install diffx
 cargo install diffx
 ```
 
-#### Using Scoop (Future)
-
-```powershell
-# Coming soon
-scoop install diffx
-```
-
-#### Using Chocolatey (Future)
-
-```powershell
-# Coming soon
-choco install diffx
-```
 
 ## Building from Source
 

@@ -200,30 +200,16 @@ cargo install diffx --force
 cargo install --git https://github.com/kako-jun/diffx.git
 ```
 
-### Scoop（Windows）
-```powershell
-# Scoopインストール（まだの場合）
-iwr -useb get.scoop.sh | iex
-
-# diffx追加（将来的に対応予定）
-# scoop install diffx
-```
-
-### Chocolatey（Windows）
-```powershell
-# Chocolateyインストール（まだの場合）
-Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-
-# diffx追加（将来的に対応予定）
-# choco install diffx
-```
 
 ### Node.jsエコシステム
 
 ```bash
-# 近日対応予定
+# Node.jsラッパーをインストール
 npm install diffx-js
-npx diffx-js file1.json file2.json
+
+# Node.jsプロジェクトで使用
+const diffx = require('diffx-js');
+const result = diffx.diff('file1.json', 'file2.json');
 ```
 
 ### Pythonエコシステム
