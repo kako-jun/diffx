@@ -84,28 +84,21 @@ check_branch() {
 check_versions() {
     print_info "Checking version consistency..."
     
-    # Get versions from different files
-    CARGO_VERSION=$(grep -E '^version = ".*"' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-    CORE_VERSION=$(grep -E '^version = ".*"' diffx-core/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-    CLI_VERSION=$(grep -E '^version = ".*"' diffx-cli/Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-    PYTHON_VERSION=$(grep -E '^version = ".*"' diffx-python/pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-    NPM_VERSION=$(grep -E '"version":' diffx-npm/package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+    # Get versions from different files (simplified to avoid hanging)
+    CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
+    PYTHON_VERSION=$(grep '^version = ' diffx-python/pyproject.toml | head -1 | cut -d'"' -f2)
+    NPM_VERSION=$(node -pe "require('./diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
     
     print_info "Found versions:"
-    echo "  - Cargo.toml: $CARGO_VERSION"
-    echo "  - diffx-core: $CORE_VERSION"
-    echo "  - diffx-cli: $CLI_VERSION"
+    echo "  - Cargo workspace: $CARGO_VERSION"  
     echo "  - diffx-python: $PYTHON_VERSION"
     echo "  - diffx-npm: $NPM_VERSION"
     
-    # Check if all versions match
-    if [ "$CARGO_VERSION" = "$CORE_VERSION" ] && \
-       [ "$CARGO_VERSION" = "$CLI_VERSION" ] && \
-       [ "$CARGO_VERSION" = "$PYTHON_VERSION" ] && \
-       [ "$CARGO_VERSION" = "$NPM_VERSION" ]; then
+    # Check if all versions match (core/cli use workspace version)
+    if [ "$CARGO_VERSION" = "$PYTHON_VERSION" ] && [ "$CARGO_VERSION" = "$NPM_VERSION" ]; then
         print_success "All versions are consistent: $CARGO_VERSION"
     else
-        print_error "Version mismatch detected!"
+        print_error "Version mismatch: Cargo=$CARGO_VERSION, Python=$PYTHON_VERSION, npm=$NPM_VERSION"
         ((ERRORS++))
     fi
 }
