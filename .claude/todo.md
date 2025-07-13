@@ -15,7 +15,6 @@
 
 ### 📢 プロモーション
 - [ ] Docker Hub公開
-- [ ] Reddit r/rust紹介投稿準備
 
 ### 🔧 エコシステム拡張
 - [ ] Homebrew Formula作成
@@ -56,3 +55,4 @@
 - [x] APIドキュメント改善（レガシーAPI削除）
 - [x] 統合リリーススクリプト作成
 - [x] maturin-based Python wheel実装
+- [x] Reddit r/rust紹介投稿（反応限定的）
