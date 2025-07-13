@@ -87,7 +87,7 @@ fi
 
 # 4. Dynamic version validation
 print_info "Running dynamic version validation..."
-if ./scripts/release/validate-dynamic-versions.sh > /dev/null 2>&1; then
+if ./scripts/release/validate-dynamic-versions-simple.sh > /dev/null 2>&1; then
     print_success "Dynamic version validation passed"
 else
     print_error "Dynamic version validation failed"
