@@ -3,7 +3,7 @@
 
 [package]
 name = "diffx-python"
-version = "0.5.2"
+version = "0.5.3"
 edition = "2021"
 authors = ["kako-jun"]
 license = "MIT"
@@ -17,7 +17,7 @@ path = "src/main.rs"
 
 [dependencies]
 # Reference to the actual diffx dependencies
-diffx-core = { version = "0.5.2", path = "../diffx-core" }
+diffx-core = { version = "0.5.3", path = "../diffx-core" }
 clap = { version = "4.0", features = ["derive"] }
 colored = "2.0"
 serde = { version = "1.0", features = ["derive"] }
