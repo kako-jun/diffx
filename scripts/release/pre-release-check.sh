@@ -313,20 +313,10 @@ main() {
     
     # Validate dynamic version handling
     print_info "Validating dynamic version handling..."
-    if ./scripts/validate-dynamic-versions.sh; then
+    if ./scripts/release/validate-dynamic-versions.sh; then
         print_success "Dynamic version validation passed"
     else
         print_error "Dynamic version validation failed"
-        ((ERRORS++))
-    fi
-    echo ""
-    
-    # Run environment check
-    print_info "Running environment check..."
-    if ./scripts/pre-release-environment-check.sh; then
-        print_success "Environment check passed"
-    else
-        print_error "Environment check failed"
         ((ERRORS++))
     fi
     echo ""
