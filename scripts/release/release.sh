@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -51,9 +58,9 @@ run_pre_release_checks() {
     print_info "Running pre-release checks..."
     
     # Run CI local checks
-    if [ -f "./scripts/testing/ci-local.sh" ]; then
+    if [ -f "$PROJECT_ROOT/scripts/testing/ci-local.sh" ]; then
         print_info "Running CI local checks..."
-        ./scripts/testing/ci-local.sh
+        "$PROJECT_ROOT/scripts/testing/ci-local.sh"
     else
         print_error "ci-local.sh not found"
         exit 1
@@ -61,8 +68,8 @@ run_pre_release_checks() {
     
     # Check package tests
     print_info "Running package tests..."
-    if [ -f "./scripts/testing/test-published-packages.sh" ]; then
-        ./scripts/testing/test-published-packages.sh
+    if [ -f "$PROJECT_ROOT/scripts/testing/test-published-packages.sh" ]; then
+        "$PROJECT_ROOT/scripts/testing/test-published-packages.sh"
     fi
     
     print_success "All pre-release checks passed!"
@@ -112,11 +119,11 @@ update_all_versions() {
     update_version_in_file "diffx-python/Cargo.toml" "$old_version" "$new_version"
     
     # Update npm package
-    if [ -f "diffx-npm/package.json" ]; then
+    if [ -f "$PROJECT_ROOT/diffx-npm/package.json" ]; then
         print_info "Updating version in diffx-npm/package.json"
-        cd diffx-npm
+        cd "$PROJECT_ROOT/diffx-npm"
         npm version "$new_version" --no-git-tag-version
-        cd ..
+        cd "$PROJECT_ROOT"
     fi
     
     # Update Cargo.lock
@@ -162,9 +169,9 @@ publish_crates() {
     
     # Publish core first
     print_info "Publishing diffx-core..."
-    cd diffx-core
+    cd "$PROJECT_ROOT/diffx-core"
     cargo publish
-    cd ..
+    cd "$PROJECT_ROOT"
     
     # Wait a bit for crates.io to process
     print_info "Waiting 30 seconds for crates.io to process diffx-core..."
@@ -172,9 +179,9 @@ publish_crates() {
     
     # Publish CLI
     print_info "Publishing diffx-cli..."
-    cd diffx-cli
+    cd "$PROJECT_ROOT/diffx-cli"
     cargo publish
-    cd ..
+    cd "$PROJECT_ROOT"
     
     print_success "Crates published successfully!"
 }
@@ -183,7 +190,7 @@ publish_crates() {
 publish_python() {
     print_info "Building and publishing Python package..."
     
-    cd diffx-python
+    cd "$PROJECT_ROOT/diffx-python"
     
     # Clean previous builds
     rm -rf dist/ target/wheels/
@@ -196,7 +203,7 @@ publish_python() {
     print_info "Uploading to PyPI..."
     maturin publish
     
-    cd ..
+    cd "$PROJECT_ROOT"
     
     print_success "Python package published successfully!"
 }
@@ -205,7 +212,7 @@ publish_python() {
 publish_npm() {
     print_info "Publishing npm package..."
     
-    cd diffx-npm
+    cd "$PROJECT_ROOT/diffx-npm"
     
     # Ensure we're logged in
     if ! npm whoami &> /dev/null; then
@@ -216,7 +223,7 @@ publish_npm() {
     # Publish
     npm publish
     
-    cd ..
+    cd "$PROJECT_ROOT"
     
     print_success "npm package published successfully!"
 }
@@ -274,7 +281,7 @@ main() {
     
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         print_info "Starting release monitoring..."
-        if ./scripts/release/monitor-release.sh "v$NEW_VERSION"; then
+        if "$PROJECT_ROOT/scripts/release/monitor-release.sh" "v$NEW_VERSION"; then
             print_success "🎉 Release $NEW_VERSION completed successfully across all platforms!"
             
             # Automatic release notes enhancement check

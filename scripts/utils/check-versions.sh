@@ -5,6 +5,13 @@
 
 set -e
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 echo "Checking version consistency across diffx packages..."
 
 # Colors for output
@@ -31,18 +38,18 @@ info() {
 }
 
 # Extract versions
-WORKSPACE_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
+WORKSPACE_VERSION=$(grep '^version = ' "$PROJECT_ROOT/Cargo.toml" | head -1 | cut -d'"' -f2)
 CORE_VERSION=$WORKSPACE_VERSION
 CLI_VERSION=$WORKSPACE_VERSION
 
-if [ -f "diffx-npm/package.json" ]; then
-    NPM_VERSION=$(node -p "require('./diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
+if [ -f "$PROJECT_ROOT/diffx-npm/package.json" ]; then
+    NPM_VERSION=$(node -p "require('$PROJECT_ROOT/diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
 else
     NPM_VERSION="not found"
 fi
 
-if [ -f "diffx-python/pyproject.toml" ]; then
-    PYTHON_VERSION=$(grep '^version = ' diffx-python/pyproject.toml | head -1 | cut -d'"' -f2)
+if [ -f "$PROJECT_ROOT/diffx-python/pyproject.toml" ]; then
+    PYTHON_VERSION=$(grep '^version = ' "$PROJECT_ROOT/diffx-python/pyproject.toml" | head -1 | cut -d'"' -f2)
 else
     PYTHON_VERSION="not found"
 fi

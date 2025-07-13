@@ -4,6 +4,13 @@ set -euo pipefail
 # Validate that no hardcoded version checks exist in the codebase
 # This prevents release failures due to hardcoded version assertions
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -40,7 +47,7 @@ check_hardcoded_versions() {
     print_info "Checking $description..."
     
     # Simplified check to avoid hanging
-    local hardcoded_versions=$(find . -name "$file_pattern" -not -path "./target/*" -not -path "./node_modules/*" -not -path "./.venv/*" -not -path "./venv/*" -not -path "./.git/*" | \
+    local hardcoded_versions=$(find "$PROJECT_ROOT" -name "$file_pattern" -not -path "$PROJECT_ROOT/target/*" -not -path "$PROJECT_ROOT/node_modules/*" -not -path "$PROJECT_ROOT/.venv/*" -not -path "$PROJECT_ROOT/venv/*" -not -path "$PROJECT_ROOT/.git/*" | \
         xargs grep -l "0\.[0-9]\+\.[0-9]\+" 2>/dev/null | \
         head -10 || true)
     
@@ -56,10 +63,10 @@ check_hardcoded_versions() {
 check_python_version() {
     print_info "Checking Python package version handling..."
     
-    if [ -f "diffx-python/src/diffx/__init__.py" ]; then
-        if grep -q "__version__ = \"[0-9]" diffx-python/src/diffx/__init__.py; then
+    if [ -f "$PROJECT_ROOT/diffx-python/src/diffx/__init__.py" ]; then
+        if grep -q "__version__ = \"[0-9]" "$PROJECT_ROOT/diffx-python/src/diffx/__init__.py"; then
             print_error "Found hardcoded __version__ in diffx-python/__init__.py"
-            grep -n "__version__ = \"[0-9]" diffx-python/src/diffx/__init__.py
+            grep -n "__version__ = \"[0-9]" "$PROJECT_ROOT/diffx-python/src/diffx/__init__.py"
             ((ERRORS++))
         else
             print_success "Python package uses dynamic version loading"
@@ -74,7 +81,7 @@ check_test_assertions() {
     print_info "Checking for hardcoded version assertions in tests..."
     
     # Simplified check
-    local assertion_files=$(find . -name "*.py" -o -name "*.js" -o -name "*.sh" | \
+    local assertion_files=$(find "$PROJECT_ROOT" -name "*.py" -o -name "*.js" -o -name "*.sh" | \
         grep -v "/target/" | grep -v "/node_modules/" | grep -v "/.venv/" | \
         xargs grep -l "assert.*version" 2>/dev/null | head -5 || true)
     
@@ -91,8 +98,8 @@ check_version_scripts() {
     print_info "Validating version consistency scripts use dynamic extraction..."
     
     # Check that version scripts use dynamic extraction
-    if [ -f "scripts/utils/check-versions.sh" ]; then
-        if grep -q "grep.*version.*Cargo.toml" scripts/utils/check-versions.sh; then
+    if [ -f "$PROJECT_ROOT/scripts/utils/check-versions.sh" ]; then
+        if grep -q "grep.*version.*Cargo.toml" "$PROJECT_ROOT/scripts/utils/check-versions.sh"; then
             print_success "check-versions.sh uses dynamic extraction"
         else
             print_error "check-versions.sh might not use dynamic extraction"
@@ -110,7 +117,7 @@ check_good_patterns() {
     local good_patterns=0
     
     # Check for dynamic Python version loading
-    if [ -f "diffx-python/src/diffx/__init__.py" ] && grep -q "importlib.metadata\|pkg_resources" diffx-python/src/diffx/__init__.py 2>/dev/null; then
+    if [ -f "$PROJECT_ROOT/diffx-python/src/diffx/__init__.py" ] && grep -q "importlib.metadata\|pkg_resources" "$PROJECT_ROOT/diffx-python/src/diffx/__init__.py" 2>/dev/null; then
         print_success "Found dynamic Python version loading (good)"
         ((good_patterns++))
     fi
