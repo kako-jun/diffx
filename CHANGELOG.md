@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Universal npm package**: All platform binaries now bundled in single npm package for offline deployment
+- **Comprehensive release automation**: 2-act release workflow with automatic monitoring and error recovery
+- **Release quality assurance**: Automatic release notes quality checking and enhancement system
+- **Unix-compatible directory comparison**: Proper exit codes and behavior matching standard diff tools
+- **Enhanced verbose output**: Comprehensive diagnostic information with `--verbose` flag
+- **Strategic marketing campaign**: Multi-platform content strategy across Reddit, Hacker News, and developer communities
+- **Migration planning**: Comprehensive quality standards and roadmap for sibling tools
+
+### Changed
+- **Documentation status**: Node.js ecosystem updated from "coming soon" to "available" across all 3 languages
+- **Release workflow**: Release script now accepts command-line version arguments
+- **Script organization**: Reorganized scripts into logical subdirectories (testing/, release/, etc.)
+- **Version management**: All version checks now use dynamic detection instead of hardcoded values
+- **Python environment**: Standardized on uv for virtual environment management
+
+### Fixed
+- **Release monitoring**: Fixed workflow name matching for "Release Act 1" and "Release Act 2"
+- **Script paths**: Corrected all relative paths in release and CI scripts
+- **Python package distribution**: Resolved path issues with maturin wheel structure
+- **Version validation**: Fixed hanging issues in dynamic version validation scripts
+- **Directory comparison**: Proper Unix diff exit codes (0=no diff, 1=diff found, 2=error)
+
+### Removed
+- **Obsolete installation methods**: Removed Scoop and Chocolatey installation sections (no support planned)
+- **Legacy scripts**: Cleaned up obsolete npm postinstall and download scripts
+- **Japanese package documentation**: Removed Japanese READMEs from wrapper packages for consistency
+
 ## [0.5.1] - 2025-07-12
 
 ### Added
