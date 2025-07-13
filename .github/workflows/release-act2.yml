@@ -50,13 +50,13 @@ jobs:
         node-version: '18'
         registry-url: 'https://registry.npmjs.org'
     
-    - name: Download binary for npm package
+    - name: Download all platform binaries for npm package
       working-directory: diffx-npm
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         TAG_NAME="${{ needs.get-tag.outputs.tag-name }}"
-        node scripts/download-binary.js
+        node scripts/download-all-binaries.js
     
     - name: Publish to npm
       working-directory: diffx-npm
