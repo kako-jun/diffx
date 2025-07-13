@@ -29,7 +29,7 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 ## コンテキスト効率化ルール (Context Efficiency Rules)
 **CLAUDE.mdは目次として使用し、詳細情報は以下の専用ファイルを参照:**
 
-- **📋 TODOリスト**: `.claude/todo.md` を参照
+- **📋 タスクリスト**: `.claude/tasks.md` を参照
 - **🚀 リリース手順**: `.claude/release-guide.md` を参照
 - **📊 プロジェクト状況**: `.claude/project-status.md` を参照  
 - **🏗️ アーキテクチャ**: `.claude/architecture.md` を参照
