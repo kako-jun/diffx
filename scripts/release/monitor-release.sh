@@ -58,9 +58,9 @@ check_github_actions() {
     local failed_count=0
     
     while IFS='|' read -r status conclusion workflow; do
-        if [[ "$workflow" == *"Act1"* ]]; then
+        if [[ "$workflow" == *"Act 1"* ]]; then
             act1_status="$status|$conclusion"
-        elif [[ "$workflow" == *"Act2"* ]]; then
+        elif [[ "$workflow" == *"Act 2"* ]]; then
             act2_status="$status|$conclusion"
         fi
         
