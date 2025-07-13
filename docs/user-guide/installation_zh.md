@@ -81,19 +81,6 @@ cargo install diffx
 cargo install diffx
 ```
 
-#### 使用 Scoop（即将推出）
-
-```powershell
-# 即将推出
-scoop install diffx
-```
-
-#### 使用 Chocolatey（即将推出）
-
-```powershell
-# 即将推出
-choco install diffx
-```
 
 ## 从源代码构建
 
@@ -163,14 +150,17 @@ docker build -t diffx .
 docker run --rm -v $(pwd):/workspace diffx /workspace/file1.json /workspace/file2.json
 ```
 
-## 包管理器（未来计划）
+## 包管理器
 
 ### Node.js 生态系统
 
 ```bash
-# 即将推出
+# 安装 Node.js 包装器
 npm install diffx-js
-npx diffx-js file1.json file2.json
+
+# 在 Node.js 项目中使用
+const diffx = require('diffx-js');
+const result = diffx.diff('file1.json', 'file2.json');
 ```
 
 ### Python 生态系统
