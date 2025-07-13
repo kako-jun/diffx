@@ -194,7 +194,7 @@ $ diffx report1.json report2.json  # Compare the changes themselves!
 # Rust (recommended - native performance)
 cargo install diffx
 
-# Node.js ecosystem
+# Node.js ecosystem (⚡ offline-ready with all platform binaries)
 npm install diffx-js
 
 # Python ecosystem (🆕 self-contained wheel with embedded binary)
@@ -298,7 +298,10 @@ npm install diffx-js
 pip install diffx-python
 ```
 
-All packages provide the same semantic diff capabilities with automatic binary download.
+All packages provide the same semantic diff capabilities:
+- **Rust**: Source-based compilation 
+- **npm**: Universal package with all platform binaries (offline-ready)
+- **Python**: Self-contained wheels with embedded binaries
 
 ## 🔮 Future Plans
 

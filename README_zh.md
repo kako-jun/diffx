@@ -194,7 +194,7 @@ $ diffx report1.json report2.json  # 比较变更本身！
 # Rust（推荐 - 原生性能）
 cargo install diffx
 
-# Node.js 生态系统
+# Node.js 生态系统（⚡ 内置全平台二进制文件，支持离线安装）
 npm install diffx-js
 
 # Python 生态系统（🆕 内嵌二进制的自包含 wheel）
@@ -298,7 +298,10 @@ npm install diffx-js
 pip install diffx-python
 ```
 
-所有包都通过自动二进制下载提供相同的语义差异功能。
+所有包都提供相同的语义差异功能：
+- **Rust**: 基于源代码编译
+- **npm**: 内置全平台二进制文件的通用包（离线安装）
+- **Python**: 内嵌二进制文件的自包含 wheel
 
 ## 🔮 未来计划
 

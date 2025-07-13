@@ -188,7 +188,7 @@ $ diffx report1.json report2.json  # 変更の変更を比較！
 # Rust（推奨 - ネイティブパフォーマンス）
 cargo install diffx
 
-# Node.jsエコシステム
+# Node.jsエコシステム（⚡ 全プラットフォームバイナリ同梱でオフライン対応）
 npm install diffx-js
 
 # Pythonエコシステム（🆕 バイナリ埋め込みの完全自己完結型wheel）
@@ -292,7 +292,10 @@ npm install diffx-js
 pip install diffx-python
 ```
 
-すべてのパッケージは自動バイナリダウンロードで同じ意味的差分機能を提供します。
+すべてのパッケージは同じ意味的差分機能を提供します：
+- **Rust**: ソースベースのコンパイル
+- **npm**: 全プラットフォームバイナリ同梱のユニバーサルパッケージ（オフライン対応）
+- **Python**: バイナリ埋め込みの自己完結型wheel
 
 ## 🔮 将来の計画
 
