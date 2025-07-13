@@ -240,8 +240,13 @@ main() {
     CURRENT_VERSION=$(get_current_version)
     print_info "Current version: $CURRENT_VERSION"
     
-    # Ask for new version
-    read -p "Enter new version (current: $CURRENT_VERSION): " NEW_VERSION
+    # Get new version from command line argument or prompt
+    if [ $# -gt 0 ]; then
+        NEW_VERSION="$1"
+        print_info "Using version from command line: $NEW_VERSION"
+    else
+        read -p "Enter new version (current: $CURRENT_VERSION): " NEW_VERSION
+    fi
     validate_version "$NEW_VERSION"
     
     # Confirmation
