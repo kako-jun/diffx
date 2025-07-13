@@ -81,7 +81,15 @@ pip show diffx-python
 - 新しいオプションの引数や動作をテスト
 - READMEの使用例を更新
 
-### 7. バージョン更新箇所
+### 7. チェンジログの更新
+```bash
+# CHANGELOG.mdを新バージョン用に更新
+# - 新機能・改善・バグ修正を整理
+# - 破壊的変更があれば明記
+# - リンクやマイグレーション情報を追加
+```
+
+### 8. バージョン更新箇所
 以下のファイルを統一バージョンに更新：
 - `Cargo.toml`
 - `diffx-core/Cargo.toml`
@@ -90,7 +98,7 @@ pip show diffx-python
 - `diffx-python/Cargo.toml`
 - `diffx-npm/package.json`
 
-### 8. 機能同期チェック
+### 9. 機能同期チェック
 ```bash
 # Rustの最新ヘルプ
 cargo run -- --help
@@ -102,7 +110,7 @@ cd diffx-npm && node examples.js
 cd diffx-python && python examples.py
 ```
 
-### 9. リリース前テスト
+### 10. リリース前テスト
 ```bash
 # 1. 高速チェック
 ./scripts/release/quick-release-check.sh
@@ -114,7 +122,7 @@ cd diffx-python && python examples.py
 ./scripts/testing/ci-local.sh
 ```
 
-### 10. リリース実行と監視
+### 11. リリース実行と監視
 ```bash
 # 統合リリース（監視機能付き）
 ./scripts/release/release.sh
@@ -123,7 +131,7 @@ cd diffx-python && python examples.py
 ./scripts/release/monitor-release.sh v<version>
 ```
 
-### 11. リリース後の徹底監視・確認
+### 12. リリース後の徹底監視・確認
 **重要**: タグプッシュ後は全てのアクションが正常完了するまで監視を継続する
 
 #### GitHub Actions監視
@@ -466,7 +474,7 @@ echo "Last successful release: $(git tag --sort=-version:refname | head -2 | tai
 
 ### ドキュメント更新の同期
 ```bash
-# 1. CHANGELOG.mdの事前更新
+# 1. CHANGELOG.mdの更新（リリース手順7で実施済み）
 # 2. README.mdの新機能説明
 # 3. ドキュメントサイトの更新準備
 # 4. リリースノートのテンプレート準備
