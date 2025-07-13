@@ -8,7 +8,18 @@ A Node.js wrapper for the `diffx` CLI tool.
 npm install diffx-js
 ```
 
-This will automatically download the appropriate `diffx` binary for your system from GitHub Releases.
+This package includes pre-compiled `diffx` binaries for all supported platforms (Linux x64, macOS x64/ARM64, Windows x64), enabling **completely offline installation** with no external downloads required.
+
+### Supported Platforms
+
+- **Linux x64** - Intel/AMD 64-bit
+- **macOS x64** - Intel-based Macs
+- **macOS ARM64** - Apple Silicon Macs (M1/M2/M3)
+- **Windows x64** - 64-bit Windows
+
+The appropriate binary is automatically selected at runtime based on your system.
+
+**Note:** Due to bundling all platform binaries, this package is larger (~20MB) than typical npm packages but provides complete offline functionality.
 
 ## Usage
 

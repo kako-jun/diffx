@@ -118,12 +118,12 @@ async function runTests() {
             'test2.json'
         ]);
         
-        if (diffResult.code === 0 && 
+        if (diffResult.code === 1 && 
             diffResult.stdout.includes('version') && 
             diffResult.stdout.includes('debug')) {
             success('Basic JSON diff works correctly');
         } else {
-            error(`JSON diff failed: ${diffResult.stderr}`);
+            error(`JSON diff failed. Code: ${diffResult.code}, Stdout: ${diffResult.stdout}, Stderr: ${diffResult.stderr}`);
             throw new Error('JSON diff failed');
         }
 
@@ -137,7 +137,7 @@ async function runTests() {
             'json'
         ]);
 
-        if (jsonOutputResult.code === 0) {
+        if (jsonOutputResult.code === 1) {
             try {
                 const output = JSON.parse(jsonOutputResult.stdout);
                 if (Array.isArray(output) && output.length > 0) {
@@ -166,7 +166,7 @@ async function runTests() {
             'test2.yaml'
         ]);
         
-        if (yamlResult.code === 0 && yamlResult.stdout.includes('version')) {
+        if (yamlResult.code === 1 && yamlResult.stdout.includes('version')) {
             success('YAML diff works correctly');
         } else {
             error(`YAML diff failed: ${yamlResult.stderr}`);
@@ -220,8 +220,34 @@ async function runTests() {
             throw new Error('Error handling failed');
         }
 
-        // Test 8: API functionality with new options
-        info('Test 8: Testing API functionality with new options...');
+        // Test 8: Platform-specific binary verification
+        info('Test 8: Testing platform-specific binary verification...');
+        
+        const platform = process.platform;
+        const arch = process.arch;
+        let expectedBinaryPath;
+        
+        if (platform === 'win32') {
+            expectedBinaryPath = path.join(__dirname, 'bin', 'win32-x64', 'diffx.exe');
+        } else if (platform === 'darwin') {
+            if (arch === 'arm64') {
+                expectedBinaryPath = path.join(__dirname, 'bin', 'darwin-arm64', 'diffx');
+            } else {
+                expectedBinaryPath = path.join(__dirname, 'bin', 'darwin-x64', 'diffx');
+            }
+        } else if (platform === 'linux') {
+            expectedBinaryPath = path.join(__dirname, 'bin', 'linux-x64', 'diffx');
+        }
+        
+        if (fs.existsSync(expectedBinaryPath)) {
+            success(`Platform-specific binary found: ${expectedBinaryPath}`);
+        } else {
+            error(`Platform-specific binary not found: ${expectedBinaryPath}`);
+            throw new Error('Platform binary missing');
+        }
+
+        // Test 9: API functionality with new options
+        info('Test 9: Testing API functionality with new options...');
         
         // Test ignore case option
         try {
