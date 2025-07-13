@@ -1,6 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 # Exactly match GitHub Actions CI environment
 export CARGO_TERM_COLOR=always
 export RUST_BACKTRACE=1
@@ -9,6 +16,7 @@ export RUST_BACKTRACE=1
 trap 'echo "Error occurred on line $LINENO. Exit code: $?" >&2' ERR
 
 echo "Running complete CI simulation locally (matching GitHub Actions exactly)..."
+echo "Project root: $PROJECT_ROOT"
 
 echo "Step 1: Check formatting"
 cargo fmt --all --check
@@ -67,7 +75,7 @@ else
 fi
 
 # Check for any TODO or FIXME comments (optional but good practice)
-if grep -r "TODO\|FIXME" --include="*.rs" . | grep -v "target/"; then
+if grep -r "TODO\|FIXME" --include="*.rs" "$PROJECT_ROOT" | grep -v "target/"; then
     echo "WARNING: Found TODO/FIXME comments in code"
 fi
 
@@ -78,9 +86,9 @@ if ! git diff --quiet Cargo.lock; then
 fi
 
 # Check for large files that shouldn't be committed
-if find . -type f -size +1M -not -path "./target/*" -not -path "./.git/*" | grep -q .; then
+if find "$PROJECT_ROOT" -type f -size +1M -not -path "$PROJECT_ROOT/target/*" -not -path "$PROJECT_ROOT/.git/*" | grep -q .; then
     echo "WARNING: Found files larger than 1MB"
-    find . -type f -size +1M -not -path "./target/*" -not -path "./.git/*" -exec ls -lh {} \;
+    find "$PROJECT_ROOT" -type f -size +1M -not -path "$PROJECT_ROOT/target/*" -not -path "$PROJECT_ROOT/.git/*" -exec ls -lh {} \;
 fi
 
 echo "All CI steps completed successfully!"

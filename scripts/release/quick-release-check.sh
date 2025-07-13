@@ -4,6 +4,13 @@ set -euo pipefail
 # Quick release readiness check
 # Performs essential checks without full CI run
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -52,9 +59,9 @@ fi
 
 # 2. Version consistency
 print_info "Checking version consistency..."
-CARGO_VERSION=$(grep -E '^version = ".*"' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-PYTHON_VERSION=$(grep -E '^version = ".*"' diffx-python/pyproject.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-NPM_VERSION=$(node -p "require('./diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
+CARGO_VERSION=$(grep -E '^version = ".*"' "$PROJECT_ROOT/Cargo.toml" | head -1 | sed 's/version = "\(.*\)"/\1/')
+PYTHON_VERSION=$(grep -E '^version = ".*"' "$PROJECT_ROOT/diffx-python/pyproject.toml" | head -1 | sed 's/version = "\(.*\)"/\1/')
+NPM_VERSION=$(node -p "require('$PROJECT_ROOT/diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
 
 if [ "$CARGO_VERSION" = "$PYTHON_VERSION" ] && [ "$CARGO_VERSION" = "$NPM_VERSION" ]; then
     print_success "All versions consistent: $CARGO_VERSION"
@@ -87,7 +94,7 @@ fi
 
 # 4. Dynamic version validation
 print_info "Running dynamic version validation..."
-if ./scripts/release/validate-dynamic-versions-simple.sh > /dev/null 2>&1; then
+if "$PROJECT_ROOT/scripts/release/validate-dynamic-versions-simple.sh" > /dev/null 2>&1; then
     print_success "Dynamic version validation passed"
 else
     print_error "Dynamic version validation failed"
@@ -101,12 +108,12 @@ if [ $ERRORS -eq 0 ]; then
     print_success "✅ Quick check passed! Ready to proceed with full release process."
     echo ""
     print_info "Next steps:"
-    echo "  1. Run full pre-release check: ./scripts/release/pre-release-check.sh"
-    echo "  2. Run CI local: ./scripts/testing/ci-local.sh"
-    echo "  3. Execute release: ./scripts/release/release.sh"
+    echo "  1. Run full pre-release check: $PROJECT_ROOT/scripts/release/pre-release-check.sh"
+    echo "  2. Run CI local: $PROJECT_ROOT/scripts/testing/ci-local.sh"
+    echo "  3. Execute release: $PROJECT_ROOT/scripts/release/release.sh"
 else
     print_error "❌ Found $ERRORS critical issue(s). Fix before proceeding."
     echo ""
-    print_info "Run full check for details: ./scripts/release/pre-release-check.sh"
+    print_info "Run full check for details: $PROJECT_ROOT/scripts/release/pre-release-check.sh"
     exit 1
 fi

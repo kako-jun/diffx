@@ -5,6 +5,13 @@
 
 set -e
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 echo "🔍 3言語ドキュメント整合性チェック開始"
 echo "🔍 Starting 3-language documentation consistency check"
 echo "🔍 开始检查3语言文档一致性"
@@ -59,7 +66,7 @@ for doc in "${DOCS[@]}"; do
         
         file_path="${doc}${suffix}.md"
         
-        if [ -f "$file_path" ]; then
+        if [ -f "$PROJECT_ROOT/$file_path" ]; then
             log_success "$lang_name: $file_path exists"
         else
             log_error "$lang_name: $file_path NOT FOUND"
@@ -85,9 +92,9 @@ for doc in "${DOCS[@]}"; do
         lang_name="${LANGUAGE_NAMES[$i]}"
         file_path="${doc}${suffix}.md"
         
-        if [ -f "$file_path" ]; then
+        if [ -f "$PROJECT_ROOT/$file_path" ]; then
             # 見出し（#で始まる行）をカウント
-            count=$(grep -c "^#" "$file_path" 2>/dev/null || echo "0")
+            count=$(grep -c "^#" "$PROJECT_ROOT/$file_path" 2>/dev/null || echo "0")
             heading_counts[$i]=$count
             echo "  $lang_name: $count headings"
         else
@@ -125,9 +132,9 @@ for doc in "${DOCS[@]}"; do
         lang_name="${LANGUAGE_NAMES[$i]}"
         file_path="${doc}${suffix}.md"
         
-        if [ -f "$file_path" ]; then
+        if [ -f "$PROJECT_ROOT/$file_path" ]; then
             # コードブロック（```で始まる行）をカウント
-            count=$(grep -c "^```" "$file_path" 2>/dev/null || echo "0")
+            count=$(grep -c "^```" "$PROJECT_ROOT/$file_path" 2>/dev/null || echo "0")
             # コードブロックは開始と終了で2つずつなので2で割る
             count=$((count / 2))
             code_counts[$i]=$count
@@ -156,7 +163,7 @@ echo "⚙️  4. CLIオプション整合性チェック / CLI option consistenc
 echo "-------------------------------------------------------------------------------"
 
 cli_ref_base="docs/reference/cli-reference"
-if [ -f "${cli_ref_base}.md" ]; then
+if [ -f "$PROJECT_ROOT/${cli_ref_base}.md" ]; then
     echo ""
     echo "📄 Checking CLI options in cli-reference"
     
@@ -168,9 +175,9 @@ if [ -f "${cli_ref_base}.md" ]; then
         lang_name="${LANGUAGE_NAMES[$i]}"
         file_path="${cli_ref_base}${suffix}.md"
         
-        if [ -f "$file_path" ]; then
+        if [ -f "$PROJECT_ROOT/$file_path" ]; then
             # CLIオプション（--で始まる行）をカウント
-            count=$(grep -c "^#### \`--" "$file_path" 2>/dev/null || echo "0")
+            count=$(grep -c "^#### \`--" "$PROJECT_ROOT/$file_path" 2>/dev/null || echo "0")
             option_counts[$i]=$count
             echo "  $lang_name: $count CLI options"
         else
@@ -210,9 +217,9 @@ for doc in "${DOCS[@]}"; do
             suffix="${LANGUAGES[$i]}"
             file_path="${doc}${suffix}.md"
             
-            if [ -f "$file_path" ]; then
+            if [ -f "$PROJECT_ROOT/$file_path" ]; then
                 # 大文字小文字を区別してキーワードをカウント
-                count=$(grep -c "$keyword" "$file_path" 2>/dev/null || echo "0")
+                count=$(grep -c "$keyword" "$PROJECT_ROOT/$file_path" 2>/dev/null || echo "0")
                 keyword_counts[$i]=$count
             else
                 keyword_counts[$i]=0

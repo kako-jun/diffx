@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -85,9 +92,9 @@ check_versions() {
     print_info "Checking version consistency..."
     
     # Get versions from different files (simplified to avoid hanging)
-    CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -1 | cut -d'"' -f2)
-    PYTHON_VERSION=$(grep '^version = ' diffx-python/pyproject.toml | head -1 | cut -d'"' -f2)
-    NPM_VERSION=$(node -pe "require('./diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
+    CARGO_VERSION=$(grep '^version = ' "$PROJECT_ROOT/Cargo.toml" | head -1 | cut -d'"' -f2)
+    PYTHON_VERSION=$(grep '^version = ' "$PROJECT_ROOT/diffx-python/pyproject.toml" | head -1 | cut -d'"' -f2)
+    NPM_VERSION=$(node -pe "require('$PROJECT_ROOT/diffx-npm/package.json').version" 2>/dev/null || echo "unknown")
     
     print_info "Found versions:"
     echo "  - Cargo workspace: $CARGO_VERSION"  
@@ -220,7 +227,7 @@ check_package_contents() {
     )
     
     for file in "${REQUIRED_FILES[@]}"; do
-        if [ -f "$file" ]; then
+        if [ -f "$PROJECT_ROOT/$file" ]; then
             print_success "$file exists"
         else
             print_error "$file is missing"
@@ -229,7 +236,7 @@ check_package_contents() {
     done
     
     # Check Python package structure
-    if [ -d "diffx-python/src/diffx" ]; then
+    if [ -d "$PROJECT_ROOT/diffx-python/src/diffx" ]; then
         print_success "Python package structure is correct"
     else
         print_error "Python package structure is incorrect"
@@ -251,7 +258,7 @@ check_tests() {
     fi
     
     # Check if CI script exists and is executable
-    if [ -x "./scripts/testing/ci-local.sh" ]; then
+    if [ -x "$PROJECT_ROOT/scripts/testing/ci-local.sh" ]; then
         print_success "CI local script is executable"
     else
         print_error "CI local script is not executable or not found"
@@ -264,7 +271,7 @@ check_common_issues() {
     print_info "Checking for common issues..."
     
     # Check for TODO/FIXME in code
-    TODO_COUNT=$(grep -r "TODO\|FIXME" --include="*.rs" --include="*.py" --include="*.js" . 2>/dev/null | wc -l || echo "0")
+    TODO_COUNT=$(grep -r "TODO\|FIXME" --include="*.rs" --include="*.py" --include="*.js" "$PROJECT_ROOT" 2>/dev/null | wc -l || echo "0")
     if [ "$TODO_COUNT" -gt 0 ]; then
         print_warning "Found $TODO_COUNT TODO/FIXME comments in code"
     else
@@ -272,7 +279,7 @@ check_common_issues() {
     fi
     
     # Check for debug prints
-    DEBUG_COUNT=$(grep -r "dbg!\|println!\|console\.log" --include="*.rs" --include="*.js" . 2>/dev/null | grep -v "test" | wc -l || echo "0")
+    DEBUG_COUNT=$(grep -r "dbg!\|println!\|console\.log" --include="*.rs" --include="*.js" "$PROJECT_ROOT" 2>/dev/null | grep -v "test" | wc -l || echo "0")
     if [ "$DEBUG_COUNT" -gt 0 ]; then
         print_warning "Found $DEBUG_COUNT potential debug statements"
     else
@@ -280,7 +287,7 @@ check_common_issues() {
     fi
     
     # Check Cargo.lock is committed
-    if [ -f "Cargo.lock" ] && git ls-files --error-unmatch Cargo.lock &> /dev/null; then
+    if [ -f "$PROJECT_ROOT/Cargo.lock" ] && git ls-files --error-unmatch "$PROJECT_ROOT/Cargo.lock" &> /dev/null; then
         print_success "Cargo.lock is tracked"
     else
         print_error "Cargo.lock is not tracked"
@@ -322,7 +329,7 @@ main() {
     
     # Validate dynamic version handling
     print_info "Validating dynamic version handling..."
-    if ./scripts/release/validate-dynamic-versions.sh; then
+    if "$PROJECT_ROOT/scripts/release/validate-dynamic-versions.sh"; then
         print_success "Dynamic version validation passed"
     else
         print_error "Dynamic version validation failed"
