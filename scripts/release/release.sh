@@ -276,6 +276,32 @@ main() {
         print_info "Starting release monitoring..."
         if ./scripts/release/monitor-release.sh "v$NEW_VERSION"; then
             print_success "🎉 Release $NEW_VERSION completed successfully across all platforms!"
+            
+            # Automatic release notes enhancement check
+            print_info "Performing automatic release quality checks..."
+            
+            RELEASE_BODY=$(gh release view "v$NEW_VERSION" --json body --jq '.body' 2>/dev/null || echo "")
+            BODY_LENGTH=${#RELEASE_BODY}
+            
+            if [ "$BODY_LENGTH" -lt 200 ] || [[ "$RELEASE_BODY" == *"**Full Changelog**"* ]] && [[ ! "$RELEASE_BODY" == *"Key Highlights"* ]]; then
+                print_warning "⚠️  ATTENTION: Release notes need enhancement!"
+                echo ""
+                print_info "According to release guide, detailed release notes should be added."
+                print_info "This release currently has minimal content and should be enhanced."
+                echo ""
+                print_info "Next steps:"
+                echo "  1. Identify the last substantial release (skip 'garbage' releases)"
+                echo "  2. Collect changes from that version to v$NEW_VERSION"
+                echo "  3. Create comprehensive release notes with:"
+                echo "     - Key highlights and user-facing changes"
+                echo "     - Technical improvements"
+                echo "     - Package availability information"
+                echo "     - Migration notes if applicable"
+                echo ""
+                print_warning "Current release notes are insufficient for user consumption."
+            else
+                print_success "✓ Release notes appear comprehensive"
+            fi
         else
             print_error "❌ Release monitoring detected failures. Please check the issues above."
             exit 1

@@ -331,6 +331,27 @@ main() {
     if $github_ok && $crates_ok && $pypi_ok && $npm_ok; then
         print_success "🎉 Release $TAG_VERSION completed successfully across all platforms!"
         echo ""
+        
+        # Automatic release notes enhancement
+        print_info "Checking release notes quality..."
+        RELEASE_BODY=$(gh release view "$TAG_VERSION" --json body --jq '.body' 2>/dev/null || echo "")
+        BODY_LENGTH=${#RELEASE_BODY}
+        
+        if [ "$BODY_LENGTH" -lt 200 ] || [[ "$RELEASE_BODY" == *"**Full Changelog**"* ]] && [[ ! "$RELEASE_BODY" == *"Key Highlights"* ]]; then
+            print_warning "Release notes are too brief. Detailed notes should be added."
+            print_info "Run the following to enhance release notes:"
+            echo "  gh release edit $TAG_VERSION --notes \"[Detailed release notes]\""
+            echo ""
+            print_info "Guidelines:"
+            echo "  - Include key features and improvements"
+            echo "  - Add technical changes for developers"
+            echo "  - Mention package availability (Rust/npm/Python)"
+            echo "  - Reference migration guides if needed"
+        else
+            print_success "✓ Release notes appear comprehensive"
+        fi
+        
+        echo ""
         print_info "Release URLs:"
         echo "  - GitHub: https://github.com/kako-jun/diffx/releases/tag/$TAG_VERSION"
         echo "  - crates.io: https://crates.io/crates/diffx-core"
