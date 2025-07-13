@@ -114,8 +114,8 @@ check_version_scripts() {
     print_info "Validating version consistency scripts use dynamic extraction..."
     
     # Check that version scripts use dynamic extraction
-    if [ -f "scripts/check-versions.sh" ]; then
-        if grep -q "grep.*version.*Cargo.toml" scripts/check-versions.sh; then
+    if [ -f "scripts/utils/check-versions.sh" ]; then
+        if grep -q "grep.*version.*Cargo.toml" scripts/utils/check-versions.sh; then
             print_success "check-versions.sh uses dynamic extraction"
         else
             print_error "check-versions.sh might not use dynamic extraction"
@@ -133,17 +133,17 @@ check_good_patterns() {
     local good_patterns=0
     
     # Check for dynamic version extraction patterns
-    if grep -q "cargo search" scripts/* 2>/dev/null; then
+    if grep -q "cargo search" scripts/*/* 2>/dev/null; then
         print_success "Found cargo search usage (good)"
         ((good_patterns++))
     fi
     
-    if grep -q "npm view.*version" scripts/* 2>/dev/null; then
+    if grep -q "npm view.*version" scripts/*/* 2>/dev/null; then
         print_success "Found npm view version usage (good)"
         ((good_patterns++))
     fi
     
-    if grep -q "pip.*index.*versions\|pip.*show" scripts/* 2>/dev/null; then
+    if grep -q "pip.*index.*versions\|pip.*show" scripts/*/* 2>/dev/null; then
         print_success "Found pip version checking usage (good)"
         ((good_patterns++))
     fi
