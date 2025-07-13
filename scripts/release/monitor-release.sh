@@ -341,7 +341,7 @@ main() {
         print_error "❌ Release $TAG_VERSION had failures. Please check the issues above."
         echo ""
         print_warning "If this release is completely failed and you want to clean it up:"
-        echo "  ./scripts/cleanup-failed-release.sh $TAG_VERSION"
+        echo "  ./scripts/release/cleanup-failed-release.sh $TAG_VERSION"
         echo ""
         print_info "This will remove:"
         echo "  - GitHub release page and assets"
