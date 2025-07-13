@@ -264,14 +264,63 @@ echo "npm version: $(npm --version)"
 rustc --version
 cargo --version
 
-# 3. Pythonとmaturin確認
-python --version
-maturin --version
+# 3. Python環境とmaturin確認（必ずuvでvenv使用）
+# **重要**: システムのPythonは使わず、必ずuvでvenvを作成する
+if ! command -v uv &> /dev/null; then
+    echo "❌ uvがインストールされていません"
+    echo "pipx install uv でインストールしてください"
+    exit 1
+fi
+
+# venv環境の確認・作成
+if [ ! -d ".venv" ]; then
+    echo "🔧 Python仮想環境を作成中..."
+    uv venv
+fi
+
+# venv環境をアクティベート
+source .venv/bin/activate
+
+# 必要なツールをvenv環境にインストール
+if ! command -v maturin &> /dev/null; then
+    echo "🔧 maturinをインストール中..."
+    uv pip install maturin
+fi
+
+echo "Python version: $(python --version)"
+echo "maturin version: $(maturin --version)"
 
 # 4. 認証情報の事前確認
 cargo login --dry-run
 npm whoami
 echo $MATURIN_PYPI_TOKEN | head -c 10  # 先頭10文字のみ表示
+```
+
+### Python環境管理の必須ルール
+**Pythonを使う際の絶対ルール:**
+- **システムPython禁止**: `pip install`でシステムレベルにインストールしない
+- **uv必須**: 必ず`uv`を使って仮想環境を管理する
+- **venv自動作成**: `.venv`がなければ`uv venv`で作成
+- **アクティベート必須**: 作業前に`source .venv/bin/activate`を実行
+- **依存関係管理**: `uv pip install`でパッケージをインストール
+
+```bash
+# Python環境セットアップ手順
+# 1. uvのインストール（一度だけ）
+pipx install uv
+
+# 2. プロジェクトごとにvenv作成
+cd /path/to/diffx
+uv venv
+
+# 3. 環境アクティベート（作業のたびに）
+source .venv/bin/activate
+
+# 4. 必要なツールインストール
+uv pip install maturin wheel build twine
+
+# 5. 作業完了後（任意）
+deactivate
 ```
 
 ### リリース直前の最終確認

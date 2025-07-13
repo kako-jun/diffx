@@ -107,8 +107,8 @@ check_versions() {
 check_dependencies() {
     print_info "Checking required tools..."
     
-    # Check for required commands
-    REQUIRED_COMMANDS=("cargo" "npm" "maturin" "git")
+    # Check for required commands (excluding maturin initially)
+    REQUIRED_COMMANDS=("cargo" "npm" "git" "uv")
     
     for cmd in "${REQUIRED_COMMANDS[@]}"; do
         if command -v "$cmd" &> /dev/null; then
@@ -125,6 +125,22 @@ check_dependencies() {
     else
         print_error "Python is not installed"
         ((ERRORS++))
+    fi
+    
+    # Check Python virtual environment and maturin
+    if [ -d ".venv" ]; then
+        print_success "Python virtual environment exists"
+        
+        # Check if maturin is available in venv
+        if .venv/bin/python -c "import maturin" 2>/dev/null; then
+            print_success "maturin is available in virtual environment"
+        else
+            print_warning "maturin not found in virtual environment"
+            print_info "Run: source .venv/bin/activate && uv pip install maturin"
+        fi
+    else
+        print_warning "Python virtual environment not found"
+        print_info "Run: uv venv && source .venv/bin/activate && uv pip install maturin"
     fi
 }
 
