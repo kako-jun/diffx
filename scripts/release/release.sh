@@ -51,9 +51,9 @@ run_pre_release_checks() {
     print_info "Running pre-release checks..."
     
     # Run CI local checks
-    if [ -f "./scripts/ci-local.sh" ]; then
+    if [ -f "./scripts/testing/ci-local.sh" ]; then
         print_info "Running CI local checks..."
-        ./scripts/ci-local.sh
+        ./scripts/testing/ci-local.sh
     else
         print_error "ci-local.sh not found"
         exit 1
@@ -61,8 +61,8 @@ run_pre_release_checks() {
     
     # Check package tests
     print_info "Running package tests..."
-    if [ -f "./scripts/test-published-packages.sh" ]; then
-        ./scripts/test-published-packages.sh
+    if [ -f "./scripts/testing/test-published-packages.sh" ]; then
+        ./scripts/testing/test-published-packages.sh
     fi
     
     print_success "All pre-release checks passed!"
@@ -274,7 +274,7 @@ main() {
     
     if [[ ! $REPLY =~ ^[Nn]$ ]]; then
         print_info "Starting release monitoring..."
-        if ./scripts/monitor-release.sh "v$NEW_VERSION"; then
+        if ./scripts/release/monitor-release.sh "v$NEW_VERSION"; then
             print_success "🎉 Release $NEW_VERSION completed successfully across all platforms!"
         else
             print_error "❌ Release monitoring detected failures. Please check the issues above."
@@ -282,7 +282,7 @@ main() {
         fi
     else
         print_warning "Monitoring skipped. You can manually monitor with:"
-        echo "  ./scripts/monitor-release.sh v$NEW_VERSION"
+        echo "  ./scripts/release/monitor-release.sh v$NEW_VERSION"
         echo ""
         print_warning "Manual verification steps:"
         echo "  - GitHub Actions: gh run list"
