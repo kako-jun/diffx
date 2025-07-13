@@ -14,12 +14,10 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 - **背景情報も同時提供**: なぜその仕様なのか、他の選択肢との違い
 - **例**: `--context`なら「unified形式専用、CLI/JSON/YAML無効、前後N行表示、具体例3パターン」を一度に報告
 
-# 🚨 重要な開発ルール (Important Development Rules)
-
 ## プッシュ前の必須チェック (Pre-Push Requirements)
 **必ずプッシュ前に以下を実行すること:**
 ```bash
-./scripts/ci-local.sh
+./scripts/testing/ci-local.sh
 ```
 
 - このスクリプトはGitHub Actions CIと完全に同じ環境・パラメータで実行される
@@ -28,113 +26,58 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 - ローカルで成功 → GitHub CIでも成功が保証される
 - CI失敗によるプッシュのやり直しを防げる
 
-## 名前「diffx」に込めた意味
-diff + x の「x」は何を意味するか？
+## コンテキスト効率化ルール (Context Efficiency Rules)
+**CLAUDE.mdは目次として使用し、詳細情報は以下の専用ファイルを参照:**
 
-- **extended** 拡張された差分（構造化、意味的）
-- **exact** 正確な差分抽出
-- **flexible** 柔軟なフォーマット対応
-- **indexed** 差分にインデックスを付けて追跡可能
-- **next-gen** 次世代の差分ツール
+- **📋 TODOリスト**: TodoRead/TodoWriteツールを使用（動的管理）
+- **🚀 リリース手順**: `.claude/release-guide.md` を参照
+- **📊 プロジェクト状況**: `.claude/project-status.md` を参照  
+- **🏗️ アーキテクチャ**: `.claude/architecture.md` を参照
+- **🎯 ロードマップ**: `.claude/roadmap.md` を参照
 
-# diffx の仕様（Specification）
-
-## 対応フォーマット
-JSON, YAML, TOML, XML, INI, CSV
-
-## 差分の種類
-- キーの追加・削除
-- 値の変更
-- 配列の挿入・削除・変更
-- ネスト構造の差分
-
-## 出力形式
-- **diffx形式 (デフォルト)**: セマンティック差分形式
-- **JSON/YAML形式**: 機械可読な形式
-- **diff互換形式**: 既存ツールとの連携用
-
-# diffx の提供形態
-
-## 1. Rust Crate（diffx-core）
-構造化差分抽出のロジックをライブラリとして提供
-- **✅ 実装済み** - 包括的なテストケース付き
-
-## 2. CLIツール（diffx）
-ユーザーが直接使えるコマンドラインツール
-- **✅ 実装済み** - 全ての基本機能が動作
-
-## 3. 他言語向けラッパー（npm/pip）
-- **npmパッケージ（diffx-js）**: Node.js環境からCLI呼び出し
-- **pipパッケージ（diffx-python）**: Python環境からCLI呼び出し
-- **✅ 実装済み**
-
-# 📈 現在の状況
-
-## 🎯 プロジェクト完成 🎉
-
-**diffx は設計・実装・テスト・ドキュメント化・マルチプラットフォーム公開が完了**
-
-### 🏆 実装完了済み
-- **全6フォーマット対応**: JSON/YAML/TOML/XML/INI/CSV
-- **高度な差分機能**: 構造認識、配列追跡、正規表現フィルタ
-- **UNIX互換CLI**: --context, --ignore-case, --quiet等の標準オプション
-- **3言語エコシステム**: Rust(crates.io), JavaScript(npm), Python(PyPI)
-- **自動最適化**: --optimizeフラグ削除、インテリジェントな自動判定
-- **2幕リリースワークフロー**: 安定したCI/CD自動公開システム
-
-## 📦 最新リリース: v0.4.2 (2025-07-12)
-
-### ✅ 完了した改善
-- **組織レベルテンプレート**: kako-jun/.github で全リポジトリ共通化
-- **リリースノート自動生成**: `--generate-notes`による詳細なリリース履歴
-- **パッケージメタデータ最適化**: 発見性とSEO向上
-- **APIドキュメント改善**: レガシーAPI削除、クリーンな現代的API
-- **完全自動公開**: 全プラットフォーム同時リリース
-
-# 🎯 今後の展開
-
-## 🚀 次のステップ（優先度順）
-
-### 📢 コミュニティ展開（2025-07-12〜）
-- **GitHub Pages公式サイト**: docs/の自動公開サイト開設
-- **Docker Hub公開**: コンテナ環境対応
-- **Reddit r/rust紹介投稿**: Rustコミュニティへの発表
-- **Awesome Rust申請**: リスト掲載による知名度向上
-
-### 🔧 エコシステム拡張（中期）
-- **Homebrew Formula**: macOS向けパッケージマネージャ対応
-- **TUIモード**: インタラクティブな差分表示
-- **VS Code拡張**: IDE統合による開発者体験向上
-
-### 💡 高度機能（長期）
-- **3者間差分**: `--three-way`による高度な比較
-- **AI要約機能**: 差分の自然言語説明生成
-- **Web API**: `diffx serve`による HTTP API提供
+**重要**: 詳細が必要な時のみ該当ファイルを読むこと。CLAUDE.md自体は最小限に保つ。
 
 ---
 
-# 📝 開発メモ
+# 📦 現在の状況 (Current Status)
 
-## 🚀 リリース手順
-**重要**: リリース前に必ず `.claude/release-guide.md` を確認すること
+## 🎯 プロジェクト完成度
+**diffx は設計・実装・テスト・ドキュメント化・マルチプラットフォーム公開が完了**
+
+- **✅ 全6フォーマット対応**: JSON/YAML/TOML/XML/INI/CSV
+- **✅ 高度な差分機能**: 構造認識、配列追跡、正規表現フィルタ
+- **✅ UNIX互換CLI**: --context, --ignore-case, --quiet等の標準オプション
+- **✅ 3言語エコシステム**: Rust(crates.io), JavaScript(npm), Python(PyPI)
+- **✅ 2幕リリースワークフロー**: 安定したCI/CD自動公開システム
+
+## 📦 最新リリース: v0.5.3 (2025-07-13)
+- **🚀 npmユニバーサルパッケージ**: 全プラットフォームバイナリ同梱でオフライン対応
+- **🛠️ スクリプト信頼性向上**: パス問題解決、全ディレクトリから実行可能
+- **📝 3言語ドキュメント更新**: 英語、日本語、中国語すべてで新機能対応
+
+## 💻 提供形態
+- **🦀 Rust (crates.io)**: ソースベースコンパイルで最高性能
+- **📦 npm (diffx-js)**: 全プラットフォームバイナリ同梱のユニバーサルパッケージ
+- **🐍 Python (diffx-python)**: maturin製の自己完結型wheel
+
+---
+
+# 🚀 開発ガイド (Development Guide)
+
+## リリース手順
 ```bash
-# リリース前チェック
-./scripts/pre-release-check.sh
-
-# 統合リリース実行
-./scripts/release.sh
+# 詳細手順は以下を参照
+cat .claude/release-guide.md
 ```
 
-## 🎯 現在のTODOリスト（2025-07-12）
-- [ ] GitHub Pages公式サイト開設
-- [ ] Docker Hub公開
-- [ ] Reddit r/rust紹介投稿準備
-- [x] 組織レベルGitHubテンプレート作成（kako-jun/.github）
-- [x] 2幕リリースワークフロー実装
-- [x] APIドキュメント改善（レガシーAPI削除）
-- [x] 統合リリーススクリプト作成
+## Python環境管理
+```bash
+# 必ずuvでvenv作成
+uv venv && source .venv/bin/activate
+```
 
-## 🏗️ アーキテクチャ決定
-- **リリース戦略**: 2幕構成（Act1: コア, Act2: ラッパー）で安定性確保
-- **テンプレート戦略**: 組織レベル共通化、プロジェクト固有は最小限
-- **API戦略**: レガシー削除、シンプルで直感的なモダンAPI
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
