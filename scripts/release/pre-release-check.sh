@@ -251,10 +251,10 @@ check_tests() {
     fi
     
     # Check if CI script exists and is executable
-    if [ -x "./scripts/ci-local.sh" ]; then
+    if [ -x "./scripts/testing/ci-local.sh" ]; then
         print_success "CI local script is executable"
     else
-        print_error "CI local script is not executable"
+        print_error "CI local script is not executable or not found"
         ((ERRORS++))
     fi
 }
