@@ -14,7 +14,6 @@
 ## 🌍 コミュニティ展開 (Community)
 
 ### 📢 プロモーション
-- [ ] GitHub Pages公式サイト開設
 - [ ] Docker Hub公開
 - [ ] Reddit r/rust紹介投稿準備
 
