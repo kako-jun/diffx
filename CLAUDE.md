@@ -115,6 +115,16 @@ JSON, YAML, TOML, XML, INI, CSV
 
 # 📝 開発メモ
 
+## 🚀 リリース手順
+**重要**: リリース前に必ず `.claude/release-guide.md` を確認すること
+```bash
+# リリース前チェック
+./scripts/pre-release-check.sh
+
+# 統合リリース実行
+./scripts/release.sh
+```
+
 ## 🎯 現在のTODOリスト（2025-07-12）
 - [ ] GitHub Pages公式サイト開設
 - [ ] Docker Hub公開
@@ -122,6 +132,7 @@ JSON, YAML, TOML, XML, INI, CSV
 - [x] 組織レベルGitHubテンプレート作成（kako-jun/.github）
 - [x] 2幕リリースワークフロー実装
 - [x] APIドキュメント改善（レガシーAPI削除）
+- [x] 統合リリーススクリプト作成
 
 ## 🏗️ アーキテクチャ決定
 - **リリース戦略**: 2幕構成（Act1: コア, Act2: ラッパー）で安定性確保

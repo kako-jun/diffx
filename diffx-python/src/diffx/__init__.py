@@ -21,7 +21,18 @@ from .diffx import (
 # For backward compatibility with existing diffx_python users
 from .compat import run_diffx
 
-__version__ = "0.5.1"
+# Version is now managed dynamically from pyproject.toml
+# This prevents hardcoded version mismatches during releases
+try:
+    from importlib.metadata import version
+    __version__ = version("diffx-python")
+except ImportError:
+    # Fallback for Python < 3.8
+    try:
+        import pkg_resources
+        __version__ = pkg_resources.get_distribution("diffx-python").version
+    except Exception:
+        __version__ = "unknown"
 __all__ = [
     "diff",
     "diff_string", 

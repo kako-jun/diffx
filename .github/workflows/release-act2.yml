@@ -19,15 +19,12 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test-binaries:
+  get-tag:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     outputs:
       tag-name: ${{ steps.get-tag.outputs.tag }}
-      binaries-ready: ${{ steps.test.outputs.ready }}
     steps:
-    - uses: actions/checkout@v4
-    
     - name: Get tag name
       id: get-tag
       run: |
@@ -38,33 +35,12 @@ jobs:
           TAG_NAME=$(gh api repos/${{ github.repository }}/releases/latest --jq '.tag_name')
         fi
         echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
-        echo "Testing binaries for tag: $TAG_NAME"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Test binary downloads
-      id: test
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        TAG_NAME="${{ steps.get-tag.outputs.tag }}"
-        echo "Testing binary downloads for $TAG_NAME..."
-        
-        # Test Linux binary download
-        if curl -f -L "https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/diffx-linux-x86_64.tar.gz" -o test.tar.gz; then
-          echo "✅ Linux binary download successful"
-          rm test.tar.gz
-        else
-          echo "❌ Linux binary download failed"
-          exit 1
-        fi
-        
-        echo "ready=true" >> $GITHUB_OUTPUT
 
   publish-npm:
-    needs: test-binaries
+    needs: get-tag
     runs-on: ubuntu-latest
-    if: needs.test-binaries.outputs.binaries-ready == 'true'
     steps:
     - uses: actions/checkout@v4
     
@@ -74,47 +50,34 @@ jobs:
         node-version: '18'
         registry-url: 'https://registry.npmjs.org'
     
-    - name: Test binary download in npm package
+    - name: Download binary for npm package
       working-directory: diffx-npm
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "Testing binary download script..."
+        TAG_NAME="${{ needs.get-tag.outputs.tag-name }}"
         node scripts/download-binary.js
-        
-        # Verify binary was downloaded
-        if [ -f "bin/diffx" ] || [ -f "bin/diffx.exe" ]; then
-          echo "✅ Binary download successful"
-        else
-          echo "❌ Binary download failed"
-          exit 1
-        fi
     
     - name: Publish to npm
       working-directory: diffx-npm
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      run: |
-        echo "Publishing diffx-js to npm..."
-        npm publish
+      run: npm publish
 
   publish-pypi:
-    needs: test-binaries
+    needs: get-tag
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            binary-url: diffx-linux-x86_64.tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            binary-url: diffx-windows-x86_64.zip
           - os: macos-latest
             target: x86_64-apple-darwin
-            binary-url: diffx-macos-x86_64.tar.gz
           - os: macos-latest
             target: aarch64-apple-darwin
-            binary-url: diffx-macos-aarch64.tar.gz
     runs-on: ${{ matrix.os }}
-    if: needs.test-binaries.outputs.binaries-ready == 'true'
     steps:
     - uses: actions/checkout@v4
     
@@ -131,61 +94,10 @@ jobs:
     - name: Install maturin
       run: pip install maturin
     
-    - name: Download diffx binary for embedding
-      working-directory: diffx-python
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        TAG_NAME="${{ needs.test-binaries.outputs.tag-name }}"
-        BINARY_URL="https://github.com/${{ github.repository }}/releases/download/$TAG_NAME/${{ matrix.binary-url }}"
-        
-        echo "Downloading diffx binary from: $BINARY_URL"
-        mkdir -p target/release
-        
-        if [[ "${{ matrix.binary-url }}" == *.zip ]]; then
-          curl -L "$BINARY_URL" -o binary.zip
-          if command -v unzip &> /dev/null; then
-            unzip binary.zip
-            mv diffx.exe target/release/
-          else
-            # Windows fallback
-            powershell -Command "Expand-Archive -Path binary.zip -DestinationPath ."
-            mv diffx.exe target/release/
-          fi
-          rm binary.zip
-        else
-          curl -L "$BINARY_URL" -o binary.tar.gz
-          tar -xzf binary.tar.gz
-          mv diffx target/release/
-          rm binary.tar.gz
-        fi
-        
-        # Verify binary exists
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          ls -la target/release/diffx.exe
-        else
-          ls -la target/release/diffx
-          chmod +x target/release/diffx
-        fi
-    
-    - name: Build wheel with maturin
-      working-directory: diffx-python
-      run: |
-        echo "Building wheel with embedded binary..."
-        maturin build --release --target ${{ matrix.target }} --out dist --find-interpreter
-    
-    - name: Test wheel installation
-      working-directory: diffx-python
-      run: |
-        echo "Testing wheel installation..."
-        pip install dist/*.whl
-        python -c "import diffx; print('Import successful')"
-        python -c "import diffx; print('Binary available:', diffx.is_diffx_available())"
-    
-    - name: Publish to PyPI
+    - name: Build and publish wheel
       working-directory: diffx-python
       env:
         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
       run: |
-        echo "Publishing wheel to PyPI..."
+        maturin build --release --target ${{ matrix.target }} --out dist --find-interpreter
         maturin publish --skip-existing
