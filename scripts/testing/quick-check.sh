@@ -71,6 +71,49 @@ main() {
     cargo build --release --package diffx-core
     print_success "✓ Release build successful - performance optimizations applied"
     
+    # Step 6: Test npm package (dry run only)
+    if [ -d "$PROJECT_ROOT/diffx-npm" ] && command -v node &> /dev/null; then
+        print_info "Step 6: Testing npm package..."
+        cd "$PROJECT_ROOT/diffx-npm"
+        
+        # Validate package.json
+        if node -e "require('./package.json')" 2>/dev/null; then
+            # Test npm publish readiness (dry run)
+            if npm publish --dry-run > /dev/null 2>&1; then
+                print_success "✓ npm package test passed (dry run)"
+            else
+                print_warning "npm publish dry run failed - check package.json"
+            fi
+        else
+            print_warning "Invalid package.json in diffx-npm"
+        fi
+        
+        cd "$PROJECT_ROOT"
+    else
+        print_info "Step 6: Skipping npm tests (Node.js not installed or diffx-npm not found)"
+    fi
+    
+    # Step 7: Test Python package (build only)
+    if [ -d "$PROJECT_ROOT/diffx-python" ] && command -v python3 &> /dev/null && command -v maturin &> /dev/null; then
+        print_info "Step 7: Testing Python package..."
+        cd "$PROJECT_ROOT/diffx-python"
+        
+        # Clean previous builds
+        rm -rf target/ dist/ build/ 2>/dev/null || true
+        
+        # Test maturin build (local target only)
+        LOCAL_TARGET=$(rustc -vV | grep host | cut -d' ' -f2)
+        if maturin build --release --target "$LOCAL_TARGET" --out dist > /dev/null 2>&1; then
+            print_success "✓ Python package build passed"
+        else
+            print_warning "maturin build failed - check pyproject.toml"
+        fi
+        
+        cd "$PROJECT_ROOT"
+    else
+        print_info "Step 7: Skipping Python tests (Python/maturin not installed or diffx-python not found)"
+    fi
+    
     echo ""
     print_success "🎉 All quick checks passed!"
     print_info "Ready to push to main branch"

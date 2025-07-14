@@ -53,6 +53,12 @@ jobs:
           target
         key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
+    - name: Run pre-release tests
+      if: matrix.os == 'ubuntu-latest' && matrix.target == 'x86_64-unknown-linux-gnu'
+      run: |
+        chmod +x ./scripts/testing/04-pre-release-test-act1.sh
+        ./scripts/testing/04-pre-release-test-act1.sh
+    
     - name: Build release binary
       run: cargo build --package diffx --release --target ${{ matrix.target }}
 
