@@ -1,0 +1,10 @@
+# diffx Demo Output: xml-diff
+# Description: XML file comparison
+# Command: diffx config.xml config_new.xml
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+  ~ item.$text: "value2" -> "value3"
+  ~ item.@id: "2" -> "3"

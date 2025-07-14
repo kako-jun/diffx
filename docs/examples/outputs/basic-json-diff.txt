@@ -1,0 +1,10 @@
+# diffx Demo Output: basic-json-diff
+# Description: Basic JSON file comparison
+# Command: diffx config_v1.json config_v2.json
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+    ~ app.settings.log_level: "info" -> "debug"
+  ~ app.version: "1.0" -> "1.1"

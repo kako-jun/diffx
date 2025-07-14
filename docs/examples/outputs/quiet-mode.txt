@@ -1,0 +1,9 @@
+# diffx Demo Output: quiet-mode
+# Description: Silent mode with exit status only
+# Command: diffx config.json config_new.json --quiet
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+(No output - differences found, exit code 1)

@@ -1,0 +1,47 @@
+# diffx Demo Output: help-output
+# Description: Help command output
+# Command: diffx --help
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+Smart diff for config files. Compare JSON/YAML/TOML/XML semantically. Features: ignore patterns, array tracking, directory compare, JSON/YAML output
+
+Usage: diffx [OPTIONS] <INPUT1> <INPUT2>
+
+Arguments:
+  <INPUT1>  The first input (file path or directory path, use '-' for stdin)
+  <INPUT2>  The second input (file path or directory path, use '-' for stdin)
+
+Options:
+  -f, --format <FORMAT>
+          Input file format [possible values: json, yaml, toml, ini, xml, csv]
+  -o, --output <OUTPUT>
+          Output format [possible values: cli, json, yaml, unified]
+  -r, --recursive
+          Compare directories recursively
+      --path <PATH>
+          Filter differences by a specific path (e.g., "config.users\[0\].name")
+      --ignore-keys-regex <IGNORE_KEYS_REGEX>
+          Ignore keys matching a regular expression (e.g., "^id$")
+      --epsilon <EPSILON>
+          Tolerance for float comparisons (e.g., "0.001")
+      --array-id-key <ARRAY_ID_KEY>
+          Key to use for identifying array elements (e.g., "id")
+      --context <CONTEXT>
+          Show N lines of context around differences (unified diff style)
+      --ignore-whitespace
+          Ignore whitespace differences in string values
+      --ignore-case
+          Ignore case differences in string values
+  -q, --quiet
+          Suppress normal output; return only exit status (diff -q style)
+      --brief
+          Report only filenames, not the differences (diff --brief style)
+  -v, --verbose
+          Show verbose processing information including performance metrics, configuration details, and diagnostic output
+  -h, --help
+          Print help
+  -V, --version
+          Print version

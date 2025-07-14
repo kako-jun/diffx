@@ -1,0 +1,12 @@
+# diffx Demo Output: context-mode
+# Description: Context display with surrounding lines
+# Command: diffx config.json config_new.json --context 3
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+    ~ config.database.port: 5432 -> 5433
+    ~ config.logging.level: "info" -> "debug"
+  + features[3]: "monitoring"
+~ version: "1.0" -> "1.1"

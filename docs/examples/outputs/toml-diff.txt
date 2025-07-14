@@ -1,0 +1,11 @@
+# diffx Demo Output: toml-diff
+# Description: TOML file comparison
+# Command: diffx Cargo.toml Cargo_new.toml
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+~ age: 30 -> 31
+~ city: "New York" -> "Boston"
+  + items[2]: "orange"

@@ -1,0 +1,10 @@
+# diffx Demo Output: csv-diff
+# Description: CSV file comparison
+# Command: diffx data.csv data_new.csv
+# Generated: Mon Jul 14 03:49:15 PM JST 2025
+# Version: 0.5.3
+
+## Command Output:
+
+    ~ [0].header2: "valueB" -> "new_valueB"
+  + [2]: {"header1":"valueE","header2":"valueF"}
