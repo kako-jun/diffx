@@ -7,6 +7,7 @@ set -euo pipefail
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -83,12 +84,12 @@ create_and_push_tag() {
     
     print_success "Tag $tag created and pushed!"
     print_info "GitHub Actions will now start building and publishing packages"
-    print_info "Monitor progress at: https://github.com/kako-jun/diffx/actions"
+    print_info "Monitor progress at: $(git remote get-url origin | sed 's/\.git$//')/actions"
 }
 
 # Main function
 main() {
-    print_info "Creating release tag for diffx"
+    print_info "Creating release tag for ${PROJECT_NAME}"
     
     # Pre-flight checks
     check_branch
@@ -105,7 +106,7 @@ main() {
     echo ""
     print_info "Next steps:"
     echo "  1. Monitor GitHub Actions: ./scripts/release/monitor-release.sh v$CURRENT_VERSION"
-    echo "  2. Or check manually: https://github.com/kako-jun/diffx/actions"
+    echo "  2. Or check manually: $(git remote get-url origin | sed 's/\.git$//')/actions"
 }
 
 # Run main function

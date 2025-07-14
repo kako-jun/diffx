@@ -8,6 +8,7 @@ set -euo pipefail
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -68,13 +69,13 @@ main() {
     
     # Step 5: Quick performance check
     print_info "Step 5: Quick performance check..."
-    cargo build --release --package diffx-core
+    cargo build --release --package ${PROJECT_NAME}-core
     print_success "✓ Release build successful - performance optimizations applied"
     
     # Step 6: Test npm package (dry run only)
-    if [ -d "$PROJECT_ROOT/diffx-npm" ] && command -v node &> /dev/null; then
+    if [ -d "$PROJECT_ROOT/${PROJECT_NAME}-npm" ] && command -v node &> /dev/null; then
         print_info "Step 6: Testing npm package..."
-        cd "$PROJECT_ROOT/diffx-npm"
+        cd "$PROJECT_ROOT/${PROJECT_NAME}-npm"
         
         # Validate package.json
         if node -e "require('./package.json')" 2>/dev/null; then
@@ -85,18 +86,18 @@ main() {
                 print_warning "npm publish dry run failed - check package.json"
             fi
         else
-            print_warning "Invalid package.json in diffx-npm"
+            print_warning "Invalid package.json in ${PROJECT_NAME}-npm"
         fi
         
         cd "$PROJECT_ROOT"
     else
-        print_info "Step 6: Skipping npm tests (Node.js not installed or diffx-npm not found)"
+        print_info "Step 6: Skipping npm tests (Node.js not installed or ${PROJECT_NAME}-npm not found)"
     fi
     
     # Step 7: Test Python package (build only)
-    if [ -d "$PROJECT_ROOT/diffx-python" ] && command -v python3 &> /dev/null && command -v maturin &> /dev/null; then
+    if [ -d "$PROJECT_ROOT/${PROJECT_NAME}-python" ] && command -v python3 &> /dev/null && command -v maturin &> /dev/null; then
         print_info "Step 7: Testing Python package..."
-        cd "$PROJECT_ROOT/diffx-python"
+        cd "$PROJECT_ROOT/${PROJECT_NAME}-python"
         
         # Clean previous builds
         rm -rf target/ dist/ build/ 2>/dev/null || true
@@ -111,7 +112,7 @@ main() {
         
         cd "$PROJECT_ROOT"
     else
-        print_info "Step 7: Skipping Python tests (Python/maturin not installed or diffx-python not found)"
+        print_info "Step 7: Skipping Python tests (Python/maturin not installed or ${PROJECT_NAME}-python not found)"
     fi
     
     echo ""

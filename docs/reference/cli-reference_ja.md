@@ -1,6 +1,6 @@
 # CLIリファレンス
 
-`diffx` コマンドライン・インターフェースの完全なリファレンスドキュメントです。
+`diffx` コマンドラインインターフェースの完全なリファレンスドキュメントです。
 
 ## 概要
 
@@ -10,52 +10,52 @@ diffx [オプション] <入力1> <入力2>
 
 ## 説明
 
-`diffx` は構造化データファイルのセマンティック比較を行うコマンドラインツールです。従来のテキストベース差分ツールとは異なり、`diffx` はデータの構造と意味を理解し、フォーマットの違いではなく実際の変更に焦点を当てます。
+`diffx` は、構造化データファイルのセマンティック（意味的）な比較を行うコマンドラインツールです。従来のテキストベースの差分ツールとは異なり、`diffx` はデータの構造と意味を理解し、フォーマットの違いではなく実際の変更点に焦点を当てます。
 
 ## 引数
 
 ### `<入力1>`
-- **型**: ファイルパス、ディレクトリパス、または標準入力の `-`
+- **型**: ファイルパス、ディレクトリパス、または標準入力の場合は `-`
 - **必須**: はい
-- **説明**: 比較する最初の入力
+- **説明**: 比較対象の最初の入力。
 
 ### `<入力2>`
-- **型**: ファイルパス、ディレクトリパス、または標準入力の `-`
+- **型**: ファイルパス、ディレクトリパス、または標準入力の場合は `-`
 - **必須**: はい
-- **説明**: 比較する2番目の入力
+- **説明**: 比較対象の2番目の入力。
 
-**例:**
+**使用例:**
 ```bash
 # 2つのファイルを比較
 diffx config.json config.new.json
 
-# 標準入力と比較
+# 標準入力からの入力と比較
 cat config.json | diffx - config.new.json
 
-# ディレクトリを比較
+# ディレクトリを比較（デフォルトでは非再帰的、Unixのdiffコマンドと互換性あり）
 diffx config_dir1/ config_dir2/
 ```
 
 ## オプション
 
-### フォーマット・オプション
+### フォーマット関連オプション
 
 #### `-f, --format <フォーマット>`
 - **型**: 文字列
 - **デフォルト**: ファイル拡張子から自動検出
-- **値**: `json`, `yaml`, `toml`, `xml`, `ini`, `csv`
-- **説明**: 入力ファイルの形式を強制指定
+- **指定可能な値**: `json`, `yaml`, `toml`, `xml`, `ini`, `csv`
+- **説明**: 特定の入力ファイルフォーマットを強制します。
 
-**例:**
+**使用例:**
 ```bash
-# JSON形式として解釈を強制
+# JSON形式として強制的に解釈
 diffx --format json file1.txt file2.txt
 
-# YAML形式として解釈を強制
+# YAML形式として強制的に解釈
 diffx -f yaml config1 config2
 ```
 
-**自動検出マッピング:**
+**自動検出のマッピング:**
 - `.json` → `json`
 - `.yaml`, `.yml` → `yaml`
 - `.toml` → `toml`
@@ -63,15 +63,15 @@ diffx -f yaml config1 config2
 - `.ini`, `.cfg`, `.conf` → `ini`
 - `.csv` → `csv`
 
-### 出力オプション
+### 出力関連オプション
 
 #### `-o, --output <フォーマット>`
 - **型**: 文字列
-- **デフォルト**: `cli`
-- **値**: `cli`, `json`, `yaml`, `unified`
-- **説明**: 差分の出力形式
+- **デフォルト**: `diffx` (人間が読みやすいdiffx形式)
+- **指定可能な値**: `diffx`, `json`, `yaml`, `unified`
+- **説明**: 差分の出力フォーマットを指定します。
 
-**CLI出力（デフォルト）:**
+**diffxフォーマット (デフォルト):**
 ```bash
 diffx config.json config.new.json
 # 出力:
@@ -107,176 +107,176 @@ diffx config.json config.new.json --output yaml
 **Unified出力:**
 ```bash
 diffx config.json config.new.json --output unified
-# 出力: 従来のdiff形式
+# 出力: 従来のdiff形式のフォーマット
 ```
 
-### フィルタリング・オプション
+### フィルタリング関連オプション
 
 #### `--path <パス>`
 - **型**: 文字列
-- **デフォルト**: なし（全体を比較）
-- **説明**: データ構造の特定パスの差分のみにフィルタリング
+- **デフォルト**: なし (構造全体を比較)
+- **説明**: データ構造内の特定のパスに差分の比較を限定します。
 
-**パス構文:**
+**パスの構文:**
 - オブジェクトキー: `database.host`
 - 配列インデックス: `users[0]`
 - ネストしたパス: `config.database.connection.host`
 - 複雑なパス: `services.web.env[0].name`
 
-**例:**
+**使用例:**
 ```bash
-# データベース設定のみ比較
+# データベース設定のみを比較
 diffx config.json config.new.json --path "database"
 
 # 特定の配列要素を比較
 diffx config.json config.new.json --path "users[0]"
 
-# 深くネストしたパス
+# 深くネストしたパスを比較
 diffx config.json config.new.json --path "services.web.environment.variables"
 ```
 
 #### `--ignore-keys-regex <パターン>`
 - **型**: 正規表現文字列
 - **デフォルト**: なし
-- **説明**: 指定した正規表現にマッチするキーを無視
+- **説明**: 指定された正規表現に一致するキーを無視します。
 
-**よくあるパターン:**
+**一般的なパターン:**
 ```bash
-# タイムスタンプフィールドを無視
+# タイムスタンプ関連のフィールドを無視
 diffx file1.json file2.json --ignore-keys-regex "^(timestamp|createdAt|updatedAt)$"
 
-# 内部フィールド（アンダースコア開始）を無視
+# 内部フィールド（アンダースコアで始まる）を無視
 diffx file1.json file2.json --ignore-keys-regex "^_.*"
 
-# 複数パターンを無視
+# 複数のパターンを無視
 diffx file1.json file2.json --ignore-keys-regex "^(id|timestamp|_.*|temp_.*)$"
 
-# バージョン関連フィールドを無視
+# バージョン関連のフィールドを無視
 diffx file1.json file2.json --ignore-keys-regex "(version|buildNumber|revision)"
 ```
 
-**正規表現例:**
-- `^timestamp$` - "timestamp"の完全一致
+**正規表現の例:**
+- `^timestamp$` - "timestamp"に完全に一致
 - `^_.*` - アンダースコアで始まるフィールド
 - `.*_temp$` - "_temp"で終わるフィールド
-- `^(id|uid|pk)$` - id、uid、pkのいずれか
-- `(?i)password` - "password"の大文字小文字無視マッチ
+- `^(id|uid|pk)$` - id, uid, pkのいずれかに一致
+- `(?i)password` - "password"に大文字小文字を区別せずに一致
 
-### 比較オプション
+### 比較関連オプション
 
 #### `--epsilon <値>`
 - **型**: 浮動小数点数
-- **デフォルト**: `0.0`（厳密比較）
-- **説明**: 浮動小数点数比較の許容誤差
+- **デフォルト**: `0.0` (厳密な比較)
+- **説明**: 浮動小数点数を比較する際の許容誤差。
 
-**例:**
+**使用例:**
 ```bash
-# 小さな差を許容
+# 浮動小数点数の小さな差を許容
 diffx metrics.json metrics.new.json --epsilon 0.001
 
-# より寛容な許容誤差（科学データ）
+# 科学技術データ用に、より緩い許容誤差を設定
 diffx measurements.json measurements.new.json --epsilon 0.01
 
-# 非常に厳密な比較（金融データ）
+# 金融データ用に、非常に厳密な比較を実施
 diffx financial.json financial.new.json --epsilon 0.000001
 ```
 
-**用途:**
-- 科学データの測定精度
-- 金融計算の丸め誤差
-- パフォーマンス指標の小さな変動
-- 変換データの浮動小数点アーティファクト
+**主な使用場面:**
+- 測定精度が問題となる科学技術データ
+- 丸め誤差が生じる金融計算
+- 小さな変動があるパフォーマンス指標
+- 浮動小数点数に変換されたデータ
 
 #### `--array-id-key <キー>`
 - **型**: 文字列
-- **デフォルト**: なし（位置ベース比較）
-- **説明**: 配列要素の識別と追跡に使用するキー
+- **デフォルト**: なし (位置に基づいて比較)
+- **説明**: 配列の要素を識別し、追跡するために使用するキー。
 
-**例:**
+**使用例:**
 ```bash
-# ユーザーをIDで追跡
+# IDを使ってユーザーを追跡
 diffx users.json users.updated.json --array-id-key "id"
 
-# 商品をSKUで追跡
+# SKUを使って製品を追跡
 diffx inventory.json inventory.new.json --array-id-key "sku"
 
-# データベースレコードを主キーで追跡
+# 主キーを使ってデータベースのレコードを追跡
 diffx records.json records.new.json --array-id-key "primary_key"
 ```
 
-**IDキーなしの場合:**
+**ID追跡なしの場合:**
 ```json
-// 配列比較は位置ベースの変更を表示
+// 配列の比較では、位置に基づいた変更が表示される
 // 旧: [{"name": "Alice"}, {"name": "Bob"}]
 // 新: [{"name": "Bob"}, {"name": "Alice"}]
-// 結果: すべての要素が変更されたと表示
+// 結果: すべての要素が変更されたと見なされる
 ```
 
-**IDキー使用の場合:**
+**ID追跡ありの場合:**
 ```json
 // 旧: [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]  
 // 新: [{"id": 2, "name": "Bob"}, {"id": 1, "name": "Alice"}]
-// 結果: 変更なし（同じ要素、異なる順序）
+// 結果: 変更は検出されない（要素は同じで順序が違うだけ）
 ```
 
 #### `--ignore-whitespace`
-- **型**: ブールフラグ
+- **型**: ブール値フラグ
 - **デフォルト**: False
-- **説明**: 文字列値の空白差異を無視
+- **説明**: 文字列の値に含まれる空白文字の違いを無視します。
 
-**例:**
+**使用例:**
 ```bash
-# 異なる空白を持つファイル
+# 空白の扱いが異なるファイル
 echo '{"text": "Hello  World"}' > file1.json
 echo '{"text": "Hello World"}' > file2.json
 
-# 通常の比較では差分を表示
+# 通常の比較では差分が検出される
 diffx file1.json file2.json
 # 出力: ~ text: "Hello  World" -> "Hello World"
 
-# 空白無視で比較 - 差分なしと報告
+# 空白を無視すると差分は報告されない
 diffx file1.json file2.json --ignore-whitespace
 # 出力: (差分なし)
 ```
 
-**使用ケース:**
-- 一貫性のない間隔を持つ設定ファイル
+**主な使用場面:**
+- スペースの使い方が一貫しない設定ファイル
 - 異なるシステムからエクスポートされたデータ
-- 余分なスペースを導入する手動編集
-- 正規化済み vs 生のテキストデータ
+- 手動編集によって余分なスペースが挿入された場合
+- 正規化されたテキストと未加工のテキストの比較
 
 #### `--ignore-case`
-- **型**: ブールフラグ
+- **型**: ブール値フラグ
 - **デフォルト**: False
-- **説明**: 文字列値の大文字小文字差異を無視
+- **説明**: 文字列の値に含まれる大文字と小文字の違いを無視します。
 
-**例:**
+**使用例:**
 ```bash
-# 異なる大文字小文字を持つファイル
+# 大文字小文字の使い方が異なるファイル
 echo '{"status": "Active"}' > file1.json
 echo '{"status": "ACTIVE"}' > file2.json
 
-# 通常の比較では差分を表示
+# 通常の比較では差分が検出される
 diffx file1.json file2.json
 # 出力: ~ status: "Active" -> "ACTIVE"
 
-# 大文字小文字無視で比較 - 差分なしと報告
+# 大文字小文字を無視すると差分は報告されない
 diffx file1.json file2.json --ignore-case
 # 出力: (差分なし)
 ```
 
-**使用ケース:**
-- 様々な大文字小文字を持つユーザー入力データ
+**主な使用場面:**
+- 大文字小文字が混在するユーザー入力データ
 - レガシーシステムの移行
 - 大文字小文字を区別しない設定値
-- データ正規化タスク
+- データ正規化のタスク
 
 **オプションの組み合わせ:**
 ```bash
-# 空白と大文字小文字の両方の差異を処理
+# 空白と大文字小文字の両方の違いを無視
 diffx config.json config.new.json --ignore-whitespace --ignore-case
 
-# 複数オプションを使用した複雑な例
+# 複数のオプションを組み合わせた複雑な例
 diffx data.yaml data.updated.yaml \
   --ignore-case \
   --ignore-whitespace \
@@ -288,178 +288,178 @@ diffx data.yaml data.updated.yaml \
 
 #### `--context <N>`
 - **型**: 整数
-- **デフォルト**: なし（すべてのコンテキストを表示）
-- **説明**: unified出力形式で差分周辺のN行のコンテキストを表示
+- **デフォルト**: なし (すべてのコンテキストを表示)
+- **説明**: unified出力形式で、差分の周囲に指定したN行のコンテキストを表示します。
 
-**例:**
+**使用例:**
 ```bash
-# 変更箇所周辺の2行のコンテキストを表示
+# 変更点の周囲に2行のコンテキストを表示
 diffx config.json config.new.json --output unified --context 2
 
-# 変更行のみ表示（コンテキストなし）
+# 変更された行のみを表示（コンテキストなし）
 diffx config.json config.new.json --output unified --context 0
 
-# デフォルト動作（すべてのコンテキスト）
+# デフォルトの動作（すべてのコンテキストを表示）
 diffx config.json config.new.json --output unified
 ```
 
-**コンテキスト付きサンプル出力:**
+**コンテキスト付きの出力例:**
 ```diff
-# --context 2
-  "database": {
-    "host": "localhost",
--   "port": 5432
-+   "port": 5433
-  },
-  "cache": {
+# --context 2 の場合
+   "database": {
+     "host": "localhost",
+-    "port": 5432
++    "port": 5433
+   },
+   "cache": {
 
-# --context 0  
--   "port": 5432
-+   "port": 5433
+# --context 0 の場合
+-    "port": 5432
++    "port": 5433
 ```
 
 #### `-q, --quiet`
-- **型**: ブールフラグ
+- **型**: ブール値フラグ
 - **デフォルト**: False
-- **説明**: 通常の出力を抑制し、終了ステータスのみを返す
+- **説明**: 通常の出力を抑制し、終了ステータスのみを返します。
 
-**例:**
+**使用例:**
 ```bash
-# ファイルが異なるかをチェック（スクリプト用）
+# ファイルが異なるかどうかをスクリプトで確認
 diffx config.json config.new.json --quiet
 echo $?  # 0 = 差分なし, 1 = 差分あり, 2 = エラー
 
-# シェルスクリプトで使用
+# シェルスクリプトでの使用
 if diffx config.json backup.json --quiet; then
-    echo "ファイルは同一"
+    echo "ファイルは同一です"
 else
-    echo "ファイルが異なる"
+    echo "ファイルが異なります"
 fi
 
-# 他のオプションと組み合わせ
+# 他のオプションとの組み合わせ
 diffx large.json large.new.json --quiet --ignore-whitespace
 ```
 
 **終了コード:**
-- `0`: 差分なし
-- `1`: 差分あり
-- `2`: エラー発生（無効なファイル、フォーマットエラーなど）
+- `0`: 差分は見つかりませんでした
+- `1`: 差分が見つかりました
+- `2`: エラーが発生しました（ファイルが無効、フォーマットエラーなど）
 
 #### `--brief`
-- **型**: ブールフラグ
+- **型**: ブール値フラグ
 - **デフォルト**: False
-- **説明**: 差分内容ではなく、ファイル名のみを報告（`diff --brief`に類似）
+- **説明**: 差分の詳細ではなく、ファイル名のみを報告します（`diff --brief`と同様の動作）。
 
-**例:**
+**使用例:**
 ```bash
-# ファイルが異なるかのみを報告
+# ファイルが異なるかどうかだけを報告
 diffx config.json config.new.json --brief
 # 出力: Files config.json and config.new.json differ
 
-# ディレクトリ比較で使用
+# ディレクトリ比較での使用
 diffx configs/ configs.backup/ --recursive --brief
 # 出力: Files configs/app.json and configs.backup/app.json differ
 
-# フィルタリングと組み合わせ
+# フィルタリングとの組み合わせ
 diffx data.json data.new.json --brief --ignore-keys-regex "^timestamp$"
 ```
 
-**使用ケース:**
+**主な使用場面:**
 - バッチ処理スクリプト
-- 迅速なファイル比較チェック
-- 自動テストパイプライン
-- ファイル同期検証
+- 簡単なファイル比較チェック
+- 自動化されたテストパイプライン
+- ファイル同期の検証
 
 #### `-v, --verbose`
-- **型**: ブールフラグ
+- **型**: ブール値フラグ
 - **デフォルト**: False
-- **説明**: パフォーマンス指標、設定詳細、処理統計を含む包括的な診断情報を表示
+- **説明**: パフォーマンス指標、設定詳細、処理統計など、包括的な診断情報を表示します。
 
-**例:**
+**使用例:**
 ```bash
 # 基本的な詳細出力
 diffx config.json config.new.json --verbose
-# 出力例:
-# Input file information: 
-#   Input 1 size: 245 bytes
-#   Input 2 size: 267 bytes
-# Parse time: 15.2µs
-# Diff computation time: 23.8µs
-# Total differences found: 3
-# Performance summary:
-#   Total processing time: 125.4µs
-#   Memory optimization: disabled
+# 出力に含まれる情報:
+# 入力ファイル情報: 
+#   入力1のサイズ: 245バイト
+#   入力2のサイズ: 267バイト
+# パース時間: 15.2µs
+# 差分計算時間: 23.8µs
+# 見つかった差分の合計: 3
+# パフォーマンス概要:
+#   総処理時間: 125.4µs
+#   メモリ最適化: 無効
 
-# フィルタリングオプションと詳細出力の組み合わせ
+# フィルタリングオプションと組み合わせた詳細出力
 diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilon 0.1
-# 追加出力:
-# Key filtering configuration:
-#   Regex pattern: timestamp
-# Numerical tolerance configuration:
-#   Epsilon value: 0.1
+# 追加の出力:
+# キーフィルタリング設定:
+#   正規表現パターン: timestamp
+# 数値許容誤差設定:
+#   イプシロン値: 0.1
 
-# ディレクトリ比較での詳細出力
+# ディレクトリ比較の詳細出力
 diffx configs/ configs.backup/ --recursive --verbose
-# 追加出力:
-# Directory scan results:
-#   Files in configs/: 12
-#   Files in configs.backup/: 11
-#   Total files to compare: 12
-# Directory comparison summary:
-#   Files compared: 11
-#   Files only in one directory: 1
-#   Differences found: Yes
+# 追加の出力:
+# ディレクトリのスキャン結果:
+#   configs/ 内のファイル数: 12
+#   configs.backup/ 内のファイル数: 11
+#   比較対象の合計ファイル数: 12
+# ディレクトリ比較の概要:
+#   比較したファイル数: 11
+#   片方のディレクトリにのみ存在するファイル数: 1
+#   見つかった差分: あり
 ```
 
-**詳細情報カテゴリ:**
+**詳細情報のカテゴリ:**
 
-1. **パフォーマンス指標**
-   - ファイルサイズとメモリ使用量
-   - パース時間、差分計算時間
-   - 総処理時間
-   - メモリ最適化状態
+1.  **パフォーマンス指標**
+    -   ファイルサイズとメモリ使用量
+    -   パース時間、差分計算時間
+    -   総処理時間
+    -   メモリ最適化の状態
 
-2. **設定詳細**
-   - アクティブなフィルタリングパターン（正規表現、許容誤差、配列IDキー）
-   - パスフィルタリング設定
-   - コンテキスト表示設定
+2.  **設定詳細**
+    -   有効なフィルタリングパターン（正規表現、イプシロン、配列IDキー）
+    -   パスフィルタリングの設定
+    -   コンテキスト表示の設定
 
-3. **処理統計**
-   - フィルタリング前後の差分総数
-   - ディレクトリスキャン結果
-   - 比較効果指標
+3.  **処理統計**
+    -   フィルタリング前後の差分総数
+    -   ディレクトリのスキャン結果
+    -   比較の有効性に関する指標
 
-4. **診断出力**
-   - 最適化決定
-   - 処理バッチ情報
-   - エラーコンテキストとトラブルシューティングデータ
+4.  **診断出力**
+    -   最適化の決定に関する情報
+    -   処理バッチの情報
+    -   エラーコンテキストとトラブルシューティングデータ
 
-**使用ケース:**
+**主な使用場面:**
 - パフォーマンス分析と最適化
-- 遅い比較のトラブルシューティング
-- フィルタ効果の理解
+- 時間のかかる比較のトラブルシューティング
+- フィルタの効果を理解する
 - 設定問題のデバッグ
-- CI/CDパイプライン診断
+- CI/CDパイプラインの診断
 - サポートとメンテナンス作業
 
-### ディレクトリオプション
+### ディレクトリ関連オプション
 
 #### `-r, --recursive`
-- **型**: ブールフラグ
+- **型**: ブール値フラグ
 - **デフォルト**: False
-- **説明**: サブディレクトリまで再帰的にディレクトリ比較を実行（Unix diff互換）
+- **説明**: サブディレクトリを含めて再帰的にディレクトリを比較します（Unixの`diff`コマンドと互換性あり）。
 
-**例:**
+**使用例:**
 ```bash
 # --recursiveなしのディレクトリ比較（Unix diff互換）
-# ディレクトリ直下のファイルのみ比較、サブディレクトリは「Common subdirectories」として表示
+# ディレクトリ直下のファイルを比較し、共通のサブディレクトリはメッセージで表示
 diffx config_dir1/ config_dir2/
 # 出力:
 # Common subdirectories: config_dir1/subdir and config_dir2/subdir
 # --- Comparing config.json ---
 # ~ version: "1.0" -> "1.1"
 
-# 再帰比較 - サブディレクトリ内のファイルも含めて比較
+# 再帰比較 - サブディレクトリ内のすべてのファイルを比較
 diffx config_dir1/ config_dir2/ --recursive
 # 出力:
 # --- Comparing config.json ---
@@ -467,143 +467,142 @@ diffx config_dir1/ config_dir2/ --recursive
 # --- Comparing subdir/nested.json ---
 # ~ data: "old" -> "new"
 
-# 出力形式付きの再帰比較
+# 出力フォーマットを指定した再帰比較
 diffx environments/dev/ environments/prod/ -r --output json
 
-# フィルタリング付きの再帰比較
+# フィルタリングと組み合わせた再帰比較
 diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**Unix diff互換動作:**
+**Unix diff互換の動作:**
 
-**`--recursive` フラグなし（デフォルト）:**
-- 指定されたディレクトリ直下のファイルのみを比較
-- 両方の場所に存在するサブディレクトリに対して「Common subdirectories」メッセージを表示
-- サブディレクトリ内のファイルは比較しない
-- 標準Unix `diff`コマンドとの互換性を維持
+**`--recursive`フラグなし（デフォルト）:**
+-   指定されたディレクトリ直下のファイルのみを比較します。
+-   両方の場所に存在するサブディレクトリについては、「Common subdirectories」というメッセージを表示します。
+-   サブディレクトリ内のファイルは比較しません。
+-   標準的なUnixの`diff`コマンドとの互換性を維持します。
 
-**`--recursive` フラグあり:**
-- サブディレクトリを通してすべてのファイルを再帰的に比較
-- 出力でディレクトリ構造を維持
-- `diff -r`の動作と同等
+**`--recursive`フラグあり:**
+-   サブディレクトリを含め、すべてのファイルを再帰的に比較します。
+-   出力においてディレクトリ構造を維持します。
+-   `diff -r`の動作に相当します。
 
-**共通動作:**
-- 両方のディレクトリに存在しないファイルをスキップ
-- 各ファイルのフォーマット自動検出を尊重
-- 一方のディレクトリにのみ存在するファイルを報告
+**共通の動作:**
+-   片方のディレクトリにしか存在しないファイルはスキップします。
+-   各ファイルのフォーマット自動検出を尊重します。
+-   片方のディレクトリにのみ存在するファイルを報告します。
 
-### パフォーマンスオプション
+### パフォーマンス関連オプション
 
 #### 自動最適化
 - **型**: 自動機能
-- **デフォルト**: >1MBファイルで有効
-- **説明**: 大きなファイルやデータ構造に対して自動的にメモリ効率的な処理を有効化
+- **デフォルト**: 1MBを超えるファイルで有効
+- **説明**: 大きなファイルやデータ構造に対して、メモリ効率の良い処理が自動的に有効になります。
 
 **自動検出の動作:**
-- ファイル ≤1MB: 標準モード（高速、無制限メモリ）
-- ファイル >1MB: 最適化モード（メモリ効率、バッチ処理）
-- 手動設定不要 - 最適化は完全に透明
+-   1MB以下のファイル: 標準モード（高速、メモリ使用量に制限なし）
+-   1MBを超えるファイル: 最適化モード（メモリ効率が良く、バッチ処理）
+-   手動での設定は不要 - 最適化は完全に透過的に行われます。
 
-**最適化機能:**
-- ファイルサイズに基づく自動検出
-- 大きなデータセットでのメモリ効率的処理
-- 深いネスト構造でのバッチ処理
-- モードに関係なく同一出力を維持
+**最適化の機能:**
+-   ファイルサイズに基づく自動検出
+-   大規模データセットに対するメモリ効率の良い処理
+-   深いネスト構造に対するバッチ処理
+-   どのモードでも同一の出力を維持
 
-**例:**
+**使用例:**
 ```bash
 # 自動検出（常に有効）
 diffx config.json config.new.json
-# 小ファイルは標準モード、大ファイルは最適化モード
+# 小さなファイルには標準モード、大きなファイルには最適化モードが自動的に使われる
 
-# 大きなファイルは自動的に最適化を使用
+# 大きなファイルでは自動的に最適化が使用される
 diffx massive_db.json massive_db.new.json --array-id-key "id" --path "users"
-# 大きなファイルは自動的に最適化モードを使用
+# 大きなファイルのため、自動的に最適化モードが使用される
 
-# 他の全オプションは最適化と透明に動作
+# 他のすべてのオプションは最適化と透過的に連携
 diffx complex_data.json complex_data.v2.json --ignore-keys-regex "^timestamp$"
-# 必要に応じて自動的に最適化を適用
+# 必要に応じて最適化が自動的に適用される
 ```
 
-**パフォーマンス動作:**
+**パフォーマンスの動作:**
 ```bash
-# 小ファイル (<1MB) - 自動標準モード
+# 小さなファイル（<1MB） - 自動で標準モード
 diffx config.json config.new.json
-# 高速処理、無制限メモリ使用
+# 高速処理、メモリ使用量に制限なし
 
-# 大ファイル (>1MB) - 自動最適化モード
+# 大きなファイル（>1MB） - 自動で最適化モード
 diffx large_dataset.json large_dataset.v2.json
-# メモリ効率、バッチ処理
+# メモリ効率の良いバッチ処理
 
-# 複雑なネスト構造 - 自動最適化
+# 複雑なネスト構造 - 自動で最適化
 diffx deep_nested.json deep_nested.v2.json
-# データ特性に基づく透明な最適化
+# データ特性に基づいた透過的な最適化
 ```
 
 ### 情報オプション
 
 #### `-h, --help`
-- **型**: ブールフラグ
-- **説明**: ヘルプ情報を表示して終了
+- **型**: ブール値フラグ
+- **説明**: ヘルプ情報を表示して終了します。
 
 #### `-V, --version`
-- **型**: ブールフラグ  
-- **説明**: バージョン情報を表示して終了
+- **型**: ブール値フラグ
+- **説明**: バージョン情報を表示して終了します。
 
-**例:**
+**使用例:**
 ```bash
-# ヘルプ表示
+# ヘルプの表示
 diffx --help
 diffx -h
 
-# バージョン表示
+# バージョンの表示
 diffx --version
 diffx -V
 ```
 
 ## 終了コード
 
-`diffx` は以下の終了コードを使用します：
+`diffx` は以下の終了コードを使用します:
 
-- **0**: 成功、差分なし
-- **1**: 成功、差分あり
-- **2**: コマンドライン引数エラー
-- **3**: ファイルI/Oエラー
-- **4**: パースエラー（無効なフォーマット）
-- **5**: 内部エラー
+-   **0**: 成功、差分なし
+-   **1**: 成功、差分あり
+-   **2**: コマンドライン引数のエラー
+-   **3**: ファイルI/Oエラー
+-   **4**: パースエラー（無効なフォーマット）
+-   **5**: 内部エラー
 
-**例:**
+**使用例:**
 ```bash
-# ファイルが同一かチェック
+# ファイルが同一かどうかを確認
 if diffx file1.json file2.json >/dev/null 2>&1; then
-    echo "ファイルは同一"
+    echo "ファイルは同一です"
 else
-    echo "ファイルが異なる"
+    echo "ファイルが異なります"
 fi
 
-# 終了コードをキャプチャ
+# 終了コードを取得
 diffx config.json config.new.json
 EXIT_CODE=$?
 case $EXIT_CODE in
     0) echo "差分なし" ;;
-    1) echo "差分あり" ;;
-    *) echo "エラーが発生 (code: $EXIT_CODE)" ;;
+    1) echo "差分が見つかりました" ;;
+    *) echo "エラーが発生しました (コード: $EXIT_CODE)" ;;
 esac
 ```
-
 
 ## 使用パターン
 
 ### 基本的な比較
 
 ```bash
-# シンプルなファイル比較
+# 簡単なファイル比較
 diffx file1.json file2.json
 
-# 異なるフォーマットとの比較
-diffx config.yaml config.toml --format yaml --format toml
+# 異なるフォーマットのファイルを比較
+diffx config.yaml config.toml
 
-# 標準入力との比較
+# 標準入力とファイルを比較
 curl -s https://api.example.com/config | diffx - local_config.json
 ```
 
@@ -614,78 +613,82 @@ curl -s https://api.example.com/config | diffx - local_config.json
 diffx app.json app.new.json \
   --ignore-keys-regex "^(timestamp|_.*|createdAt|updatedAt|version)$"
 
-# パス特化比較
+# 特定のパスに限定した比較
 diffx large_config.json large_config.new.json \
   --path "database.connections"
 
-# 複数オプションの組み合わせ
+# 複数のオプションを組み合わせ
 diffx users.json users.new.json \
   --array-id-key "user_id" \
-  --ignore-keys-regex "^(last_login|session_.*)$" \
+  --ignore-keys-regex "^(last_login|session_.*)" \
   --output json
 ```
 
 ### ディレクトリ操作
 
 ```bash
-# 再帰ディレクトリ比較
+# Unix diff互換のディレクトリ比較（非再帰的）
+diffx configs/ configs.backup/
+# ディレクトリ内のファイルと「Common subdirectories」メッセージを表示
+
+# 再帰的なディレクトリ比較
 diffx configs/ configs.backup/ --recursive
 
-# フィルタリング付きディレクトリ比較
+# フィルタリング付きのディレクトリ比較
 diffx env/dev/ env/prod/ \
   --recursive \
-  --ignore-keys-regex "^(host|port|password)$" \
+  --ignore-keys-regex "^(host|port|password)" \
   --output json > env_diff.json
 ```
 
 ### 統合例
 
 ```bash
-# Git統合
+# Gitとの統合
 git show HEAD~1:config.json > old_config.json
 diffx old_config.json config.json --output unified
 
 # CI/CDパイプライン
 diffx expected_config.json actual_config.json \
-  --ignore-keys-regex "^(deployment_time|build_id)$" \
+  --ignore-keys-regex "^(deployment_time|build_id)" \
   --output json > config_validation.json
 
 # 監視スクリプト
 #!/bin/bash
 if ! diffx baseline_config.json current_config.json \
      --ignore-keys-regex "^(timestamp|uptime)$" >/dev/null; then
-  echo "設定ドリフトが検出されました！"
+  echo "設定のドリフトが検出されました！"
   diffx baseline_config.json current_config.json --output json | \
     notify_alert_system.py
 fi
 ```
 
-## エラー処理
+## エラーハンドリング
 
-### よくあるエラー
+### 一般的なエラー
 
 **ファイルが見つからない:**
 ```bash
 $ diffx nonexistent.json config.json
-Error: そのようなファイルまたはディレクトリはありません (os error 2)
+Error: No such file or directory (os error 2)
 ```
 
 **無効なフォーマット:**
 ```bash
 $ diffx invalid.json valid.json
-Error: JSONの解析に失敗: 1行15列目で `,` または `}` が期待されます
+Error: Failed to parse JSON: expected `,` or `}` at line 1 column 15
 ```
 
-**アクセス権限エラー:**
+**権限が拒否されました:**
 ```bash
 $ diffx protected.json config.json
-Error: アクセスが拒否されました (os error 13)
+Error: Permission denied (os error 13)
 ```
 
 **無効な正規表現:**
 ```bash
 $ diffx file1.json file2.json --ignore-keys-regex "[invalid"
-Error: 無効な正規表現: 文字クラスが閉じられていません
+Error: Invalid regular expression: unclosed character class
 ```
 
 ### デバッグ
@@ -695,7 +698,7 @@ Error: 無効な正規表現: 文字クラスが閉じられていません
 diffx --format json file1.txt file2.txt
 ```
 
-## パフォーマンス考慮事項
+## パフォーマンスに関する考慮事項
 
 ### 大きなファイル
 
@@ -718,47 +721,47 @@ find configs/ -name "*.json" -print0 | \
 
 ### メモリ使用量
 
-大きなファイルには以下を検討：
-- `--path` を使用して特定セクションに焦点
-- `--ignore-keys-regex` で大きな無関係セクションをフィルタリング
-- 可能であればファイルを小さなチャンクに分割処理
+非常に大きなファイルの場合は、以下を検討してください:
+- `--path` を使用して特定のセクションに焦点を当てる
+- `--ignore-keys-regex` を使用して、大きく無関係なセクションを除外する
+- 可能であれば、ファイルをより小さなチャンクで処理する
 
-## 用途別例
+## ユースケース別使用例
 
 ### 設定管理
 ```bash
-# 環境比較
+# 環境間の比較
 diffx prod.json staging.json --ignore-keys-regex "^(host|port|secret_.*)$"
 
-# Kubernetesマニフェスト  
+# Kubernetesマニフェスト
 diffx deployment.yaml deployment.new.yaml --ignore-keys-regex "^metadata\\.(creation.*|resource.*)$"
 ```
 
 ### APIテスト
 ```bash
-# レスポンス検証
+# レスポンスの検証
 diffx expected_response.json actual_response.json --ignore-keys-regex "^(timestamp|request_id)$"
 
-# スキーマ比較
+# スキーマの比較
 diffx api_v1_schema.json api_v2_schema.json --path "definitions"
 ```
 
 ### データ処理
 ```bash
-# ETL検証
+# ETLの検証
 diffx input_data.json output_data.json --array-id-key "record_id" --epsilon 0.001
 
-# データベースエクスポート比較
+# データベースエクスポートの比較
 diffx export1.json export2.json --array-id-key "id" --ignore-keys-regex "^(updated_at|sync_time)$"
 ```
 
 ### セキュリティ監査
 ```bash
-# ポリシー比較
+# ポリシーの比較
 diffx security_policy.json security_policy.new.json --path "permissions"
 
-# アクセス制御検証
+# アクセス制御の検証
 diffx rbac.yaml rbac.new.yaml --array-id-key "name"
 ```
 
-この包括的なCLIリファレンスは、`diffx` の利用可能なすべてのオプションと効果的な使用のための実用例を提供します。
+この包括的なCLIリファレンスは、`diffx`で利用可能なすべてのオプションを網羅し、効果的な使用法のための実用的な例を提供します。

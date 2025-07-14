@@ -7,6 +7,7 @@ set -euo pipefail
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -338,9 +339,9 @@ check_security() {
     fi
     
     # npm audit (only high severity)
-    if command -v npm &> /dev/null && [ -f "$PROJECT_ROOT/diffx-npm/package-lock.json" ]; then
+    if command -v npm &> /dev/null && [ -f "$PROJECT_ROOT/${PROJECT_NAME}-npm/package-lock.json" ]; then
         print_info "Running npm audit..."
-        cd "$PROJECT_ROOT/diffx-npm"
+        cd "$PROJECT_ROOT/${PROJECT_NAME}-npm"
         if npm audit --audit-level=high &> /dev/null; then
             print_success "No critical npm vulnerabilities"
         else
@@ -382,10 +383,10 @@ check_package_structure() {
         "LICENSE"
         "CHANGELOG.md"
         "Cargo.toml"
-        "diffx-core/Cargo.toml"
-        "diffx-cli/Cargo.toml"
-        "diffx-python/pyproject.toml"
-        "diffx-npm/package.json"
+        "${PROJECT_NAME}-core/Cargo.toml"
+        "${PROJECT_NAME}-cli/Cargo.toml"
+        "${PROJECT_NAME}-python/pyproject.toml"
+        "${PROJECT_NAME}-npm/package.json"
     )
     
     for file in "${REQUIRED_FILES[@]}"; do
@@ -398,7 +399,7 @@ check_package_structure() {
     done
     
     # Check Python package structure
-    if [ -d "$PROJECT_ROOT/diffx-python/src/diffx" ]; then
+    if [ -d "$PROJECT_ROOT/${PROJECT_NAME}-python/src/${PROJECT_NAME}" ]; then
         print_success "Python package structure is correct"
     else
         print_error "Python package structure is incorrect"
@@ -406,7 +407,7 @@ check_package_structure() {
     fi
     
     # Check npm package structure
-    if [ -f "$PROJECT_ROOT/diffx-npm/index.js" ]; then
+    if [ -f "$PROJECT_ROOT/${PROJECT_NAME}-npm/index.js" ]; then
         print_success "npm package structure is correct"
     else
         print_error "npm package structure is incorrect"

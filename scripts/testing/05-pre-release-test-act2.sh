@@ -7,6 +7,7 @@ set -euo pipefail
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -64,16 +65,16 @@ check_prerequisites() {
 test_npm_package() {
     print_info "=== Testing npm package build ==="
     
-    if [ ! -d "$PROJECT_ROOT/diffx-npm" ]; then
-        print_error "diffx-npm directory not found"
+    if [ ! -d "$PROJECT_ROOT/${PROJECT_NAME}-npm" ]; then
+        print_error "${PROJECT_NAME}-npm directory not found"
         exit 1
     fi
     
-    cd "$PROJECT_ROOT/diffx-npm"
+    cd "$PROJECT_ROOT/${PROJECT_NAME}-npm"
     
     # Check package.json exists and is valid
     if [ ! -f "package.json" ]; then
-        print_error "package.json not found in diffx-npm"
+        print_error "package.json not found in ${PROJECT_NAME}-npm"
         exit 1
     fi
     
@@ -114,22 +115,22 @@ test_npm_package() {
 test_python_package() {
     print_info "=== Testing Python package build ==="
     
-    if [ ! -d "$PROJECT_ROOT/diffx-python" ]; then
-        print_error "diffx-python directory not found"
+    if [ ! -d "$PROJECT_ROOT/${PROJECT_NAME}-python" ]; then
+        print_error "${PROJECT_NAME}-python directory not found"
         exit 1
     fi
     
-    cd "$PROJECT_ROOT/diffx-python"
+    cd "$PROJECT_ROOT/${PROJECT_NAME}-python"
     
     # Check pyproject.toml exists and is valid
     if [ ! -f "pyproject.toml" ]; then
-        print_error "pyproject.toml not found in diffx-python"
+        print_error "pyproject.toml not found in ${PROJECT_NAME}-python"
         exit 1
     fi
     
     # Check Cargo.toml exists for maturin
     if [ ! -f "Cargo.toml" ]; then
-        print_error "Cargo.toml not found in diffx-python"
+        print_error "Cargo.toml not found in ${PROJECT_NAME}-python"
         exit 1
     fi
     
@@ -183,7 +184,7 @@ test_python_package() {
     print_info "Testing installed Python package..."
     
     # Test import
-    if ! python -c "import diffx_python; print('Import successful')"; then
+    if ! python -c "import ${PROJECT_NAME}_python; print('Import successful')"; then
         print_error "Python package import failed"
         exit 1
     fi

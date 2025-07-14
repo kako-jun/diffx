@@ -7,6 +7,7 @@ set -euo pipefail
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -39,16 +40,16 @@ echo ""
 
 # Check crates.io versions
 echo "📦 Checking crates.io..."
-CRATES_CORE_VERSION=$(cargo search diffx-core --limit 1 2>/dev/null | grep -E "^diffx-core" | sed 's/.*= "\([^"]*\)".*/\1/' || echo "not found")
-CRATES_CLI_VERSION=$(cargo search diffx-cli --limit 1 2>/dev/null | grep -E "^diffx-cli" | sed 's/.*= "\([^"]*\)".*/\1/' || echo "not found")
+CRATES_CORE_VERSION=$(cargo search ${PROJECT_NAME}-core --limit 1 2>/dev/null | grep -E "^${PROJECT_NAME}-core" | sed 's/.*= "\([^"]*\)".*/\1/' || echo "not found")
+CRATES_CLI_VERSION=$(cargo search ${PROJECT_NAME}-cli --limit 1 2>/dev/null | grep -E "^${PROJECT_NAME}-cli" | sed 's/.*= "\([^"]*\)".*/\1/' || echo "not found")
 
 # Check npm registry
 echo "📦 Checking npm registry..."
-NPM_VERSION=$(npm view diffx-js version 2>/dev/null || echo "not found")
+NPM_VERSION=$(npm view ${PROJECT_NAME}-js version 2>/dev/null || echo "not found")
 
 # Check PyPI
 echo "📦 Checking PyPI..."
-PYPI_VERSION=$(pip index versions diffx-python 2>/dev/null | grep -E "Available versions:" | sed 's/.*: \([^,]*\).*/\1/' || echo "not found")
+PYPI_VERSION=$(pip index versions ${PROJECT_NAME}-python 2>/dev/null | grep -E "Available versions:" | sed 's/.*: \([^,]*\).*/\1/' || echo "not found")
 
 # Get local version for comparison
 LOCAL_VERSION=$(grep '^version = ' "$PROJECT_ROOT/Cargo.toml" | head -1 | cut -d'"' -f2)
@@ -59,10 +60,10 @@ echo "Published Package Versions:"
 echo "┌─────────────────┬─────────────┬─────────────┐"
 echo "│ Package         │ Published   │ Local       │"
 echo "├─────────────────┼─────────────┼─────────────┤"
-printf "│ %-15s │ %-11s │ %-11s │\n" "diffx-core" "$CRATES_CORE_VERSION" "$LOCAL_VERSION"
-printf "│ %-15s │ %-11s │ %-11s │\n" "diffx-cli" "$CRATES_CLI_VERSION" "$LOCAL_VERSION"
-printf "│ %-15s │ %-11s │ %-11s │\n" "diffx-js" "$NPM_VERSION" "$LOCAL_VERSION"
-printf "│ %-15s │ %-11s │ %-11s │\n" "diffx-python" "$PYPI_VERSION" "$LOCAL_VERSION"
+printf "│ %-15s │ %-11s │ %-11s │\n" "${PROJECT_NAME}-core" "$CRATES_CORE_VERSION" "$LOCAL_VERSION"
+printf "│ %-15s │ %-11s │ %-11s │\n" "${PROJECT_NAME}-cli" "$CRATES_CLI_VERSION" "$LOCAL_VERSION"
+printf "│ %-15s │ %-11s │ %-11s │\n" "${PROJECT_NAME}-js" "$NPM_VERSION" "$LOCAL_VERSION"
+printf "│ %-15s │ %-11s │ %-11s │\n" "${PROJECT_NAME}-python" "$PYPI_VERSION" "$LOCAL_VERSION"
 echo "└─────────────────┴─────────────┴─────────────┘"
 echo ""
 

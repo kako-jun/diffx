@@ -4,6 +4,9 @@ set -euo pipefail
 # Release monitoring script - correctly handles Act1 -> Act2 workflow
 # Fixes issues with false positive errors and workflow dependency understanding
 
+# Get project name from current directory
+PROJECT_NAME=$(basename "$(pwd)")
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -178,26 +181,26 @@ check_packages() {
     print_info "Checking package availability for version $version..."
     
     # Check crates.io
-    if curl -s "https://crates.io/api/v1/crates/diffx-core" | grep -q "\"newest_version\":\"$version\""; then
-        print_success "✓ crates.io: diffx-core $version"
+    if curl -s "https://crates.io/api/v1/crates/${PROJECT_NAME}-core" | grep -q "\"newest_version\":\"$version\""; then
+        print_success "✓ crates.io: ${PROJECT_NAME}-core $version"
     else
-        print_warning "✗ crates.io: diffx-core $version not yet available"
+        print_warning "✗ crates.io: ${PROJECT_NAME}-core $version not yet available"
         return 1
     fi
     
     # Check PyPI
-    if curl -s "https://pypi.org/pypi/diffx-python/json" | grep -q "\"version\":\"$version\""; then
-        print_success "✓ PyPI: diffx-python $version"
+    if curl -s "https://pypi.org/pypi/${PROJECT_NAME}-python/json" | grep -q "\"version\":\"$version\""; then
+        print_success "✓ PyPI: ${PROJECT_NAME}-python $version"
     else
-        print_warning "✗ PyPI: diffx-python $version not yet available"
+        print_warning "✗ PyPI: ${PROJECT_NAME}-python $version not yet available"
         return 1
     fi
     
     # Check npm
-    if curl -s "https://registry.npmjs.org/diffx-js" | grep -q "\"$version\""; then
-        print_success "✓ npm: diffx-js $version"
+    if curl -s "https://registry.npmjs.org/${PROJECT_NAME}-js" | grep -q "\"$version\""; then
+        print_success "✓ npm: ${PROJECT_NAME}-js $version"
     else
-        print_warning "✗ npm: diffx-js $version not yet available"
+        print_warning "✗ npm: ${PROJECT_NAME}-js $version not yet available"
         return 1
     fi
     
@@ -301,10 +304,10 @@ main() {
     print_success "🎉 Release $VERSION completed successfully!"
     echo ""
     print_info "Release information:"
-    echo "  - GitHub: https://github.com/kako-jun/diffx/releases/tag/$VERSION"
-    echo "  - crates.io: https://crates.io/crates/diffx-core"
-    echo "  - PyPI: https://pypi.org/project/diffx-python/"
-    echo "  - npm: https://www.npmjs.com/package/diffx-js"
+    echo "  - GitHub: $(git remote get-url origin | sed 's/\.git$//')/releases/tag/$VERSION"
+    echo "  - crates.io: https://crates.io/crates/${PROJECT_NAME}-core"
+    echo "  - PyPI: https://pypi.org/project/${PROJECT_NAME}-python/"
+    echo "  - npm: https://www.npmjs.com/package/${PROJECT_NAME}-js"
     
     return 0
 }
