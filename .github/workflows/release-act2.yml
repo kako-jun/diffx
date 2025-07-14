@@ -50,6 +50,11 @@ jobs:
         node-version: '18'
         registry-url: 'https://registry.npmjs.org'
     
+    - name: Run pre-release tests for npm
+      run: |
+        chmod +x ./scripts/testing/05-pre-release-test-act2.sh
+        ./scripts/testing/05-pre-release-test-act2.sh
+    
     - name: Download all platform binaries for npm package
       working-directory: diffx-npm
       env:
