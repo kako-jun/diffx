@@ -112,9 +112,19 @@ main() {
     echo '{"a": 1}' > "$TEST_DIR/test1.json"
     echo '{"a": 2}' > "$TEST_DIR/test2.json"
     
-    # Test basic diff
-    if ! "$BINARY_PATH" "$TEST_DIR/test1.json" "$TEST_DIR/test2.json" > /dev/null 2>&1; then
-        print_error "Binary test failed"
+    # Test basic diff (should return exit code 1 when differences found)
+    "$BINARY_PATH" "$TEST_DIR/test1.json" "$TEST_DIR/test2.json" > /dev/null 2>&1
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 1 ]; then
+        print_error "Binary test failed: expected exit code 1 (differences found), got $EXIT_CODE"
+        exit 1
+    fi
+    
+    # Test identical files (should return exit code 0 when no differences)
+    "$BINARY_PATH" "$TEST_DIR/test1.json" "$TEST_DIR/test1.json" > /dev/null 2>&1
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 0 ]; then
+        print_error "Binary test failed: expected exit code 0 (no differences), got $EXIT_CODE"
         exit 1
     fi
     
