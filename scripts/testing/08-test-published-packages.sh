@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# 🧪 Test published diffx packages across all ecosystems
+# 🧪 Test published packages across all ecosystems
 # Based on lawkit's comprehensive package testing approach
 
 set -e
+
+# Get project name from current directory
+PROJECT_NAME=$(basename "$(pwd)")
 
 # Colors for output
 RED='\033[0;31m'
@@ -32,7 +35,7 @@ log() {
     echo -e "${BLUE}[$(date +'%H:%M:%S')] $1${NC}"
 }
 
-echo "🧪 Testing Published diffx Packages"
+echo "🧪 Testing Published ${PROJECT_NAME} Packages"
 echo "=================================="
 
 # Create temporary workspace

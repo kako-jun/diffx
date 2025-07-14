@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Get project name from current directory
+PROJECT_NAME=$(basename "$(pwd)")
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -128,31 +131,31 @@ check_and_yank_crate() {
     fi
 }
 
-check_and_yank_crate "diffx-core"
-check_and_yank_crate "diffx-cli"
+check_and_yank_crate "${PROJECT_NAME}-core"
+check_and_yank_crate "${PROJECT_NAME}-cli"
 
 # Step 5: Check npm package
 echo ""
 print_info "Checking npm package..."
 if command -v npm &> /dev/null; then
-    local npm_versions=$(npm view diffx-js versions --json 2>/dev/null | jq -r '.[]' 2>/dev/null || echo "")
+    local npm_versions=$(npm view ${PROJECT_NAME}-js versions --json 2>/dev/null | jq -r '.[]' 2>/dev/null || echo "")
     if echo "$npm_versions" | grep -q "^$VERSION_CLEAN$"; then
-        print_warning "Found diffx-js@$VERSION_CLEAN on npm"
+        print_warning "Found ${PROJECT_NAME}-js@$VERSION_CLEAN on npm"
         print_info "To unpublish from npm (only possible within 24 hours):"
-        echo "  npm unpublish diffx-js@$VERSION_CLEAN"
+        echo "  npm unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN"
         echo ""
-        read -p "Attempt to unpublish diffx-js@$VERSION_CLEAN now? (y/N) " -n 1 -r
+        read -p "Attempt to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN now? (y/N) " -n 1 -r
         echo ""
         
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            if npm unpublish "diffx-js@$VERSION_CLEAN"; then
-                print_success "diffx-js@$VERSION_CLEAN unpublished from npm"
+            if npm unpublish "${PROJECT_NAME}-js@$VERSION_CLEAN"; then
+                print_success "${PROJECT_NAME}-js@$VERSION_CLEAN unpublished from npm"
             else
-                print_error "Failed to unpublish diffx-js@$VERSION_CLEAN (may be too late or insufficient permissions)"
+                print_error "Failed to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN (may be too late or insufficient permissions)"
             fi
         fi
     else
-        print_success "diffx-js@$VERSION_CLEAN not found on npm (good)"
+        print_success "${PROJECT_NAME}-js@$VERSION_CLEAN not found on npm (good)"
     fi
 else
     print_warning "npm not available, skipping npm check"
@@ -162,16 +165,16 @@ fi
 echo ""
 print_info "Checking PyPI package..."
 if command -v pip &> /dev/null; then
-    local pypi_versions=$(pip index versions diffx-python 2>/dev/null | grep "Available versions:" | sed 's/Available versions: //' || echo "")
+    local pypi_versions=$(pip index versions ${PROJECT_NAME}-python 2>/dev/null | grep "Available versions:" | sed 's/Available versions: //' || echo "")
     if echo "$pypi_versions" | grep -q "$VERSION_CLEAN"; then
-        print_warning "Found diffx-python@$VERSION_CLEAN on PyPI"
+        print_warning "Found ${PROJECT_NAME}-python@$VERSION_CLEAN on PyPI"
         print_warning "PyPI does not allow deletion of packages automatically."
-        print_info "If you need to remove diffx-python@$VERSION_CLEAN from PyPI:"
+        print_info "If you need to remove ${PROJECT_NAME}-python@$VERSION_CLEAN from PyPI:"
         echo "  1. Contact PyPI support: https://pypi.org/help/#file-bug-reports"
         echo "  2. Explain the situation (failed release)"
         echo "  3. Request removal of version $VERSION_CLEAN"
     else
-        print_success "diffx-python@$VERSION_CLEAN not found on PyPI (good)"
+        print_success "${PROJECT_NAME}-python@$VERSION_CLEAN not found on PyPI (good)"
     fi
 else
     print_warning "pip not available, skipping PyPI check"
@@ -184,9 +187,9 @@ print_success "✓ GitHub release $TAG_VERSION cleaned up"
 print_success "✓ Git tags cleaned up"
 
 print_info "Manual follow-up if needed:"
-echo "  - Check crates.io: https://crates.io/crates/diffx-core"
-echo "  - Check npm: https://www.npmjs.com/package/diffx-js"
-echo "  - Check PyPI: https://pypi.org/project/diffx-python/"
+echo "  - Check crates.io: https://crates.io/crates/${PROJECT_NAME}-core"
+echo "  - Check npm: https://www.npmjs.com/package/${PROJECT_NAME}-js"
+echo "  - Check PyPI: https://pypi.org/project/${PROJECT_NAME}-python/"
 echo ""
 print_info "You can now safely create a new release with the same or different version."
 

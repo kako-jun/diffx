@@ -7,6 +7,7 @@ set -euo pipefail
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -82,16 +83,16 @@ main() {
     
     # Quick performance check
     print_info "Quick performance check..."
-    cargo build --release --package diffx-core
+    cargo build --release --package ${PROJECT_NAME}-core
     print_success "Release build successful - performance optimizations applied"
     
     # Step 3: Build release binary (simulating GitHub Actions build)
     print_info "Step 3: Building release binary for local target..."
-    cargo build --package diffx --release --target "$LOCAL_TARGET"
+    cargo build --package ${PROJECT_NAME} --release --target "$LOCAL_TARGET"
     
     # Step 4: Test binary functionality
     print_info "Step 4: Testing built binary..."
-    BINARY_PATH="target/$LOCAL_TARGET/release/diffx"
+    BINARY_PATH="target/$LOCAL_TARGET/release/${PROJECT_NAME}"
     if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
         BINARY_PATH="$BINARY_PATH.exe"
     fi
@@ -123,18 +124,18 @@ main() {
     print_info "Step 5: Simulating crates.io publish (dry run only - no actual publishing)..."
     
     # Check if packages can be published (dry run)
-    print_info "Checking diffx-core publish readiness (dry run)..."
-    cd "$PROJECT_ROOT/diffx-core"
+    print_info "Checking ${PROJECT_NAME}-core publish readiness (dry run)..."
+    cd "$PROJECT_ROOT/${PROJECT_NAME}-core"
     if ! cargo publish --dry-run; then
-        print_error "diffx-core dry run failed"
+        print_error "${PROJECT_NAME}-core dry run failed"
         exit 1
     fi
     cd "$PROJECT_ROOT"
     
-    print_info "Checking diffx-cli publish readiness (dry run)..."
-    cd "$PROJECT_ROOT/diffx-cli"
+    print_info "Checking ${PROJECT_NAME}-cli publish readiness (dry run)..."
+    cd "$PROJECT_ROOT/${PROJECT_NAME}-cli"
     if ! cargo publish --dry-run; then
-        print_error "diffx-cli dry run failed"
+        print_error "${PROJECT_NAME}-cli dry run failed"
         exit 1
     fi
     cd "$PROJECT_ROOT"
