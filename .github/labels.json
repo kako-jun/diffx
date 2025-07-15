@@ -82,7 +82,7 @@
   {
     "name": "area: core",
     "color": "1d76db",
-    "description": "Core library (diffx-core)"
+    "description": "Core library"
   },
   {
     "name": "area: cli",
@@ -92,12 +92,12 @@
   {
     "name": "area: npm",
     "color": "1d76db",
-    "description": "NPM package (diffx-js)"
+    "description": "NPM package"
   },
   {
     "name": "area: pypi",
     "color": "1d76db",
-    "description": "PyPI package (diffx-python)"
+    "description": "PyPI package"
   },
   {
     "name": "area: docs",
