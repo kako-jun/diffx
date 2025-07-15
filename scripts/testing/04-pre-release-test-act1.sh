@@ -167,14 +167,6 @@ main() {
     
     # Check no uncommitted changes (excluding build artifacts)
     # Note: Cargo.lock may be updated during testing and should be committed separately
-    print_info "Checking for uncommitted changes..."
-    print_info "Full git status:"
-    git status
-    print_info "Git status --porcelain:"
-    git status --porcelain
-    print_info "Files changed (excluding target/):"
-    git diff --name-only HEAD -- ':!target/' ':!**/target/' || true
-    
     if ! git diff-index --quiet HEAD -- ':!target/' ':!**/target/'; then
         print_error "Working directory has uncommitted changes (excluding build artifacts):"
         git status --porcelain | grep -v "target/"
@@ -182,7 +174,6 @@ main() {
         git diff --name-only HEAD -- ':!target/' ':!**/target/'
         # Check if only Cargo.lock changed
         CHANGED_FILES=$(git diff --name-only HEAD -- ':!target/' ':!**/target/')
-        print_info "Changed files list: '$CHANGED_FILES'"
         if [ "$CHANGED_FILES" = "Cargo.lock" ]; then
             print_warning "Only Cargo.lock has changes - this is expected during testing"
             print_info "Committing Cargo.lock changes..."
@@ -190,12 +181,8 @@ main() {
             git commit -m "chore: update Cargo.lock after testing"
         else
             print_error "Non-Cargo.lock files have uncommitted changes - this is not allowed"
-            print_info "Detailed diff of non-target files:"
-            git diff HEAD -- ':!target/' ':!**/target/'
             exit 1
         fi
-    else
-        print_success "No uncommitted changes found (excluding build artifacts)"
     fi
     
     # Verify version consistency
