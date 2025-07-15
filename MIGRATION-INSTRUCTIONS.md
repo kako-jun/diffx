@@ -34,6 +34,29 @@ project-root/
 
 ## 🚀 移植手順
 
+### ステップ0: 既存ファイルのクリーンアップ
+
+**重要**: 既存の類似機能ファイルは削除してdiffx汎用システムに統一します。
+
+```bash
+# 既存の重複機能ファイルを確認・削除
+# （以下は一般的な例、実際のファイル名は各プロジェクトで確認）
+
+# 1. 古いリリーススクリプト削除
+rm -f scripts/release.sh scripts/publish.sh scripts/build-release.sh 2>/dev/null || true
+
+# 2. 古いCI/テストスクリプト削除  
+rm -f scripts/ci.sh scripts/test-all.sh scripts/check.sh 2>/dev/null || true
+
+# 3. 古いGitHub Actionsワークフロー削除（同名のものがあれば）
+rm -f .github/workflows/release.yml .github/workflows/publish.yml 2>/dev/null || true
+
+# 4. 古いバージョン管理スクリプト削除
+rm -f scripts/bump-version.sh scripts/update-version.sh 2>/dev/null || true
+
+echo "既存ファイルクリーンアップ完了 - diffx汎用システムで統一します"
+```
+
 ### ステップ1: ファイルコピー
 
 ```bash
@@ -184,3 +207,16 @@ cat Cargo.toml | grep members
 ---
 
 **この手順書通りに実行すれば、100%確実にdiffxの汎用化リリースシステムが移植されます。**
+
+## 🎯 Claude Code向け実行指示
+
+lawkit/diffaiプロジェクトでClaude Codeに以下を指示してください：
+
+```
+../diffx/MIGRATION-INSTRUCTIONS.md を読んで、手順書通りに実行してください。
+
+重要な追加指示:
+- 既存の類似機能ファイル（古いリリーススクリプト、CIスクリプト等）は削除して構いません
+- 目的が重複するワークフローやスクリプトはdiffx汎用システムに統一してください
+- 手順書に従って確実に移植を完了させてください
+```
