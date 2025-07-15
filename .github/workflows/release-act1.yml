@@ -40,8 +40,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set project name
+    - name: Set project name (Unix)
+      if: matrix.os != 'windows-latest'
       run: echo "ARCHIVE_NAME=${{ env.PROJECT_NAME }}-${{ matrix.platform }}" >> $GITHUB_ENV
+    
+    - name: Set project name (Windows)
+      if: matrix.os == 'windows-latest'
+      run: echo "ARCHIVE_NAME=${{ env.PROJECT_NAME }}-${{ matrix.platform }}" >> $env:GITHUB_ENV
     
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -77,15 +82,26 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         cd target/${{ matrix.target }}/release
-        7z a "${{ env.ARCHIVE_NAME }}.zip" "${{ env.PROJECT_NAME }}.exe"
-        mv "${{ env.ARCHIVE_NAME }}.zip" ../../../
+        7z a ${{ env.ARCHIVE_NAME }}.zip ${{ env.PROJECT_NAME }}.exe
+        mv ${{ env.ARCHIVE_NAME }}.zip ../../../
 
-    - name: Upload artifacts
+    - name: Upload artifacts (Unix)
+      if: matrix.os != 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.ARCHIVE_NAME }}
-        path: ${{ env.ARCHIVE_NAME }}.*
+        path: ${{ env.ARCHIVE_NAME }}.tar.gz
         retention-days: 5
+        if-no-files-found: error
+        
+    - name: Upload artifacts (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.ARCHIVE_NAME }}
+        path: ${{ env.ARCHIVE_NAME }}.zip
+        retention-days: 5
+        if-no-files-found: error
 
   create-release:
     needs: build-and-upload
