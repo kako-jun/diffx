@@ -114,8 +114,10 @@ main() {
     
     # Test basic diff (should return exit code 1 when differences found)
     print_info "Testing diff detection: $BINARY_PATH $TEST_DIR/test1.json $TEST_DIR/test2.json"
+    set +e  # Temporarily disable exit on error
     "$BINARY_PATH" "$TEST_DIR/test1.json" "$TEST_DIR/test2.json" > /dev/null 2>&1
     EXIT_CODE=$?
+    set -e  # Re-enable exit on error
     print_info "Diff test returned exit code: $EXIT_CODE (expected: 1)"
     if [ $EXIT_CODE -ne 1 ]; then
         print_error "Binary test failed: expected exit code 1 (differences found), got $EXIT_CODE"
@@ -127,8 +129,10 @@ main() {
     
     # Test identical files (should return exit code 0 when no differences)
     print_info "Testing no diff: $BINARY_PATH $TEST_DIR/test1.json $TEST_DIR/test1.json"
+    set +e  # Temporarily disable exit on error
     "$BINARY_PATH" "$TEST_DIR/test1.json" "$TEST_DIR/test1.json" > /dev/null 2>&1
     EXIT_CODE=$?
+    set -e  # Re-enable exit on error
     print_info "No diff test returned exit code: $EXIT_CODE (expected: 0)"
     if [ $EXIT_CODE -ne 0 ]; then
         print_error "Binary test failed: expected exit code 0 (no differences), got $EXIT_CODE"
