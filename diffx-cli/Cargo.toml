@@ -15,7 +15,7 @@ exclude.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-diffx-core = { version = "0.5.4", path = "../diffx-core" }
+diffx-core = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 colored = { workspace = true }
