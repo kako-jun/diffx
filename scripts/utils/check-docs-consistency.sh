@@ -8,6 +8,7 @@ set -e
 # Find the project root directory (where Cargo.toml exists)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -204,7 +205,7 @@ echo "🔍 5. 特定キーワード整合性チェック / Specific keyword cons
 echo "-------------------------------------------------------------------------------------"
 
 # 重要なキーワードリスト
-declare -a KEYWORDS=("diffx" "JSON" "YAML")
+declare -a KEYWORDS=("${PROJECT_NAME}" "JSON" "YAML")
 
 for doc in "${DOCS[@]}"; do
     echo ""

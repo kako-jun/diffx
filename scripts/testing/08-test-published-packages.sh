@@ -51,19 +51,19 @@ TEST_JSON2='{"debug": false, "version": "1.1", "name": "app"}'
 EXPECTED_DIFF_COUNT=2  # version change + debug change
 
 ###########################################
-# Test 1: npm package (diffx-js)
+# Test 1: npm package (${PROJECT_NAME}-js)
 ###########################################
 
-log "Test 1: Testing npm package (diffx-js)"
+log "Test 1: Testing npm package (${PROJECT_NAME}-js)"
 
 # Create fresh npm project
 mkdir npm-test && cd npm-test
 npm init -y >/dev/null 2>&1
 
-# Install diffx-js
-log "Installing diffx-js from npm..."
-npm install diffx-js >/dev/null 2>&1
-success "diffx-js installed successfully"
+# Install ${PROJECT_NAME}-js
+log "Installing ${PROJECT_NAME}-js from npm..."
+npm install ${PROJECT_NAME}-js >/dev/null 2>&1
+success "${PROJECT_NAME}-js installed successfully"
 
 # Create test files
 echo "$TEST_JSON1" > test1.json
@@ -71,15 +71,15 @@ echo "$TEST_JSON2" > test2.json
 
 # Test CLI command via npm
 log "Testing CLI via npm (--help)..."
-npx diffx --help >/dev/null 2>&1
+npx ${PROJECT_NAME} --help >/dev/null 2>&1
 success "CLI help command works"
 
 log "Testing CLI via npm (--version)..."
-NPM_VERSION=$(npx diffx --version | head -1)
+NPM_VERSION=$(npx ${PROJECT_NAME} --version | head -1)
 success "CLI version: $NPM_VERSION"
 
 log "Testing basic diff functionality..."
-DIFF_OUTPUT=$(npx diffx test1.json test2.json)
+DIFF_OUTPUT=$(npx ${PROJECT_NAME} test1.json test2.json)
 if echo "$DIFF_OUTPUT" | grep -q "version.*1.0.*1.1" && echo "$DIFF_OUTPUT" | grep -q "debug.*true.*false"; then
     success "Basic diff functionality works correctly"
 else
@@ -89,7 +89,7 @@ else
 fi
 
 log "Testing JSON output format..."
-JSON_OUTPUT=$(npx diffx test1.json test2.json --output json)
+JSON_OUTPUT=$(npx ${PROJECT_NAME} test1.json test2.json --output json)
 if echo "$JSON_OUTPUT" | python3 -m json.tool >/dev/null 2>&1; then
     success "JSON output format is valid"
 else
@@ -111,7 +111,7 @@ version: "1.1"
 debug: false
 EOF
 
-YAML_DIFF=$(npx diffx test1.yaml test2.yaml)
+YAML_DIFF=$(npx ${PROJECT_NAME} test1.yaml test2.yaml)
 if echo "$YAML_DIFF" | grep -q "version.*1.0.*1.1"; then
     success "YAML diff functionality works"
 else
@@ -121,25 +121,25 @@ else
 fi
 
 log "Testing stdin processing..."
-echo "$TEST_JSON1" | npx diffx - test2.json >/dev/null 2>&1
+echo "$TEST_JSON1" | npx ${PROJECT_NAME} - test2.json >/dev/null 2>&1
 success "Stdin processing works"
 
 cd ..
 
 ###########################################
-# Test 2: Python package (diffx-python)
+# Test 2: Python package (${PROJECT_NAME}-python)
 ###########################################
 
-log "Test 2: Testing Python package (diffx-python)"
+log "Test 2: Testing Python package (${PROJECT_NAME}-python)"
 
 # Create virtual environment
 python3 -m venv python-test-env
 source python-test-env/bin/activate
 
-# Install diffx-python
-log "Installing diffx-python from PyPI..."
-pip install diffx-python >/dev/null 2>&1
-success "diffx-python installed successfully"
+# Install ${PROJECT_NAME}-python
+log "Installing ${PROJECT_NAME}-python from PyPI..."
+pip install ${PROJECT_NAME}-python >/dev/null 2>&1
+success "${PROJECT_NAME}-python installed successfully"
 
 # Test binary download (manual step for Python)
 log "Testing binary download..."
@@ -150,7 +150,7 @@ try:
     if not result:
         print('Binary not available, attempting download...')
         import subprocess
-        subprocess.run(['diffx-download-binary'], check=True, capture_output=True)
+        subprocess.run(['${PROJECT_NAME}-download-binary'], check=True, capture_output=True)
     print('OK: Binary availability check passed')
 except Exception as e:
     print(f'ERROR: Binary check failed: {e}')
@@ -299,7 +299,7 @@ cd npm-test
 cp ../config_old.json ../config_new.json .
 
 log "Processing with npm package..."
-NPM_RESULT=$(npx diffx config_old.json config_new.json --output json)
+NPM_RESULT=$(npx ${PROJECT_NAME} config_old.json config_new.json --output json)
 echo "$NPM_RESULT" > npm_result.json
 
 # Process with Python package  
@@ -404,7 +404,7 @@ EOF
 cd npm-test
 cp ../.github_workflows_old.yml ../.github_workflows_new.yml .
 
-CI_DIFF=$(npx diffx .github_workflows_old.yml .github_workflows_new.yml)
+CI_DIFF=$(npx ${PROJECT_NAME} .github_workflows_old.yml .github_workflows_new.yml)
 if echo "$CI_DIFF" | grep -q "node-version" && echo "$CI_DIFF" | grep -q "develop"; then
     success "CI/CD configuration diff scenario works"
 else
@@ -421,8 +421,8 @@ echo ""
 echo "All Published Package Tests Passed!"
 echo "======================================"
 echo ""
-success "npm package (diffx-js) - All functionality verified"
-success "Python package (diffx-python) - All functionality verified"  
+success "npm package (${PROJECT_NAME}-js) - All functionality verified"
+success "Python package (${PROJECT_NAME}-python) - All functionality verified"  
 success "Cross-platform compatibility - Results identical"
 success "Real-world scenarios - Working correctly"
 echo ""

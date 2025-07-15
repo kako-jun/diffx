@@ -16,6 +16,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  PROJECT_NAME: ${{ github.event.repository.name }}
 
 jobs:
   build-and-upload:
@@ -24,20 +25,23 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            name: diffx-linux-x86_64
+            platform: linux-x86_64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            name: diffx-windows-x86_64
+            platform: windows-x86_64
           - os: macos-latest
             target: x86_64-apple-darwin
-            name: diffx-macos-x86_64
+            platform: macos-x86_64
           - os: macos-latest
             target: aarch64-apple-darwin
-            name: diffx-macos-aarch64
+            platform: macos-aarch64
 
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Set project name
+      run: echo "ARCHIVE_NAME=${GITHUB_REPOSITORY##*/}-${{ matrix.platform }}" >> $GITHUB_ENV
     
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
@@ -60,29 +64,29 @@ jobs:
         ./scripts/testing/04-pre-release-test-act1.sh
     
     - name: Build release binary
-      run: cargo build --package diffx --release --target ${{ matrix.target }}
+      run: cargo build --package ${GITHUB_REPOSITORY##*/} --release --target ${{ matrix.target }}
 
     - name: Create archive (Unix)
       if: matrix.os != 'windows-latest'
       run: |
         cd target/${{ matrix.target }}/release
-        tar -czf ${{ matrix.name }}.tar.gz diffx
-        mv ${{ matrix.name }}.tar.gz ../../../
+        tar -czf ${{ env.ARCHIVE_NAME }}.tar.gz ${GITHUB_REPOSITORY##*/}
+        mv ${{ env.ARCHIVE_NAME }}.tar.gz ../../../
 
     - name: Create archive (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         cd target/${{ matrix.target }}/release
-        7z a ${{ matrix.name }}.zip diffx.exe
-        mv ${{ matrix.name }}.zip ../../../
+        7z a ${{ env.ARCHIVE_NAME }}.zip ${GITHUB_REPOSITORY##*/}.exe
+        mv ${{ env.ARCHIVE_NAME }}.zip ../../../
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.name }}
+        name: ${{ env.ARCHIVE_NAME }}
         path: |
-          ${{ matrix.name }}.tar.gz
-          ${{ matrix.name }}.zip
+          ${{ env.ARCHIVE_NAME }}.tar.gz
+          ${{ env.ARCHIVE_NAME }}.zip
         retention-days: 5
 
   create-release:
@@ -138,10 +142,10 @@ jobs:
         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       run: |
         # Publish core library first
-        cargo publish --package diffx-core
+        cargo publish --package ${GITHUB_REPOSITORY##*/}-core
         
         # Wait a bit for the core package to be available
         sleep 30
         
         # Publish CLI tool
-        cargo publish --package diffx
+        cargo publish --package ${GITHUB_REPOSITORY##*/}
