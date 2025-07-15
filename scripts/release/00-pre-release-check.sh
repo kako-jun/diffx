@@ -46,7 +46,7 @@ check_git_status() {
     
     if ! git diff-index --quiet HEAD --; then
         print_error "Working directory has uncommitted changes"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     else
         print_success "Working directory is clean"
     fi
@@ -54,7 +54,7 @@ check_git_status() {
     # Check for untracked files
     if [ -n "$(git ls-files --others --exclude-standard)" ]; then
         print_warning "Untracked files present (this might be okay)"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 }
 
@@ -65,7 +65,7 @@ check_branch() {
     CURRENT_BRANCH=$(git branch --show-current)
     if [ "$CURRENT_BRANCH" != "main" ]; then
         print_error "Not on main branch (current: $CURRENT_BRANCH)"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     else
         print_success "On main branch"
     fi
@@ -77,7 +77,7 @@ check_branch() {
     
     if [ "$LOCAL" != "$REMOTE" ]; then
         print_error "Branch is not up to date with remote"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     else
         print_success "Branch is up to date with remote"
     fi
@@ -88,7 +88,7 @@ check_branch() {
     if [ "$UNMERGED_BRANCHES" -gt 0 ]; then
         print_warning "Found $UNMERGED_BRANCHES unmerged branches"
         git branch --no-merged main | grep -v "^\*" | sed 's/^/  /'
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     else
         print_success "All branches are merged into main"
     fi
@@ -101,7 +101,7 @@ check_github_status() {
     # Check if gh CLI is available
     if ! command -v gh &> /dev/null; then
         print_warning "GitHub CLI (gh) not found. Skipping GitHub checks."
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
         return
     fi
     
@@ -111,7 +111,7 @@ check_github_status() {
     else
         print_error "GitHub CLI not authenticated"
         print_info "Run: gh auth login"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
         return
     fi
     
@@ -120,7 +120,7 @@ check_github_status() {
     if [ "$OPEN_ISSUES" != "unknown" ]; then
         if [ "$OPEN_ISSUES" -gt 0 ]; then
             print_warning "Found $OPEN_ISSUES open issues"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS + 1))
         else
             print_success "No open issues"
         fi
@@ -131,7 +131,7 @@ check_github_status() {
     if [ "$OPEN_PRS" != "unknown" ]; then
         if [ "$OPEN_PRS" -gt 0 ]; then
             print_warning "Found $OPEN_PRS open PRs"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS + 1))
         else
             print_success "No open PRs"
         fi
@@ -143,7 +143,7 @@ check_github_status() {
         print_success "Recent CI run successful"
     else
         print_warning "Recent CI run not successful or not found"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 }
 
@@ -157,7 +157,7 @@ check_tool_versions() {
         print_success "Rust: $RUST_VERSION"
     else
         print_error "Rust toolchain not found"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     if command -v cargo &> /dev/null; then
@@ -165,7 +165,7 @@ check_tool_versions() {
         print_success "Cargo: $CARGO_VERSION"
     else
         print_error "Cargo not found"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # Node.js and npm
@@ -174,7 +174,7 @@ check_tool_versions() {
         print_success "Node.js: $NODE_VERSION"
     else
         print_error "Node.js not found"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     if command -v npm &> /dev/null; then
@@ -182,7 +182,7 @@ check_tool_versions() {
         print_success "npm: $NPM_VERSION"
     else
         print_error "npm not found"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # Python
@@ -194,7 +194,7 @@ check_tool_versions() {
         print_success "Python: $PYTHON_VERSION"
     else
         print_error "Python not found"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # uv (Python package manager)
@@ -203,7 +203,7 @@ check_tool_versions() {
         print_success "uv: $UV_VERSION"
     else
         print_error "uv not found (required for Python development)"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # Git
@@ -212,7 +212,7 @@ check_tool_versions() {
         print_success "Git: $GIT_VERSION"
     else
         print_error "Git not found"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # Check Python virtual environment and maturin
@@ -226,14 +226,22 @@ check_tool_versions() {
         elif [ -f ".venv/bin/maturin" ]; then
             print_success "Maturin available in virtual environment"
         else
-            print_error "Maturin not found (required for Python package)"
-            print_info "Run: source .venv/bin/activate && uv pip install maturin"
-            ((ERRORS++))
+            print_info "Installing maturin automatically..."
+            if source .venv/bin/activate && uv pip install maturin; then
+                print_success "Maturin installed successfully"
+            else
+                print_error "Failed to install maturin"
+                ERRORS=$((ERRORS + 1))
+            fi
         fi
     else
-        print_warning "Python virtual environment not found"
-        print_info "Run: uv venv && source .venv/bin/activate && uv pip install maturin"
-        ((WARNINGS++))
+        print_info "Creating Python virtual environment and installing maturin..."
+        if uv venv && source .venv/bin/activate && uv pip install maturin; then
+            print_success "Virtual environment and maturin installed successfully"
+        else
+            print_error "Failed to create virtual environment or install maturin"
+            ERRORS=$((ERRORS + 1))
+        fi
     fi
 }
 
@@ -247,7 +255,7 @@ check_authentication() {
     else
         print_warning "Cargo credentials not found"
         print_info "Run: cargo login"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
     
     # npm
@@ -257,7 +265,7 @@ check_authentication() {
     else
         print_error "npm not authenticated"
         print_info "Run: npm login"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # PyPI/maturin
@@ -270,7 +278,7 @@ check_authentication() {
         else
             print_warning "PyPI credentials not found"
             print_info "Set MATURIN_PYPI_TOKEN or configure ~/.pypirc"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS + 1))
         fi
     fi
 }
@@ -284,7 +292,7 @@ check_external_services() {
         print_success "crates.io accessible"
     else
         print_warning "crates.io connection issues"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
     
     # PyPI
@@ -292,7 +300,7 @@ check_external_services() {
         print_success "PyPI accessible"
     else
         print_warning "PyPI connection issues"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
     
     # npm registry
@@ -300,7 +308,7 @@ check_external_services() {
         print_success "npm registry accessible"
     else
         print_warning "npm registry connection issues"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
     
     # GitHub API
@@ -308,7 +316,7 @@ check_external_services() {
         print_success "GitHub API accessible"
     else
         print_warning "GitHub API connection issues"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 }
 
@@ -332,7 +340,7 @@ check_security() {
             print_success "No Rust vulnerabilities found"
         else
             print_warning "Rust vulnerabilities detected"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS + 1))
         fi
     else
         print_info "cargo-audit not installed (optional)"
@@ -346,7 +354,7 @@ check_security() {
             print_success "No critical npm vulnerabilities"
         else
             print_warning "npm vulnerabilities detected"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS + 1))
         fi
         cd "$PROJECT_ROOT"
     fi
@@ -365,11 +373,11 @@ check_timing() {
             print_success "Good timing: Business hours on weekday"
         else
             print_warning "Consider releasing during business hours (10:00-15:00)"
-            ((WARNINGS++))
+            WARNINGS=$((WARNINGS + 1))
         fi
     else
         print_warning "Consider releasing on weekdays for better support availability"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 }
 
@@ -394,7 +402,7 @@ check_package_structure() {
             print_success "$file exists"
         else
             print_error "$file is missing"
-            ((ERRORS++))
+            ERRORS=$((ERRORS + 1))
         fi
     done
     
@@ -403,7 +411,7 @@ check_package_structure() {
         print_success "Python package structure is correct"
     else
         print_error "Python package structure is incorrect"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
     
     # Check npm package structure
@@ -411,7 +419,7 @@ check_package_structure() {
         print_success "npm package structure is correct"
     else
         print_error "npm package structure is incorrect"
-        ((ERRORS++))
+        ERRORS=$((ERRORS + 1))
     fi
 }
 
