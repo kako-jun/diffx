@@ -1,7 +1,15 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Setting up GitHub Workflow automation for diffx project"
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
+
+# Change to project root
+cd "$PROJECT_ROOT"
+
+echo "🚀 Setting up GitHub Workflow automation for $PROJECT_NAME project"
 echo "========================================================="
 
 # Check if gh CLI is installed
