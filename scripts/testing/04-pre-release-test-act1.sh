@@ -171,12 +171,12 @@ main() {
         exit 1
     fi
     
-    # Check no uncommitted changes
-    if ! git diff-index --quiet HEAD --; then
-        print_error "Working directory has uncommitted changes:"
-        git status --porcelain
-        print_error "Git diff:"
-        git diff --name-only HEAD
+    # Check no uncommitted changes (excluding build artifacts)
+    if ! git diff-index --quiet HEAD -- ':!target/' ':!**/target/'; then
+        print_error "Working directory has uncommitted changes (excluding build artifacts):"
+        git status --porcelain | grep -v "target/"
+        print_error "Git diff (excluding target/):"
+        git diff --name-only HEAD -- ':!target/' ':!**/target/'
         exit 1
     fi
     
