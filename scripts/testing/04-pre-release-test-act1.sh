@@ -173,7 +173,10 @@ main() {
     
     # Check no uncommitted changes
     if ! git diff-index --quiet HEAD --; then
-        print_error "Working directory has uncommitted changes"
+        print_error "Working directory has uncommitted changes:"
+        git status --porcelain
+        print_error "Git diff:"
+        git diff --name-only HEAD
         exit 1
     fi
     
