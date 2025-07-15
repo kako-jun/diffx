@@ -7,27 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Universal npm package**: All platform binaries now bundled in single npm package for offline deployment
-- **Comprehensive release automation**: 2-act release workflow with automatic monitoring and error recovery
-- **Release quality assurance**: Automatic release notes quality checking and enhancement system
-- **Unix-compatible directory comparison**: Proper exit codes and behavior matching standard diff tools
-- **Enhanced verbose output**: Comprehensive diagnostic information with `--verbose` flag
-- **Strategic marketing campaign**: Multi-platform content strategy across Reddit, Hacker News, and developer communities
-- **Migration planning**: Comprehensive quality standards and roadmap for sibling tools
-
-### Changed
-- **Documentation status**: Node.js ecosystem updated from "coming soon" to "available" across all 3 languages
-- **Release workflow**: Release script now accepts command-line version arguments
-- **Script organization**: Reorganized scripts into logical subdirectories (testing/, release/, etc.)
-- **Version management**: All version checks now use dynamic detection instead of hardcoded values
-- **Python environment**: Standardized on uv for virtual environment management
+## [0.5.4] - 2025-07-15
 
 ### Fixed
-- **Release monitoring**: Fixed workflow name matching for "Release Act 1" and "Release Act 2"
-- **Script paths**: Corrected all relative paths in release and CI scripts
-- **Python package distribution**: Resolved path issues with maturin wheel structure
-- **Version validation**: Fixed hanging issues in dynamic version validation scripts
+- **npm package warnings**: Corrected package.json configuration warnings
+- **Test script reliability**: Fixed binary test exit code handling in Act1 test script
+- **Build artifact management**: Improved .gitignore to exclude all target directories from version control
+
+### Changed
+- **Release infrastructure**: Enhanced release and testing scripts with universal project compatibility
+- **CI/CD integration**: Integrated npm/pip tests into daily CI with unified test execution
+- **Script organization**: Reorganized release scripts with numbered sequence for clarity
 - **Directory comparison**: Proper Unix diff exit codes (0=no diff, 1=diff found, 2=error)
 
 ### Removed
