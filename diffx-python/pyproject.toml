@@ -68,8 +68,8 @@ python-source = "src"
 bindings = "bin"
 # Find Python interpreters automatically
 find-interpreter = true
-# Skip auditwheel repair to avoid library issues in development
-skip-auditwheel = true
+# Use manylinux for PyPI compatibility
+compatibility = "manylinux2014"
 
 [tool.ruff]
 line-length = 88
