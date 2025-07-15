@@ -200,7 +200,7 @@ main() {
     
     # Verify version consistency
     print_info "Verifying version consistency..."
-    if ! "$PROJECT_ROOT/scripts/release/check-local-versions.sh"; then
+    if ! "$PROJECT_ROOT/scripts/release/03-check-local-versions.sh"; then
         print_error "Version consistency check failed"
         exit 1
     fi
