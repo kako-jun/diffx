@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 # Release monitoring script - correctly handles Act1 -> Act2 workflow
 # Fixes issues with false positive errors and workflow dependency understanding
@@ -55,12 +55,13 @@ get_workflow_runs() {
     local workflow_name="$1"
     local tag="$2"
     
-    # Get runs triggered by this tag push (within last 2 hours to avoid old results)
-    gh run list --workflow="$workflow_name" --json status,conclusion,event,headSha,createdAt,url --limit 10 | \
-    jq -r --arg tag "$tag" --argjson since_time "$(date -d '2 hours ago' +%s)" '
+    # Get the most recent run for this tag - handle both push and workflow_run events
+    gh run list --workflow="$workflow_name" --json status,conclusion,event,headBranch,createdAt,url --limit 50 | \
+    jq -r --arg tag "$tag" '
         map(select(
-            .event == "push" and 
-            (.createdAt | fromdateiso8601) > $since_time
+            (.event == "push" and (.headBranch == $tag or .headBranch == "refs/tags/" + $tag)) or
+            (.event == "workflow_run") or
+            (.event == "workflow_dispatch")
         )) | 
         sort_by(.createdAt) | 
         reverse | 
@@ -75,7 +76,7 @@ check_act1() {
     
     local run_info=$(get_workflow_runs "release-act1.yml" "$tag")
     
-    if [ -z "$run_info" ]; then
+    if [ -z "$run_info" ] || [ "$run_info" = "null" ]; then
         print_warning "No Act1 run found for $tag yet (may still be queuing)"
         return 1
     fi
@@ -83,8 +84,9 @@ check_act1() {
     local status=$(echo "$run_info" | jq -r '.status // "unknown"')
     local conclusion=$(echo "$run_info" | jq -r '.conclusion // "null"')
     local url=$(echo "$run_info" | jq -r '.url // ""')
+    local event=$(echo "$run_info" | jq -r '.event // ""')
     
-    print_info "Act1 status: $status, conclusion: $conclusion"
+    print_info "Act1 status: $status, conclusion: $conclusion, event: $event"
     if [ -n "$url" ]; then
         print_info "Act1 URL: $url"
     fi
@@ -97,7 +99,7 @@ check_act1() {
                     return 0
                     ;;
                 "failure")
-                    print_error "Act1 failed"
+                    print_error "Act1 failed with conclusion: $conclusion"
                     return 2
                     ;;
                 "cancelled")
@@ -136,10 +138,21 @@ check_act2() {
     local status=$(echo "$run_info" | jq -r '.status // "unknown"')
     local conclusion=$(echo "$run_info" | jq -r '.conclusion // "null"')
     local url=$(echo "$run_info" | jq -r '.url // ""')
+    local run_id=$(echo "$run_info" | jq -r '.databaseId // ""')
     
     print_info "Act2 status: $status, conclusion: $conclusion"
     if [ -n "$url" ]; then
         print_info "Act2 URL: $url"
+    fi
+    
+    # Check for job failures even if workflow is still running
+    if [ "$status" = "in_progress" ] && [ -n "$run_id" ]; then
+        print_info "Checking individual job statuses..."
+        local failed_jobs=$(gh run view "$run_id" --json jobs --jq '.jobs[] | select(.conclusion == "failure") | .name' 2>/dev/null || echo "")
+        if [ -n "$failed_jobs" ]; then
+            print_error "Act2 has failed jobs: $failed_jobs"
+            return 2
+        fi
     fi
     
     case "$status" in
@@ -150,7 +163,7 @@ check_act2() {
                     return 0
                     ;;
                 "failure")
-                    print_error "Act2 failed"
+                    print_error "Act2 failed with conclusion: $conclusion"
                     return 2
                     ;;
                 "cancelled")
@@ -221,8 +234,10 @@ main() {
     local elapsed=0
     
     while [ $elapsed -lt $max_wait ]; do
-        local act1_result=$(check_act1 "$VERSION")
+        set +e
+        check_act1 "$VERSION"
         local act1_code=$?
+        set -e
         
         if [ $act1_code -eq 0 ]; then
             print_success "Act1 completed successfully!"
@@ -253,8 +268,10 @@ main() {
     
     elapsed=0
     while [ $elapsed -lt $max_wait ]; do
-        local act2_result=$(check_act2 "$VERSION")
+        set +e
+        check_act2 "$VERSION"
         local act2_code=$?
+        set -e
         
         if [ $act2_code -eq 0 ]; then
             print_success "Act2 completed successfully!"
