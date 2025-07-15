@@ -30,12 +30,17 @@ print_error() {
 
 # Check if version is provided
 if [ $# -eq 0 ]; then
-    print_error "Usage: $0 <failed-version>"
+    print_error "Usage: $0 <failed-version> [--force]"
     print_error "Example: $0 v0.6.0"
+    print_error "Use --force to skip confirmation prompts"
     exit 1
 fi
 
 FAILED_VERSION=$1
+FORCE_MODE=false
+if [ "$#" -eq 2 ] && [ "$2" = "--force" ]; then
+    FORCE_MODE=true
+fi
 TAG_VERSION=$FAILED_VERSION
 if [[ ! $FAILED_VERSION =~ ^v ]]; then
     TAG_VERSION="v$FAILED_VERSION"
@@ -52,12 +57,17 @@ echo "  3. Delete the remote git tag"
 echo "  4. Optionally yank crates from crates.io"
 echo "  5. Show instructions for npm/PyPI cleanup"
 echo ""
-read -p "Continue with cleanup? (y/N) " -n 1 -r
-echo ""
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_info "Cleanup cancelled"
-    exit 0
+if [ "$FORCE_MODE" = false ]; then
+    read -p "Continue with cleanup? (y/N) " -n 1 -r
+    echo ""
+    
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Cleanup cancelled"
+        exit 0
+    fi
+else
+    print_info "Force mode enabled, proceeding with cleanup..."
 fi
 
 # Check if gh CLI is available
@@ -114,17 +124,27 @@ check_and_yank_crate() {
     
     if cargo search "$crate_name" | grep -q "$crate_name.*= \"$VERSION_CLEAN\""; then
         print_warning "Found $crate_name version $VERSION_CLEAN on crates.io"
-        read -p "Yank $crate_name@$VERSION_CLEAN from crates.io? (y/N) " -n 1 -r
-        echo ""
         
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [ "$FORCE_MODE" = true ]; then
+            print_info "Force mode: yanking $crate_name@$VERSION_CLEAN from crates.io"
             if cargo yank --vers "$VERSION_CLEAN" "$crate_name"; then
                 print_success "$crate_name@$VERSION_CLEAN yanked from crates.io"
             else
                 print_error "Failed to yank $crate_name@$VERSION_CLEAN"
             fi
         else
-            print_info "Skipping yank for $crate_name@$VERSION_CLEAN"
+            read -p "Yank $crate_name@$VERSION_CLEAN from crates.io? (y/N) " -n 1 -r
+            echo ""
+            
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                if cargo yank --vers "$VERSION_CLEAN" "$crate_name"; then
+                    print_success "$crate_name@$VERSION_CLEAN yanked from crates.io"
+                else
+                    print_error "Failed to yank $crate_name@$VERSION_CLEAN"
+                fi
+            else
+                print_info "Skipping yank for $crate_name@$VERSION_CLEAN"
+            fi
         fi
     else
         print_success "$crate_name@$VERSION_CLEAN not found on crates.io (good)"
@@ -132,7 +152,7 @@ check_and_yank_crate() {
 }
 
 check_and_yank_crate "${PROJECT_NAME}-core"
-check_and_yank_crate "${PROJECT_NAME}-cli"
+check_and_yank_crate "${PROJECT_NAME}"
 
 # Step 5: Check npm package
 echo ""
@@ -144,14 +164,23 @@ if command -v npm &> /dev/null; then
         print_info "To unpublish from npm (only possible within 24 hours):"
         echo "  npm unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN"
         echo ""
-        read -p "Attempt to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN now? (y/N) " -n 1 -r
-        echo ""
-        
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [ "$FORCE_MODE" = true ]; then
+            print_info "Force mode: attempting to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN"
             if npm unpublish "${PROJECT_NAME}-js@$VERSION_CLEAN"; then
                 print_success "${PROJECT_NAME}-js@$VERSION_CLEAN unpublished from npm"
             else
                 print_error "Failed to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN (may be too late or insufficient permissions)"
+            fi
+        else
+            read -p "Attempt to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN now? (y/N) " -n 1 -r
+            echo ""
+            
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                if npm unpublish "${PROJECT_NAME}-js@$VERSION_CLEAN"; then
+                    print_success "${PROJECT_NAME}-js@$VERSION_CLEAN unpublished from npm"
+                else
+                    print_error "Failed to unpublish ${PROJECT_NAME}-js@$VERSION_CLEAN (may be too late or insufficient permissions)"
+                fi
             fi
         fi
     else
