@@ -10,20 +10,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.5.4] - 2025-07-15
 
 ### Fixed
+- **GitHub Actions reliability**: Fixed git status checks failing due to build artifacts in CI environment
+- **Act1 test script robustness**: Improved binary test exit code handling and Cargo.lock automatic processing
+- **Release script paths**: Corrected version consistency check script references
 - **npm package warnings**: Corrected package.json configuration warnings
-- **Test script reliability**: Fixed binary test exit code handling in Act1 test script
-- **Build artifact management**: Improved .gitignore to exclude all target directories from version control
+- **Workspace dependency resolution**: Enhanced CLI dry run handling for workspace dependencies
 
 ### Changed
 - **Release infrastructure**: Enhanced release and testing scripts with universal project compatibility
 - **CI/CD integration**: Integrated npm/pip tests into daily CI with unified test execution
 - **Script organization**: Reorganized release scripts with numbered sequence for clarity
-- **Directory comparison**: Proper Unix diff exit codes (0=no diff, 1=diff found, 2=error)
+- **Error handling**: Improved cleanup and rollback functionality for failed releases
+- **Build artifact management**: Enhanced .gitignore to exclude all target directories from version control
 
 ### Removed
 - **Obsolete installation methods**: Removed Scoop and Chocolatey installation sections (no support planned)
 - **Legacy scripts**: Cleaned up obsolete npm postinstall and download scripts
-- **Japanese package documentation**: Removed Japanese READMEs from wrapper packages for consistency
+- **Debug output**: Removed temporary debugging logs from release scripts
 
 ## [0.5.1] - 2025-07-12
 
