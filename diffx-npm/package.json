@@ -22,7 +22,7 @@
   ],
   "main": "lib.js",
   "bin": {
-    "diffx": "./index.js"
+    "diffx": "index.js"
   },
   "scripts": {
     "test": "node test.js",
@@ -55,7 +55,7 @@
   "homepage": "https://github.com/kako-jun/diffx",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kako-jun/diffx.git",
+    "url": "git+https://github.com/kako-jun/diffx.git",
     "directory": "diffx-npm"
   },
   "bugs": {
