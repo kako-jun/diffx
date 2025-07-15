@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Get project name from current directory
-PROJECT_NAME=$(basename "$(pwd)")
+# Find the project root directory (where Cargo.toml exists)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_NAME=$(basename "$PROJECT_ROOT")
+
+# Change to project root
+cd "$PROJECT_ROOT"
 
 # Colors for output
 RED='\033[0;31m'
