@@ -38,10 +38,52 @@
 - [x] **テストスクリプト汎用化**: パッケージ名・コマンド名の動的生成
 - [x] **ドキュメント汎用化**: プロジェクト名ハードコード除去
 
+### 🔧 進行中 - 共有CI/CDシステム実装
+- [x] **共有リポジトリ構造作成**: `.github/rust-cli-kiln/` ディレクトリ配下にscripts/workflows移動
+- [x] **シンボリックリンク作成**: `.github-shared -> ../.github` でローカル開発対応
+- [x] **workflow_call対応**: reusable workflowsでプロジェクト間共有
+- [x] **動的プロジェクト名取得**: `${{ github.event.repository.name }}` 使用
+- [x] **common.sh共通化**: プロジェクトルート検出とBASH_SOURCE処理
+- [x] **CI workflow修正**: プロジェクトcheckout追加、BASH_SOURCE[1]フォールバック対応
+- [ ] **🔄 現在のタスク**: 共有リポジトリ修正のプッシュ待ち（workflow/common.sh）
+- [ ] **CIワークフロー動作確認**: GitHub Actions実行テスト
+- [ ] **残りスクリプト更新**: common.sh利用への移行
+- [ ] **benchmark/release workflow有効化**: .disabledファイル名変更
+
 ### 🎯 次期移植ターゲット
 - [ ] **lawkitプロジェクトへの移植**: ファイルコピー + 実行権限付与のみ
 - [ ] **diffaiプロジェクトへの移植**: 同上
 - [ ] **移植後動作確認**: 各プロジェクトでのquick-check.sh実行
+
+### 📋 実装済み変更点詳細
+```bash
+# ディレクトリ構造
+/home/kako-jun/repos/2025/.github/
+├── .github/workflows/
+│   ├── rust-cli-kiln-ci.yml (workflow_call対応)
+│   ├── rust-cli-kiln-benchmark.yml.disabled
+│   ├── rust-cli-kiln-release-act1.yml.disabled
+│   └── rust-cli-kiln-release-act2.yml.disabled
+└── rust-cli-kiln/
+    ├── scripts/
+    │   ├── utils/common.sh (プロジェクトルート検出)
+    │   ├── testing/quick-check.sh (common.sh使用)
+    │   └── testing/04-pre-release-test-act1.sh (common.sh使用)
+    └── release-guide.md
+
+# 各プロジェクトでの参照
+/home/kako-jun/repos/2025/diffx/
+├── .github-shared -> ../.github (symlink)
+├── .github/workflows/ci.yml (workflow_call使用)
+└── scripts/utils/create-github-shared-symlink.sh
+```
+
+### 🚨 残り作業
+1. **共有リポジトリプッシュ**: `/home/kako-jun/repos/2025/.github/` の修正をプッシュ
+2. **CI動作確認**: GitHub Actions実行でcommon.sh動作テスト
+3. **全スクリプト更新**: 残り全スクリプトでcommon.sh利用
+4. **ワークフロー有効化**: benchmark/release の .disabled 削除
+5. **lawkit/diffai移植**: 動作確認後に他プロジェクトへコピー
 
 ## 💡 長期的機能 (Long-term Features)
 
