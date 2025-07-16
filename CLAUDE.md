@@ -17,7 +17,7 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 ## プッシュ前の必須チェック (Pre-Push Requirements)
 **必ずプッシュ前に以下を実行すること:**
 ```bash
-./mnt/rust-cli-kiln/scripts/testing/quick-check.sh
+./.github-shared/rust-cli-kiln/scripts/testing/quick-check.sh
 ```
 
 - このスクリプトはGitHub Actions CIと完全に同じ環境・パラメータで実行される
@@ -30,7 +30,7 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 **CLAUDE.mdは目次として使用し、詳細情報は以下の専用ファイルを参照:**
 
 - **📋 タスクリスト**: `.claude/tasks.md` を参照
-- **🚀 リリース手順**: `mnt/rust-cli-kiln/release-guide.md` を参照
+- **🚀 リリース手順**: `.github-shared/rust-cli-kiln/release-guide.md` を参照
 - **📊 プロジェクト状況**: `.claude/project-status.md` を参照  
 - **🏗️ アーキテクチャ**: `.claude/architecture.md` を参照
 - **🎯 ロードマップ**: `.claude/roadmap.md` を参照
@@ -67,7 +67,7 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 ## リリース手順
 ```bash
 # 詳細手順は以下を参照
-cat mnt/rust-cli-kiln/release-guide.md
+cat .github-shared/rust-cli-kiln/release-guide.md
 ```
 
 ## Python環境管理
