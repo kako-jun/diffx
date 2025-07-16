@@ -76,6 +76,15 @@ cat github-shared/rust-cli-kiln/release-guide.md
 uv venv && source .venv/bin/activate
 ```
 
+## 共有スクリプト利用
+```bash
+# GitHub設定セットアップ（ラベル・ブランチ保護など）
+./github-shared/rust-cli-kiln/scripts/setup/setup-github-workflow.sh
+
+# 3言語ドキュメント整合性チェック
+./github-shared/rust-cli-kiln/scripts/docs/check-docs-consistency.sh
+```
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
