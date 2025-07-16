@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2025-07-16
+
+### Added
+- **Linux ARM64 platform support**: Extended platform matrix to include ARM64 Linux servers
+- **Unified platform support**: All packages (Rust/npm/PyPI) now support the same 5 platforms consistently
+
+### Fixed
+- **npm binary download path**: Corrected script path reference in GitHub Actions workflow
+- **Project detection in shared scripts**: Fixed common.sh usage across all release scripts
+- **Platform inconsistency**: Unified platform support matrix across all packaging systems
+
+### Changed
+- **Shared CI/CD system completion**: Full migration to kako-jun/.github repository with workflow_call
+- **Benchmark workflow simplification**: Removed complex performance regression detection, kept simple weekly runs
+- **CI/CD optimization**: Eliminated duplicate tests between Act1 and Act2, improved reliability
+
+### Infrastructure
+- **3-project unification**: diffx, lawkit, and diffai now share the same CI/CD infrastructure
+- **Cross-platform reliability**: All 5 platforms tested and verified across all package managers
+- **Documentation updates**: Updated all project documentation to reflect new shared system
+
 ## [0.5.4] - 2025-07-15
 
 ### Fixed
