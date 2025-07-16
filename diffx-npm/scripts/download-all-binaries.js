@@ -17,6 +17,12 @@ const PLATFORMS = [
     subdir: 'linux-x64'
   },
   { 
+    name: 'linux-arm64', 
+    file: 'diffx-linux-aarch64.tar.gz',
+    binaryName: 'diffx',
+    subdir: 'linux-arm64'
+  },
+  { 
     name: 'darwin-x64', 
     file: 'diffx-macos-x86_64.tar.gz',
     binaryName: 'diffx',
