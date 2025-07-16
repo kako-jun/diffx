@@ -162,4 +162,7 @@ npm-package/bin/benf*
 !npm-package/bin/lawkit
 !npm-package/bin/benf
 
+# === diffx npm binaries ===
+diffx-npm/bin/
+
 github-shared
