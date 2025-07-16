@@ -78,3 +78,4 @@ htmlcov/
 # Documentation consistency check outputs
 docs-consistency-*.log
 docs-consistency-*.json
+mnt/
