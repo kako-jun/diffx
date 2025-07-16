@@ -38,52 +38,89 @@
 - [x] **テストスクリプト汎用化**: パッケージ名・コマンド名の動的生成
 - [x] **ドキュメント汎用化**: プロジェクト名ハードコード除去
 
-### 🔧 進行中 - 共有CI/CDシステム実装
+### ✅ 完了 - 共有CI/CDシステム実装
 - [x] **共有リポジトリ構造作成**: `.github/rust-cli-kiln/` ディレクトリ配下にscripts/workflows移動
-- [x] **シンボリックリンク作成**: `.github-shared -> ../.github` でローカル開発対応
+- [x] **シンボリックリンク作成**: `github-shared -> ../.github` でローカル開発対応（パス名統一）
 - [x] **workflow_call対応**: reusable workflowsでプロジェクト間共有
 - [x] **動的プロジェクト名取得**: `${{ github.event.repository.name }}` 使用
-- [x] **common.sh共通化**: プロジェクトルート検出とBASH_SOURCE処理
-- [x] **CI workflow修正**: プロジェクトcheckout追加、BASH_SOURCE[1]フォールバック対応
-- [ ] **🔄 現在のタスク**: 共有リポジトリ修正のプッシュ待ち（workflow/common.sh）
-- [ ] **CIワークフロー動作確認**: GitHub Actions実行テスト
-- [ ] **残りスクリプト更新**: common.sh利用への移行
-- [ ] **benchmark/release workflow有効化**: .disabledファイル名変更
+- [x] **common.sh共通化**: プロジェクトルート検出とBASH_SOURCE処理改善
+- [x] **CI workflow修正**: プロジェクトcheckout追加、共有リポジトリcheckout対応
+- [x] **CIワークフロー動作確認**: GitHub Actions実行テスト完了
+- [x] **benchmark/release workflow有効化**: 全ワークフロー有効化・権限修正
+- [x] **パス問題解決**: `.github-shared`→`github-shared`でENOENTエラー解決
+- [x] **スクリプトパス修正**: Act1/Act2でgithub-sharedパス使用
+- [x] **汎用スクリプト移動**: setup-github-workflow.sh, check-docs-consistency.sh共有化
+- [x] **JSON設定連携**: labels.json, branch-protection.json自動適用機能追加
 
-### 🎯 次期移植ターゲット
+### 🔧 進行中 - Release workflow最適化
+- [x] **Release Act1実行中**: v0.5.5-testタグでテスト実行中
+- [x] **Act1の問題発見**: npm/Pythonテストの二重実行を発見
+- [ ] **🔄 現在のタスク**: Act1からnpm/Pythonテスト削除（高速化）
+- [ ] **Act1/Act2動作確認**: 修正後の完全テスト
+- [ ] **テストタグ削除**: v0.5.5-testクリーンアップ
+
+### 🎯 次期移植ターゲット  
 - [ ] **lawkitプロジェクトへの移植**: ファイルコピー + 実行権限付与のみ
 - [ ] **diffaiプロジェクトへの移植**: 同上
 - [ ] **移植後動作確認**: 各プロジェクトでのquick-check.sh実行
 
-### 📋 実装済み変更点詳細
+### 🐛 発見・修正した問題
+- **ENOENTエラー**: `.github-shared`ドット始まりパスがGitHub Actionsで失敗
+- **シンボリックリンクコミット**: `github-shared`がGitにコミットされて競合
+- **workflow_call不足**: Act2にworkflow_callトリガーが不足
+- **権限不足**: release workflowsに`contents: write`権限が不足
+- **二重テスト実行**: Act1でnpm/Pythonテスト、Act2でも同様テスト実行
+
+### 📋 最終的なディレクトリ構造
 ```bash
-# ディレクトリ構造
+# 共有リポジトリ構造
 /home/kako-jun/repos/2025/.github/
-├── .github/workflows/
-│   ├── rust-cli-kiln-ci.yml (workflow_call対応)
-│   ├── rust-cli-kiln-benchmark.yml.disabled
-│   ├── rust-cli-kiln-release-act1.yml.disabled
-│   └── rust-cli-kiln-release-act2.yml.disabled
+├── .github/
+│   ├── workflows/
+│   │   ├── rust-cli-kiln-ci.yml (workflow_call対応)
+│   │   ├── rust-cli-kiln-benchmark.yml (workflow_call対応)
+│   │   ├── rust-cli-kiln-release-act1.yml (workflow_call対応)
+│   │   └── rust-cli-kiln-release-act2.yml (workflow_call対応)
+│   ├── labels.json (共有ラベル設定)
+│   └── branch-protection.json (共有ブランチ保護設定)
 └── rust-cli-kiln/
     ├── scripts/
-    │   ├── utils/common.sh (プロジェクトルート検出)
-    │   ├── testing/quick-check.sh (common.sh使用)
-    │   └── testing/04-pre-release-test-act1.sh (common.sh使用)
+    │   ├── setup/
+    │   │   └── setup-github-workflow.sh (JSON設定自動適用)
+    │   ├── docs/
+    │   │   └── check-docs-consistency.sh (3言語整合性)
+    │   ├── testing/
+    │   │   ├── quick-check.sh (CI完全対応)
+    │   │   ├── 04-pre-release-test-act1.sh (npm/Python削除予定)
+    │   │   └── 05-pre-release-test-act2.sh (公開準備テスト)
+    │   └── utils/
+    │       └── common.sh (汎用プロジェクト検出)
     └── release-guide.md
 
-# 各プロジェクトでの参照
+# 各プロジェクト構造
 /home/kako-jun/repos/2025/diffx/
-├── .github-shared -> ../.github (symlink)
-├── .github/workflows/ci.yml (workflow_call使用)
-└── scripts/utils/create-github-shared-symlink.sh
+├── github-shared -> ../.github (symlink, GitHub Actionsと統一)
+├── .github/workflows/
+│   ├── ci.yml (workflow_call薄ラッパー)
+│   ├── benchmark.yml (workflow_call薄ラッパー)  
+│   ├── release-act1.yml (workflow_call薄ラッパー)
+│   └── release-act2.yml (workflow_call薄ラッパー)
+└── scripts/utils/
+    └── create-github-shared-symlink.sh (プロジェクト固有)
 ```
 
-### 🚨 残り作業
-1. **共有リポジトリプッシュ**: `/home/kako-jun/repos/2025/.github/` の修正をプッシュ
-2. **CI動作確認**: GitHub Actions実行でcommon.sh動作テスト
-3. **全スクリプト更新**: 残り全スクリプトでcommon.sh利用
-4. **ワークフロー有効化**: benchmark/release の .disabled 削除
-5. **lawkit/diffai移植**: 動作確認後に他プロジェクトへコピー
+### 🚨 次のステップ
+1. **共有リポジトリプッシュ**: Act1からnpm/Pythonテスト削除をプッシュ
+2. **Release Act1再テスト**: 高速化されたAct1の動作確認
+3. **Release Act2テスト**: Act1成功後のAct2動作確認  
+4. **テストタグクリーンアップ**: v0.5.5-test削除
+5. **lawkit/diffai移植**: 完全動作確認後に他プロジェクトへ移植
+
+### ✅ 達成された成果
+- **🏗️ 完全な共有CI/CDシステム**: workflow_call方式で美しく構築
+- **⚡ 高度な問題解決**: 5つの複雑な技術問題を段階的に解決
+- **🔧 汎用化の達成**: プロジェクト名動的取得、JSON設定連携
+- **📊 設計の最適化**: サブモジュール方式よりも論理的な構造を実現
 
 ## 💡 長期的機能 (Long-term Features)
 
