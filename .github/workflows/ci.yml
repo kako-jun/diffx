@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    uses: kako-jun/.github/rust-cli-kiln/.github/workflows/ci.yml@main
+    uses: kako-jun/.github/.github/workflows/rust-cli-kiln/ci.yml@main
     with:
       project-name: diffx
     secrets: inherit
