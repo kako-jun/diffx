@@ -160,4 +160,6 @@ test-models/uv.lock
 npm-package/bin/lawkit*
 npm-package/bin/benf*
 !npm-package/bin/lawkit
-!npm-package/bin/benfgithub-shared
+!npm-package/bin/benf
+
+github-shared
