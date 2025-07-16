@@ -1,0 +1,14 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  ci:
+    uses: kako-jun/.github/rust-cli-kiln/.github/workflows/ci.yml@main
+    with:
+      project-name: diffx
+    secrets: inherit
