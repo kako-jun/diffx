@@ -11,6 +11,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   release-act1:
     uses: kako-jun/.github/.github/workflows/rust-cli-kiln-release-act1.yml@main
