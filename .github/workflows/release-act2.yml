@@ -16,5 +16,5 @@ jobs:
   release-act2:
     uses: kako-jun/.github/rust-cli-kiln/.github/workflows/release-act2.yml@main
     with:
-      project-name: diffx
+      project-name: ${{ github.event.repository.name }}
     secrets: inherit
