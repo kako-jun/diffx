@@ -1,40 +1,107 @@
-# Rust
+# === Rust ===
 /target/
 **/target/
 **/*.rs.bk
-
-# IDEs
-.idea/
-.vscode/
-
-# OS
-.DS_Store
-thumbs.db
-
-# Cargo
+*.pdb
 Cargo.lock
 
-# Test intermediate files (generated during tests)
-/tests/output/
+# === IDEs ===
+.idea/
+.vscode/
+*.vim
+.netrwhist
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+thumbs.db
+ehthumbs.db
+
+# === Temporary files ===
+*.tmp
+*.temp
+*.bak
+*~
+*.orig
+*.un~
+Session.vim
+.#*
+\#*#
+.*.sw[a-z]
+
+# === Environment files ===
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+.env.staging
+
+# === Test files and outputs ===
+test_*
+*.test
+test_output/
+test_manual/
+test_threshold.csv
+tests/integration/usage_test_data/
+tests/integration/batch_test_data/
+tests/output/
 **/diff_report_v*.json
 
-# Node.js
+# === Logs ===
+*.log
+logs/
+docs-consistency-*.log
+docs-consistency-*.json
+
+# === Documentation build ===
+/book/
+/docs/_build/
+
+# === Benchmark outputs ===
+criterion/
+bench_*.txt
+
+# === Coverage reports ===
+tarpaulin-report.html
+lcov.info
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# === Release artifacts ===
+*.tar.gz
+*.zip
+*.tgz
+*.tar.gz.sig
+release/
+!scripts/release/
+
+# === Node.js ===
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
+.npm
+.yarn-integrity
 **/dist/
 **/build/
 
-# Python
+# === Python ===
 __pycache__/
 *.py[cod]
-*~
+*$py.class
 *.so
 .Python
-.env
 .venv
 env/
 venv/
@@ -42,40 +109,54 @@ ENV/
 env.bak/
 venv.bak/
 *.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
+python-package/dist/
+python-package/build/
+python-package/lawkit.egg-info/
+python-venv/
+*.whl
 
-# Binary downloads
+# === Binary downloads ===
 **/packages/*/bin/
 **/packages/*/temp/
 
-# Configuration files with sensitive data
+# === Configuration files with sensitive data ===
 .config/
 **/claude_desktop_config.json
 **/.config/claude-desktop/
+*.key
+*.pem
+*.crt
+secrets.json
 
-# Claude CLI cache and logs
+# === Claude CLI cache and logs ===
 ~/.cache/claude-cli-nodejs/
 **/.cache/claude-cli-nodejs/
 **/mcp-logs-ide/
 **/*mcp-logs-ide*
 **/.claude/settings.local.json
 
-# Temporary files
-*.tmp
-*.temp
-*.swp
-*.swo
-*~
-
-# Local development files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Documentation consistency check outputs
-docs-consistency-*.log
-docs-consistency-*.json
+# === Project specific ===
 mnt/
+diffx/
+test-packages/
+scripts_old/
+
+# === Downloaded ML models (large files) ===
+test-models/distilbert_base/
+test-models/dialogpt_small/
+test-models/gpt2_small/
+test-models/distilgpt2/
+test-models/tiny_gpt2/
+test-models/.venv/
+test-models/uv.lock
+
+# === Large test files ===
+*.csv.large
+*.xlsx.large
+*.json.large
+
+# === NPM package specifics ===
+npm-package/bin/lawkit*
+npm-package/bin/benf*
+!npm-package/bin/lawkit
+!npm-package/bin/benf
