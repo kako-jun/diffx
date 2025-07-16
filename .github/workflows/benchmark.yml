@@ -13,5 +13,5 @@ jobs:
   benchmark:
     uses: kako-jun/.github/rust-cli-kiln/.github/workflows/benchmark.yml@main
     with:
-      project-name: diffx
+      project-name: ${{ github.event.repository.name }}
     secrets: inherit

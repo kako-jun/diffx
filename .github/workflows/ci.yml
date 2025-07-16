@@ -10,5 +10,5 @@ jobs:
   ci:
     uses: kako-jun/.github/rust-cli-kiln/.github/workflows/ci.yml@main
     with:
-      project-name: diffx
+      project-name: ${{ github.event.repository.name }}
     secrets: inherit
