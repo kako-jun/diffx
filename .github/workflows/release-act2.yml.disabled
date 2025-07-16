@@ -14,7 +14,7 @@ on:
 
 jobs:
   release-act2:
-    uses: kako-jun/.github/rust-cli-kiln/.github/workflows/release-act2.yml@main
+    uses: kako-jun/.github/.github/workflows/rust-cli-kiln-release-act2.yml@main
     with:
       project-name: ${{ github.event.repository.name }}
     secrets: inherit

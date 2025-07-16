@@ -13,7 +13,7 @@ on:
 
 jobs:
   release-act1:
-    uses: kako-jun/.github/rust-cli-kiln/.github/workflows/release-act1.yml@main
+    uses: kako-jun/.github/.github/workflows/rust-cli-kiln-release-act1.yml@main
     with:
       project-name: ${{ github.event.repository.name }}
     secrets: inherit
