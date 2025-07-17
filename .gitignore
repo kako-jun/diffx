@@ -166,3 +166,7 @@ npm-package/bin/benf*
 diffx-npm/bin/
 
 github-shared
+
+# === Temporary test directories ===
+tmp/
+diffx-js/
