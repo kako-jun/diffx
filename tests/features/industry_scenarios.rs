@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -19,10 +19,10 @@ fn test_api_schema_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("json");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(r#""Modified""#))
-        .stdout(predicate::str::contains(r#""Added""#))
-        .stdout(predicate::str::contains(r#"paths./users.post"#))
-        .stdout(predicate::str::contains(r#"schema.type"#));
+        .stdout(str::contains(r#""Modified""#))
+        .stdout(str::contains(r#""Added""#))
+        .stdout(str::contains(r#"paths./users.post"#))
+        .stdout(str::contains(r#"schema.type"#));
     Ok(())
 }
 
@@ -38,13 +38,13 @@ fn test_cicd_configuration_drift() -> Result<(), Box<dyn std::error::Error>> {
         .arg("yaml");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("Modified"))
-        .stdout(predicate::str::contains("application.version"))
-        .stdout(predicate::str::contains("security.host"))
-        .stdout(predicate::str::contains("monitoring.metrics"))
-        .stdout(predicate::str::contains("timestamp").not())
-        .stdout(predicate::str::contains("password").not())
-        .stdout(predicate::str::contains("secret_").not());
+        .stdout(str::contains("Modified"))
+        .stdout(str::contains("application.version"))
+        .stdout(str::contains("security.host"))
+        .stdout(str::contains("monitoring.metrics"))
+        .stdout(str::contains("timestamp").not())
+        .stdout(str::contains("password").not())
+        .stdout(str::contains("secret_").not());
     Ok(())
 }
 
@@ -60,14 +60,14 @@ fn test_environment_config_comparison() -> Result<(), Box<dyn std::error::Error>
         .arg("^(host|port|password|.*_secret)$");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ application.debug: true -> false",
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ application.environment: \"development\" -> \"production\"",
         ))
-        .stdout(predicate::str::contains("host").not())
-        .stdout(predicate::str::contains("port").not());
+        .stdout(str::contains("host").not())
+        .stdout(str::contains("port").not());
     Ok(())
 }
 
@@ -84,7 +84,7 @@ fn test_api_contract_validation_pattern() -> Result<(), Box<dyn std::error::Erro
         .arg("json");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("Modified").or(predicate::str::contains("Added")));
+        .stdout(str::contains("Modified").or(str::contains("Added")));
     Ok(())
 }
 
@@ -100,6 +100,6 @@ fn test_kubernetes_config_drift_pattern() -> Result<(), Box<dyn std::error::Erro
         .arg("json");
     cmd.assert()
         .code(1) // Configuration differences
-        .stdout(predicate::str::starts_with("["));
+        .stdout(str::starts_with("["));
     Ok(())
 }

@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -16,8 +16,8 @@ fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error
         .arg("--quiet");
     cmd.assert()
         .code(0) // No differences
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stdout(str::is_empty())
+        .stderr(str::is_empty());
 
     // Test with different files
     let mut cmd2 = diffx_cmd();
@@ -26,8 +26,8 @@ fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error
         .arg("--quiet");
     cmd2.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stdout(str::is_empty())
+        .stderr(str::is_empty());
     Ok(())
 }
 
@@ -40,11 +40,11 @@ fn test_unix_pattern_diff_brief_equivalent() -> Result<(), Box<dyn std::error::E
         .arg("--brief");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "Files ../tests/fixtures/file1.json and ../tests/fixtures/file2.json differ",
         ))
-        .stdout(predicate::str::contains("age").not()) // Should not show details
-        .stdout(predicate::str::contains("city").not());
+        .stdout(str::contains("age").not()) // Should not show details
+        .stdout(str::contains("city").not());
     Ok(())
 }
 
@@ -57,7 +57,7 @@ fn test_unix_pattern_diff_i_equivalent() -> Result<(), Box<dyn std::error::Error
         .arg("--ignore-case");
     cmd.assert()
         .code(0) // No differences when ignoring case
-        .stdout(predicate::str::is_empty());
+        .stdout(str::is_empty());
     Ok(())
 }
 
@@ -70,7 +70,7 @@ fn test_unix_pattern_diff_w_equivalent() -> Result<(), Box<dyn std::error::Error
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(0) // No differences when ignoring whitespace
-        .stdout(predicate::str::is_empty());
+        .stdout(str::is_empty());
     Ok(())
 }
 
@@ -86,9 +86,9 @@ fn test_unix_pattern_diff_c3_equivalent() -> Result<(), Box<dyn std::error::Erro
         .arg("2");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("-      \"port\": 5432"))
-        .stdout(predicate::str::contains("+      \"port\": 5433"))
-        .stdout(predicate::str::contains("\"host\": \"localhost\"")); // Context line
+        .stdout(str::contains("-      \"port\": 5432"))
+        .stdout(str::contains("+      \"port\": 5433"))
+        .stdout(str::contains("\"host\": \"localhost\"")); // Context line
     Ok(())
 }
 
@@ -103,8 +103,8 @@ fn test_unix_combined_pattern_qiw() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(1) // Still differences (different keys)
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stdout(str::is_empty())
+        .stderr(str::is_empty());
     Ok(())
 }
 
@@ -119,7 +119,7 @@ fn test_unix_directory_brief_pattern() -> Result<(), Box<dyn std::error::Error>>
         .arg("--brief");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("Comparing")); // Directory comparison shows file names
+        .stdout(str::contains("Comparing")); // Directory comparison shows file names
     Ok(())
 }
 
@@ -130,8 +130,8 @@ fn test_directory_comparison_without_recursive() -> Result<(), Box<dyn std::erro
         .arg("../tests/fixtures/dir2");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("--- Comparing"))
-        .stdout(predicate::str::contains("Common subdirectories")); // Shows subdirs but doesn't compare them
+        .stdout(str::contains("--- Comparing"))
+        .stdout(str::contains("Common subdirectories")); // Shows subdirs but doesn't compare them
     Ok(())
 }
 
@@ -143,7 +143,7 @@ fn test_directory_comparison_with_recursive() -> Result<(), Box<dyn std::error::
         .arg("--recursive");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("--- Comparing"));
+        .stdout(str::contains("--- Comparing"));
     Ok(())
 }
 
@@ -152,7 +152,7 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/file1.json");
-    cmd.assert().code(2).stderr(predicate::str::contains(
+    cmd.assert().code(2).stderr(str::contains(
         "Cannot compare directory and file",
     ));
     Ok(())
@@ -166,12 +166,12 @@ fn test_recursive_compares_nested_files() -> Result<(), Box<dyn std::error::Erro
         .arg("--recursive");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "--- Comparing subdir/nested.json ---",
         )) // Should compare nested files
         .stdout(
-            predicate::str::contains("data:")
-                .and(predicate::str::contains("value1").and(predicate::str::contains("value2"))),
+            str::contains("data:")
+                .and(str::contains("value1").and(str::contains("value2"))),
         );
     Ok(())
 }
@@ -183,6 +183,6 @@ fn test_non_recursive_does_not_compare_nested_files() -> Result<(), Box<dyn std:
         .arg("../tests/fixtures/dir2");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("--- Comparing subdir/nested.json ---").not()); // Should NOT compare nested files
+        .stdout(str::contains("--- Comparing subdir/nested.json ---").not()); // Should NOT compare nested files
     Ok(())
 }

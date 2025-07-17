@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -16,14 +16,14 @@ fn test_json_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("json");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(r#""Modified""#))
-        .stdout(predicate::str::contains(r#""age""#))
-        .stdout(predicate::str::contains(r#""city""#))
-        .stdout(predicate::str::contains(r#""New York""#))
-        .stdout(predicate::str::contains(r#""Boston""#))
-        .stdout(predicate::str::contains(r#""Added""#))
-        .stdout(predicate::str::contains(r#""items[2]""#))
-        .stdout(predicate::str::contains(r#""orange""#));
+        .stdout(str::contains(r#""Modified""#))
+        .stdout(str::contains(r#""age""#))
+        .stdout(str::contains(r#""city""#))
+        .stdout(str::contains(r#""New York""#))
+        .stdout(str::contains(r#""Boston""#))
+        .stdout(str::contains(r#""Added""#))
+        .stdout(str::contains(r#""items[2]""#))
+        .stdout(str::contains(r#""orange""#));
     Ok(())
 }
 
@@ -36,19 +36,19 @@ fn test_yaml_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("yaml");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             r#"- Modified:
   - age
   - 30
   - 31"#,
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             r#"- Modified:
   - city
   - New York
   - Boston"#,
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             r#"- Added:
   - items[2]
   - orange"#,
@@ -65,9 +65,9 @@ fn test_unified_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("unified");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("-  \"age\": 30,"))
-        .stdout(predicate::str::contains("+  \"age\": 31,"))
-        .stdout(predicate::str::contains("-  \"city\": \"New York\","));
+        .stdout(str::contains("-  \"age\": 30,"))
+        .stdout(str::contains("+  \"age\": 31,"))
+        .stdout(str::contains("-  \"city\": \"New York\","));
     Ok(())
 }
 
@@ -83,10 +83,10 @@ fn test_context_option_unified_output() -> Result<(), Box<dyn std::error::Error>
         .arg("2");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("-      \"port\": 5432"))
-        .stdout(predicate::str::contains("+      \"port\": 5433"))
-        .stdout(predicate::str::contains("\"host\": \"localhost\"")) // Context line
-        .stdout(predicate::str::contains("\"name\": \"myapp\"")); // Context line
+        .stdout(str::contains("-      \"port\": 5432"))
+        .stdout(str::contains("+      \"port\": 5433"))
+        .stdout(str::contains("\"host\": \"localhost\"")) // Context line
+        .stdout(str::contains("\"name\": \"myapp\"")); // Context line
     Ok(())
 }
 
@@ -102,9 +102,9 @@ fn test_context_option_zero_context() -> Result<(), Box<dyn std::error::Error>> 
         .arg("0");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("-      \"port\": 5432"))
-        .stdout(predicate::str::contains("+      \"port\": 5433"))
-        .stdout(predicate::str::contains("\"host\": \"localhost\"").not()) // No context
-        .stdout(predicate::str::contains("\"name\": \"myapp\"").not()); // No context
+        .stdout(str::contains("-      \"port\": 5432"))
+        .stdout(str::contains("+      \"port\": 5433"))
+        .stdout(str::contains("\"host\": \"localhost\"").not()) // No context
+        .stdout(str::contains("\"name\": \"myapp\"").not()); // No context
     Ok(())
 }

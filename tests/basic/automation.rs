@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -21,7 +21,7 @@ fn test_cicd_deployment_validation_pattern() -> Result<(), Box<dyn std::error::E
         .arg("json");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("Modified").or(predicate::str::contains("[]")));
+        .stdout(str::contains("Modified").or(str::contains("[]")));
     Ok(())
 }
 
@@ -37,7 +37,7 @@ fn test_cicd_config_drift_monitoring() -> Result<(), Box<dyn std::error::Error>>
         .arg("--quiet");
     cmd.assert()
         .code(1) // Configuration drift detected
-        .stdout(predicate::str::is_empty());
+        .stdout(str::is_empty());
     Ok(())
 }
 

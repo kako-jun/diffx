@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -16,7 +16,7 @@ fn test_auto_optimization_detection() -> Result<(), Box<dyn std::error::Error>> 
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("~ age: 30 -> 31"));
+        .stdout(str::contains("~ age: 30 -> 31"));
     Ok(())
 }
 
@@ -28,7 +28,7 @@ fn test_auto_optimization_on_small_files() -> Result<(), Box<dyn std::error::Err
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains("~ age: 30 -> 31")); // Same output as standard mode
+        .stdout(str::contains("~ age: 30 -> 31")); // Same output as standard mode
     Ok(())
 }
 
@@ -46,10 +46,10 @@ fn test_complex_options_combination() -> Result<(), Box<dyn std::error::Error>> 
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ application.debug: true -> false",
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ application.environment: \"development\" -> \"production\"",
         ));
     Ok(())

@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -14,9 +14,9 @@ fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.ini");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ section1.key2: \"value2\" -> \"new_value2\"",
         ))
-        .stdout(predicate::str::contains("+ section2.key4: \"value4\""));
+        .stdout(str::contains("+ section2.key4: \"value4\""));
     Ok(())
 }

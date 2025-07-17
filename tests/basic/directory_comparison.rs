@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -15,8 +15,8 @@ fn test_directory_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--recursive");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("--- Comparing b.json ---"))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains("--- Comparing b.json ---"))
+        .stdout(str::contains(
             "~ key3: \"value3\" -> \"new_value3\"",
         ));
     Ok(())
@@ -30,8 +30,8 @@ fn test_directory_comparison_verbose_non_recursive() -> Result<(), Box<dyn std::
         .arg("--verbose");
     cmd.assert()
         .code(1)
-        .stderr(predicate::str::contains("Directory scan results:"))
-        .stderr(predicate::str::contains("Recursive mode: false"));
+        .stderr(str::contains("Directory scan results:"))
+        .stderr(str::contains("Recursive mode: false"));
     Ok(())
 }
 
@@ -44,8 +44,8 @@ fn test_directory_comparison_verbose_recursive() -> Result<(), Box<dyn std::erro
         .arg("--verbose");
     cmd.assert()
         .code(1)
-        .stderr(predicate::str::contains("Directory scan results:"))
-        .stderr(predicate::str::contains("Recursive mode: true"));
+        .stderr(str::contains("Directory scan results:"))
+        .stderr(str::contains("Recursive mode: true"));
     Ok(())
 }
 
@@ -56,7 +56,7 @@ fn test_directory_with_common_subdirectories() -> Result<(), Box<dyn std::error:
         .arg("../tests/fixtures/dir2");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("Common subdirectories:"))
-        .stdout(predicate::str::contains("subdir")); // Should show common subdir but not compare files inside
+        .stdout(str::contains("Common subdirectories:"))
+        .stdout(str::contains("subdir")); // Should show common subdir but not compare files inside
     Ok(())
 }
