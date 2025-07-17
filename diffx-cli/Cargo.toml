@@ -34,9 +34,29 @@ predicates = { workspace = true }
 tempfile = { workspace = true }
 
 [[test]]
-name = "integration"
-path = "../tests/integration/mod.rs"
+name = "basic"
+path = "../tests/basic/mod.rs"
 
 [[test]]
-name = "unit"
-path = "../tests/unit/mod.rs"
+name = "cli"
+path = "../tests/cli/mod.rs"
+
+[[test]]
+name = "core"
+path = "../tests/core/mod.rs"
+
+[[test]]
+name = "docs_examples"
+path = "../tests/docs_examples/mod.rs"
+
+[[test]]
+name = "errors"
+path = "../tests/errors/mod.rs"
+
+[[test]]
+name = "features"
+path = "../tests/features/mod.rs"
+
+[[test]]
+name = "formats"
+path = "../tests/formats/mod.rs"
