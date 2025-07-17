@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -13,13 +13,13 @@ fn test_help_output_matches_docs() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("--help");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("diffx"))
-        .stdout(predicate::str::contains("USAGE"))
-        .stdout(predicate::str::contains("--ignore-case"))
-        .stdout(predicate::str::contains("--ignore-whitespace"))
-        .stdout(predicate::str::contains("--quiet"))
-        .stdout(predicate::str::contains("--brief"))
-        .stdout(predicate::str::contains("--context"));
+        .stdout(str::contains("diffx"))
+        .stdout(str::contains("USAGE"))
+        .stdout(str::contains("--ignore-case"))
+        .stdout(str::contains("--ignore-whitespace"))
+        .stdout(str::contains("--quiet"))
+        .stdout(str::contains("--brief"))
+        .stdout(str::contains("--context"));
     Ok(())
 }
 
@@ -29,6 +29,6 @@ fn test_version_output_format() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("--version");
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("diffx"));
+        .stdout(str::contains("diffx"));
     Ok(())
 }

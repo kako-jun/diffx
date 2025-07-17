@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -16,11 +16,11 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
         .arg("^age$");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("~ age:").not())
-        .stdout(predicate::str::contains(
+        .stdout(str::contains("~ age:").not())
+        .stdout(str::contains(
             r#"~ city: "New York" -> "Boston""#,
         ))
-        .stdout(predicate::str::contains("+ items[2]: \"orange\""));
+        .stdout(str::contains("+ items[2]: \"orange\""));
     Ok(())
 }
 
@@ -31,7 +31,7 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/data2.json")
         .arg("--epsilon")
         .arg("0.00001");
-    cmd.assert().success().stdout(predicate::str::is_empty()); // No differences expected within epsilon (empty output)
+    cmd.assert().success().stdout(str::is_empty()); // No differences expected within epsilon (empty output)
     Ok(())
 }
 
@@ -44,14 +44,14 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
         .arg("id");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("~ [id=1].age: 25 -> 26"))
+        .stdout(str::contains("~ [id=1].age: 25 -> 26"))
         .stdout(
-            predicate::str::contains("+ [id=3]: ")
-                .and(predicate::str::contains(r#""id":3"#))
-                .and(predicate::str::contains(r#""name":"Charlie""#))
-                .and(predicate::str::contains(r#""age":28"#)),
+            str::contains("+ [id=3]: ")
+                .and(str::contains(r#""id":3"#))
+                .and(str::contains(r#""name":"Charlie""#))
+                .and(str::contains(r#""age":28"#)),
         )
-        .stdout(predicate::str::contains("~ [0].").not()); // Ensure not comparing by index
+        .stdout(str::contains("~ [0].").not()); // Ensure not comparing by index
     Ok(())
 }
 
@@ -64,14 +64,14 @@ fn test_path_filtering_application() -> Result<(), Box<dyn std::error::Error>> {
         .arg("application");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ application.debug: true -> false",
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ application.environment: \"development\" -> \"production\"",
         ))
-        .stdout(predicate::str::contains("database").not())
-        .stdout(predicate::str::contains("services").not());
+        .stdout(str::contains("database").not())
+        .stdout(str::contains("services").not());
     Ok(())
 }
 
@@ -84,11 +84,11 @@ fn test_path_filtering_services() -> Result<(), Box<dyn std::error::Error>> {
         .arg("services");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains("~ services.auth.url: \"http://localhost:8080\" -> \"https://auth.example.com\""))
-        .stdout(predicate::str::contains("~ services.cache.enabled: false -> true"))
-        .stdout(predicate::str::contains("~ services.cache.url: \"redis://localhost:6379\" -> \"redis://cache.example.com:6379\""))
-        .stdout(predicate::str::contains("application").not())
-        .stdout(predicate::str::contains("database").not());
+        .stdout(str::contains("~ services.auth.url: \"http://localhost:8080\" -> \"https://auth.example.com\""))
+        .stdout(str::contains("~ services.cache.enabled: false -> true"))
+        .stdout(str::contains("~ services.cache.url: \"redis://localhost:6379\" -> \"redis://cache.example.com:6379\""))
+        .stdout(str::contains("application").not())
+        .stdout(str::contains("database").not());
     Ok(())
 }
 
@@ -101,15 +101,15 @@ fn test_path_filtering_database() -> Result<(), Box<dyn std::error::Error>> {
         .arg("database");
     cmd.assert()
         .code(1)
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ database.host: \"localhost\" -> \"prod-db.example.com\"",
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ database.name: \"myapp_dev\" -> \"myapp_prod\"",
         ))
-        .stdout(predicate::str::contains("~ database.timeout: 30 -> 60"))
-        .stdout(predicate::str::contains("application").not())
-        .stdout(predicate::str::contains("services").not());
+        .stdout(str::contains("~ database.timeout: 30 -> 60"))
+        .stdout(str::contains("application").not())
+        .stdout(str::contains("services").not());
     Ok(())
 }
 
@@ -122,7 +122,7 @@ fn test_ignore_case_option() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-case");
     cmd.assert()
         .code(0) // No differences when ignoring case
-        .stdout(predicate::str::is_empty());
+        .stdout(str::is_empty());
     Ok(())
 }
 
@@ -135,10 +135,10 @@ fn test_ignore_case_option_shows_differences_without_flag() -> Result<(), Box<dy
         .arg("../tests/fixtures/case_test2.json");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ status: \"Active\" -> \"ACTIVE\"",
         ))
-        .stdout(predicate::str::contains("~ level: \"Info\" -> \"INFO\""));
+        .stdout(str::contains("~ level: \"Info\" -> \"INFO\""));
     Ok(())
 }
 
@@ -151,7 +151,7 @@ fn test_ignore_whitespace_option() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(0) // No differences when ignoring whitespace
-        .stdout(predicate::str::is_empty());
+        .stdout(str::is_empty());
     Ok(())
 }
 
@@ -164,10 +164,10 @@ fn test_ignore_whitespace_option_shows_differences_without_flag(
         .arg("../tests/fixtures/whitespace_test2.json");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ text: \"Hello  World\" -> \"Hello World\"",
         ))
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "~ message: \"Test\\tValue\" -> \"Test Value\"",
         ));
     Ok(())
@@ -183,8 +183,8 @@ fn test_combined_ignore_options() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(1) // Still differences (different keys)
-        .stdout(predicate::str::contains("- level: \"Info\""))
-        .stdout(predicate::str::contains("+ message: \"Test Value\""));
+        .stdout(str::contains("- level: \"Info\""))
+        .stdout(str::contains("+ message: \"Test Value\""));
     Ok(())
 }
 
@@ -197,8 +197,8 @@ fn test_quiet_option_no_differences() -> Result<(), Box<dyn std::error::Error>> 
         .arg("--quiet");
     cmd.assert()
         .code(0) // No differences
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stdout(str::is_empty())
+        .stderr(str::is_empty());
     Ok(())
 }
 
@@ -211,8 +211,8 @@ fn test_quiet_option_with_differences() -> Result<(), Box<dyn std::error::Error>
         .arg("--quiet");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::is_empty());
+        .stdout(str::is_empty())
+        .stderr(str::is_empty());
     Ok(())
 }
 
@@ -225,11 +225,11 @@ fn test_brief_option() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--brief");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicate::str::contains(
+        .stdout(str::contains(
             "Files ../tests/fixtures/file1.json and ../tests/fixtures/file2.json differ",
         ))
-        .stdout(predicate::str::contains("age").not()) // Should not show actual differences
-        .stdout(predicate::str::contains("city").not());
+        .stdout(str::contains("age").not()) // Should not show actual differences
+        .stdout(str::contains("city").not());
     Ok(())
 }
 
@@ -242,7 +242,7 @@ fn test_brief_option_no_differences() -> Result<(), Box<dyn std::error::Error>> 
         .arg("--brief");
     cmd.assert()
         .code(0) // No differences
-        .stdout(predicate::str::is_empty());
+        .stdout(str::is_empty());
     Ok(())
 }
 
@@ -254,13 +254,13 @@ fn test_verbose_basic_output() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--verbose");
     cmd.assert()
         .code(1)
-        .stderr(predicate::str::contains("Optimization enabled:"))
-        .stderr(predicate::str::contains("Batch size:"))
-        .stderr(predicate::str::contains("Input file information:"))
-        .stderr(predicate::str::contains("Parse time:"))
-        .stderr(predicate::str::contains("Diff computation time:"))
-        .stderr(predicate::str::contains("Total differences found:"))
-        .stderr(predicate::str::contains("Performance summary:"))
-        .stderr(predicate::str::contains("Total processing time:"));
+        .stderr(str::contains("Optimization enabled:"))
+        .stderr(str::contains("Batch size:"))
+        .stderr(str::contains("Input file information:"))
+        .stderr(str::contains("Parse time:"))
+        .stderr(str::contains("Diff computation time:"))
+        .stderr(str::contains("Total differences found:"))
+        .stderr(str::contains("Performance summary:"))
+        .stderr(str::contains("Total processing time:"));
     Ok(())
 }

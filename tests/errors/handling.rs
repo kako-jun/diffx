@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
+use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -14,7 +14,7 @@ fn test_nonexistent_files_error() -> Result<(), Box<dyn std::error::Error>> {
         .arg("nonexistent2.json");
     cmd.assert()
         .code(2) // Error exit code
-        .stderr(predicate::str::contains("No such file").or(predicate::str::contains("not found")));
+        .stderr(str::contains("No such file").or(str::contains("not found")));
     Ok(())
 }
 
@@ -23,7 +23,7 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/file1.json");
-    cmd.assert().code(2).stderr(predicate::str::contains(
+    cmd.assert().code(2).stderr(str::contains(
         "Cannot compare directory and file",
     ));
     Ok(())
@@ -38,7 +38,7 @@ fn test_invalid_format_specification() -> Result<(), Box<dyn std::error::Error>>
         .arg("invalid_format");
     cmd.assert()
         .code(2) // Error exit code
-        .stderr(predicate::str::contains("format").or(predicate::str::contains("invalid")));
+        .stderr(str::contains("format").or(str::contains("invalid")));
     Ok(())
 }
 
@@ -51,6 +51,6 @@ fn test_invalid_output_format() -> Result<(), Box<dyn std::error::Error>> {
         .arg("invalid_output");
     cmd.assert()
         .code(2) // Error exit code
-        .stderr(predicate::str::contains("output").or(predicate::str::contains("invalid")));
+        .stderr(str::contains("output").or(str::contains("invalid")));
     Ok(())
 }
