@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -15,9 +15,9 @@ fn test_basic_json_example_from_docs() -> Result<(), Box<dyn std::error::Error>>
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
         .code(1)
-        .stdout(str::contains("~ age:"))
-        .stdout(str::contains("~ city:"))
-        .stdout(str::contains("+ items["));
+        .stdout(predicates::str::contains("~ age:"))
+        .stdout(predicates::str::contains("~ city:"))
+        .stdout(predicates::str::contains("+ items["));
     Ok(())
 }
 
@@ -31,8 +31,8 @@ fn test_json_output_example_from_docs() -> Result<(), Box<dyn std::error::Error>
         .arg("json");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(r#""Modified""#))
-        .stdout(str::contains(r#""Added""#));
+        .stdout(predicates::str::contains(r#""Modified""#))
+        .stdout(predicates::str::contains(r#""Added""#));
     Ok(())
 }
 
@@ -46,7 +46,7 @@ fn test_ignore_keys_example_from_docs() -> Result<(), Box<dyn std::error::Error>
         .arg("^(password|secret_.*)$");
     cmd.assert()
         .code(1)
-        .stdout(str::contains("password").not())
-        .stdout(str::contains("secret_").not());
+        .stdout(predicates::str::contains("password").not())
+        .stdout(predicates::str::contains("secret_").not());
     Ok(())
 }

@@ -170,3 +170,5 @@ github-shared
 # === Temporary test directories ===
 tmp/
 diffx-js/
+temp-*/
+tmp-*/

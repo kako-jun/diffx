@@ -1,5 +1,5 @@
 use assert_cmd::Command;
-use predicates::str;
+use predicates::prelude::*;
 use std::fs;
 use tempfile::NamedTempFile;
 
@@ -35,7 +35,7 @@ fn test_auto_optimize_basic() {
         .arg(file2.path())
         .assert()
         .code(1) // Differences found
-        .stdout(str::contains("users[0].score"));
+        .stdout(predicates::str::contains("users[0].score"));
 }
 
 #[test]
@@ -68,7 +68,7 @@ fn test_auto_optimize_with_array_id_key() {
         .arg("sku")
         .assert()
         .code(1) // Differences found
-        .stdout(str::contains("products[sku=\"DEF456\"].price"));
+        .stdout(predicates::str::contains("products[sku=\"DEF456\"].price"));
 }
 
 #[test]
@@ -103,8 +103,8 @@ fn test_auto_optimize_with_path_filter() {
         .arg("config.database")
         .assert()
         .code(1) // Differences found
-        .stdout(str::contains("config.database.port"))
-        .stdout(str::contains("other").not());
+        .stdout(predicates::str::contains("config.database.port"))
+        .stdout(predicates::str::contains("other").not());
 }
 
 #[test]
@@ -135,9 +135,9 @@ fn test_auto_optimize_with_ignore_regex() {
         .arg("^(timestamp|_.*)")
         .assert()
         .code(1) // Differences found
-        .stdout(str::contains("config.host"))
-        .stdout(str::contains("timestamp").not())
-        .stdout(str::contains("_internal").not());
+        .stdout(predicates::str::contains("config.host"))
+        .stdout(predicates::str::contains("timestamp").not())
+        .stdout(predicates::str::contains("_internal").not());
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn test_auto_optimize_directory_comparison() {
         .arg("--recursive")
         .assert()
         .code(1) // Differences found
-        .stdout(str::contains("config.value"));
+        .stdout(predicates::str::contains("config.value"));
 }
 
 #[test]

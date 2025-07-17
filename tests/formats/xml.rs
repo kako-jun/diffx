@@ -1,5 +1,4 @@
 use assert_cmd::prelude::*;
-use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -14,9 +13,9 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.xml");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ item.$text: \"value2\" -> \"value3\"",
         ))
-        .stdout(str::contains("~ item.@id: \"2\" -> \"3\""));
+        .stdout(predicates::str::contains("~ item.@id: \"2\" -> \"3\""));
     Ok(())
 }
