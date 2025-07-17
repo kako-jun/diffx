@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -16,16 +16,16 @@ fn test_complex_regex_security_fields() -> Result<(), Box<dyn std::error::Error>
         .arg("^(password|secret_.*|credentials|connection_string)$");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ application.version: \"1.0.0\" -> \"1.1.0\"",
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ security.host: \"localhost\" -> \"prod-server.example.com\"",
         ))
-        .stdout(str::contains("password").not())
-        .stdout(str::contains("secret_").not())
-        .stdout(str::contains("credentials").not())
-        .stdout(str::contains("connection_string").not());
+        .stdout(predicates::str::contains("password").not())
+        .stdout(predicates::str::contains("secret_").not())
+        .stdout(predicates::str::contains("credentials").not())
+        .stdout(predicates::str::contains("connection_string").not());
     Ok(())
 }
 
@@ -38,18 +38,18 @@ fn test_complex_regex_build_fields() -> Result<(), Box<dyn std::error::Error>> {
         .arg("^(timestamp|build_.*|deploy_.*)$");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ application.version: \"1.0.0\" -> \"1.1.0\"",
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ monitoring.metrics.cpu: 45.2 -> 52.1",
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ monitoring.metrics.memory: 78.9 -> 82.3",
         ))
-        .stdout(str::contains("timestamp").not())
-        .stdout(str::contains("build_").not())
-        .stdout(str::contains("deploy_").not());
+        .stdout(predicates::str::contains("timestamp").not())
+        .stdout(predicates::str::contains("build_").not())
+        .stdout(predicates::str::contains("deploy_").not());
     Ok(())
 }
 
@@ -62,16 +62,16 @@ fn test_complex_regex_multiple_groups() -> Result<(), Box<dyn std::error::Error>
         .arg("^(password|secret_.*|timestamp|build_.*)$");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ application.version: \"1.0.0\" -> \"1.1.0\"",
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ security.host: \"localhost\" -> \"prod-server.example.com\"",
         ))
-        .stdout(str::contains("password").not())
-        .stdout(str::contains("secret_").not())
-        .stdout(str::contains("timestamp").not())
-        .stdout(str::contains("build_").not());
+        .stdout(predicates::str::contains("password").not())
+        .stdout(predicates::str::contains("secret_").not())
+        .stdout(predicates::str::contains("timestamp").not())
+        .stdout(predicates::str::contains("build_").not());
     Ok(())
 }
 
@@ -86,17 +86,17 @@ fn test_combined_path_and_regex() -> Result<(), Box<dyn std::error::Error>> {
         .arg("^(timestamp|build_.*)$");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ monitoring.metrics.cpu: 45.2 -> 52.1",
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ monitoring.metrics.memory: 78.9 -> 82.3",
         ))
-        .stdout(str::contains("~ monitoring.deploy_time:"))
-        .stdout(str::contains("timestamp").not())
-        .stdout(str::contains("build_").not())
-        .stdout(str::contains("application").not())
-        .stdout(str::contains("security").not());
+        .stdout(predicates::str::contains("~ monitoring.deploy_time:"))
+        .stdout(predicates::str::contains("timestamp").not())
+        .stdout(predicates::str::contains("build_").not())
+        .stdout(predicates::str::contains("application").not())
+        .stdout(predicates::str::contains("security").not());
     Ok(())
 }
 
@@ -111,11 +111,11 @@ fn test_combined_path_and_output_format() -> Result<(), Box<dyn std::error::Erro
         .arg("json");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(r#""Modified""#))
-        .stdout(str::contains(r#""application.debug""#))
-        .stdout(str::contains(r#"true"#))
-        .stdout(str::contains(r#"false"#))
-        .stdout(str::contains("database").not())
-        .stdout(str::contains("services").not());
+        .stdout(predicates::str::contains(r#""Modified""#))
+        .stdout(predicates::str::contains(r#""application.debug""#))
+        .stdout(predicates::str::contains(r#"true"#))
+        .stdout(predicates::str::contains(r#"false"#))
+        .stdout(predicates::str::contains("database").not())
+        .stdout(predicates::str::contains("services").not());
     Ok(())
 }

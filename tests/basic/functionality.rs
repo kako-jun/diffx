@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -36,13 +36,13 @@ fn test_meta_chaining() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/output/diff_report_v2.json");
     cmd3.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             r#"~ [1].Modified[1]: "1.0" -> "1.1""#,
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             r#"~ [1].Modified[2]: "1.1" -> "1.2""#,
         ))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             r#"+ [2]: {"Added":["features[2]","featureD"]}"#,
         ));
 
@@ -81,10 +81,10 @@ fn test_combined_array_id_and_epsilon() -> Result<(), Box<dyn std::error::Error>
         .arg("0.0001");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ records[id=2].name: \"item2\" -> \"item2_updated\"",
         ))
-        .stdout(str::contains("value").not()); // Values should be ignored due to epsilon
+        .stdout(predicates::str::contains("value").not()); // Values should be ignored due to epsilon
 
     // Clean up
     std::fs::remove_file("../tests/fixtures/array_epsilon1.json")?;

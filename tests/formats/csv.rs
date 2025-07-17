@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -14,13 +14,13 @@ fn test_basic_csv_diff() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.csv");
     cmd.assert()
         .code(1)
-        .stdout(str::contains(
+        .stdout(predicates::str::contains(
             "~ [0].header2: \"valueB\" -> \"new_valueB\"",
         ))
         .stdout(
-            str::contains("+ [2]: ")
-                .and(str::contains("\"header1\":\"valueE\""))
-                .and(str::contains("\"header2\":\"valueF\"")),
+            predicates::str::contains("+ [2]: ")
+                .and(predicates::str::contains("\"header1\":\"valueE\""))
+                .and(predicates::str::contains("\"header2\":\"valueF\"")),
         );
     Ok(())
 }

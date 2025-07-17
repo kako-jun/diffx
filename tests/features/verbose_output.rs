@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -17,8 +17,8 @@ fn test_verbose_key_filtering() -> Result<(), Box<dyn std::error::Error>> {
         .arg("age");
     cmd.assert()
         .code(1)
-        .stderr(str::contains("Key filtering configuration:"))
-        .stderr(str::contains("Regex pattern: age"));
+        .stderr(predicates::str::contains("Key filtering configuration:"))
+        .stderr(predicates::str::contains("Regex pattern: age"));
     Ok(())
 }
 
@@ -32,10 +32,10 @@ fn test_verbose_epsilon_configuration() -> Result<(), Box<dyn std::error::Error>
         .arg("0.1");
     cmd.assert()
         .code(1)
-        .stderr(str::contains(
+        .stderr(predicates::str::contains(
             "Numerical tolerance configuration:",
         ))
-        .stderr(str::contains("Epsilon value: 0.1"));
+        .stderr(predicates::str::contains("Epsilon value: 0.1"));
     Ok(())
 }
 
@@ -49,8 +49,8 @@ fn test_verbose_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
         .arg("id");
     cmd.assert()
         .code(1)
-        .stderr(str::contains("Array tracking configuration:"))
-        .stderr(str::contains("ID key for array elements: id"));
+        .stderr(predicates::str::contains("Array tracking configuration:"))
+        .stderr(predicates::str::contains("ID key for array elements: id"));
     Ok(())
 }
 
@@ -63,10 +63,12 @@ fn test_verbose_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--path")
         .arg("app"); // Use "app" path which should have differences
     cmd.assert()
-        .stderr(str::contains("Path filtering results:"))
-        .stderr(str::contains("Filter path: app"))
-        .stderr(str::contains("Total differences before filter:"))
-        .stderr(str::contains("Differences after filter:"));
+        .stderr(predicates::str::contains("Path filtering results:"))
+        .stderr(predicates::str::contains("Filter path: app"))
+        .stderr(predicates::str::contains(
+            "Total differences before filter:",
+        ))
+        .stderr(predicates::str::contains("Differences after filter:"));
     Ok(())
 }
 
@@ -78,13 +80,13 @@ fn test_verbose_performance_metrics() -> Result<(), Box<dyn std::error::Error>> 
         .arg("--verbose");
     cmd.assert()
         .code(1)
-        .stderr(str::contains("Input file information:"))
-        .stderr(str::contains("bytes"))
-        .stderr(str::contains("Parse time:"))
-        .stderr(str::contains("µs").or(str::contains("ms")))
-        .stderr(str::contains("Diff computation time:"))
-        .stderr(str::contains("Total processing time:"))
-        .stderr(str::contains("Memory optimization:"));
+        .stderr(predicates::str::contains("Input file information:"))
+        .stderr(predicates::str::contains("bytes"))
+        .stderr(predicates::str::contains("Parse time:"))
+        .stderr(predicates::str::contains("µs").or(predicates::str::contains("ms")))
+        .stderr(predicates::str::contains("Diff computation time:"))
+        .stderr(predicates::str::contains("Total processing time:"))
+        .stderr(predicates::str::contains("Memory optimization:"));
     Ok(())
 }
 
@@ -96,7 +98,7 @@ fn test_verbose_no_differences() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--verbose");
     cmd.assert()
         .code(0)
-        .stderr(str::contains("Total differences found: 0"))
-        .stderr(str::contains("Performance summary:"));
+        .stderr(predicates::str::contains("Total differences found: 0"))
+        .stderr(predicates::str::contains("Performance summary:"));
     Ok(())
 }

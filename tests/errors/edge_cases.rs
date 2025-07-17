@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -35,7 +35,7 @@ fn test_very_large_input() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/config_v2.json")
         .arg("--verbose");
     cmd.assert()
-        .stderr(str::contains("Performance summary:"));
+        .stderr(predicates::str::contains("Performance summary:"));
     Ok(())
 }
 
@@ -53,7 +53,7 @@ fn test_malformed_json() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&malformed_path).arg("../tests/fixtures/file1.json");
     cmd.assert()
         .code(2) // Error exit code
-        .stderr(str::contains("parse").or(str::contains("invalid")));
+        .stderr(predicates::str::contains("parse").or(predicates::str::contains("invalid")));
 
     Ok(())
 }

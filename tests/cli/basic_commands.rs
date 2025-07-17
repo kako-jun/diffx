@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use predicates::str;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -13,7 +13,7 @@ fn test_version_command() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("--version");
     cmd.assert()
         .success()
-        .stdout(str::contains("diffx"));
+        .stdout(predicates::str::contains("diffx"));
     Ok(())
 }
 
@@ -23,8 +23,8 @@ fn test_help_command() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("--help");
     cmd.assert()
         .success()
-        .stdout(str::contains("diffx"))
-        .stdout(str::contains("USAGE"));
+        .stdout(predicates::str::contains("diffx"))
+        .stdout(predicates::str::contains("USAGE"));
     Ok(())
 }
 
@@ -35,11 +35,11 @@ fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
         .code(1)
-        .stdout(str::contains("~ age: 30 -> 31"))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains("~ age: 30 -> 31"))
+        .stdout(predicates::str::contains(
             "~ city: \"New York\" -> \"Boston\"",
         ))
-        .stdout(str::contains("  + items[2]: \"orange\""));
+        .stdout(predicates::str::contains("  + items[2]: \"orange\""));
     Ok(())
 }
 
@@ -78,10 +78,10 @@ fn test_specify_input_format() -> Result<(), Box<dyn std::error::Error>> {
     let output = child.wait_with_output()?;
     assert_eq!(output.status.code(), Some(1)); // Differences found
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(str::contains("~ age: 30 -> 31").eval(&stdout));
-    assert!(str::contains("~ city: \"New York\" -> \"Boston\"").eval(&stdout));
-    assert!(str::contains("~ name: \"Alice\" -> \"John\"").eval(&stdout));
-    assert!(str::contains("+ items:").eval(&stdout));
+    assert!(predicates::str::contains("~ age: 30 -> 31").eval(&stdout));
+    assert!(predicates::str::contains("~ city: \"New York\" -> \"Boston\"").eval(&stdout));
+    assert!(predicates::str::contains("~ name: \"Alice\" -> \"John\"").eval(&stdout));
+    assert!(predicates::str::contains("+ items:").eval(&stdout));
     Ok(())
 }
 
@@ -117,8 +117,8 @@ key3 = value3
     assert_eq!(output.status.code(), Some(1)); // Differences found
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
-        str::contains("~ section1.key2: \"value2\" -> \"new_value2\"").eval(&stdout)
+        predicates::str::contains("~ section1.key2: \"value2\" -> \"new_value2\"").eval(&stdout)
     );
-    assert!(str::contains("+ section2.key4: \"value4\"").eval(&stdout));
+    assert!(predicates::str::contains("+ section2.key4: \"value4\"").eval(&stdout));
     Ok(())
 }

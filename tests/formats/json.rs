@@ -1,5 +1,4 @@
 use assert_cmd::prelude::*;
-use predicates::str;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -14,11 +13,11 @@ fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json");
     cmd.assert()
         .code(1)
-        .stdout(str::contains("~ age: 30 -> 31"))
-        .stdout(str::contains(
+        .stdout(predicates::str::contains("~ age: 30 -> 31"))
+        .stdout(predicates::str::contains(
             "~ city: \"New York\" -> \"Boston\"",
         ))
-        .stdout(str::contains("  + items[2]: \"orange\""));
+        .stdout(predicates::str::contains("  + items[2]: \"orange\""));
     Ok(())
 }
 
@@ -29,8 +28,8 @@ fn test_complex_nested_json() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/config_v2.json");
     cmd.assert()
         .code(1)
-        .stdout(str::contains("~ app.version:"))
-        .stdout(str::contains("~ features["));
+        .stdout(predicates::str::contains("~ app.version:"))
+        .stdout(predicates::str::contains("~ features["));
     Ok(())
 }
 
@@ -39,8 +38,6 @@ fn test_json_array_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/users1.json")
         .arg("../tests/fixtures/users2.json");
-    cmd.assert()
-        .code(1)
-        .stdout(str::contains("["));
+    cmd.assert().code(1).stdout(predicates::str::contains("["));
     Ok(())
 }
