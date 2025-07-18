@@ -95,8 +95,12 @@ def _get_diffx_binary_path() -> str:
         if wheel_binary_path.exists():
             return str(wheel_binary_path)
     
-    # Fall back to system PATH (for development)
-    return "diffx"
+    # Error if binary not found - no system PATH fallback allowed
+    raise DiffxError(
+        f"diffx binary not found. Checked paths: {env_scripts_paths}. "
+        "This might indicate a packaging issue. Please report this at: https://github.com/kako-jun/diffx/issues",
+        -1, ""
+    )
 
 
 def _execute_diffx(args: List[str]) -> tuple[str, str]:

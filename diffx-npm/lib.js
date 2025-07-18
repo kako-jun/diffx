@@ -61,16 +61,31 @@ class DiffError extends Error {
  * @returns {string} Path to diffx binary
  */
 function getDiffxBinaryPath() {
-  // Check if local binary exists (installed via postinstall)
-  const binaryName = process.platform === 'win32' ? 'diffx.exe' : 'diffx';
-  const localBinaryPath = path.join(__dirname, 'bin', binaryName);
+  // Determine platform-specific subdirectory
+  const platform = process.platform;
+  const arch = process.arch;
+  let subdir;
   
-  if (fs.existsSync(localBinaryPath)) {
-    return localBinaryPath;
+  if (platform === 'win32') {
+    subdir = 'win32-x64';
+  } else if (platform === 'darwin') {
+    subdir = arch === 'arm64' ? 'darwin-arm64' : 'darwin-x64';
+  } else if (platform === 'linux') {
+    subdir = arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
+  } else {
+    throw new Error(`Unsupported platform: ${platform}-${arch}`);
   }
   
-  // Fall back to system PATH
-  return 'diffx';
+  // Check if platform-specific binary exists (OS hierarchy required)
+  const binaryName = process.platform === 'win32' ? 'diffx.exe' : 'diffx';
+  const platformBinaryPath = path.join(__dirname, 'bin', subdir, binaryName);
+  
+  if (fs.existsSync(platformBinaryPath)) {
+    return platformBinaryPath;
+  }
+  
+  // Error if binary not found - no system PATH fallback allowed
+  throw new Error(`Binary not found at ${platformBinaryPath}. Platform: ${platform}-${arch}. This might indicate a packaging issue. Please report this at: https://github.com/kako-jun/diffx/issues`);
 }
 
 /**
