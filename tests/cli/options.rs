@@ -264,3 +264,101 @@ fn test_verbose_basic_output() -> Result<(), Box<dyn std::error::Error>> {
         .stderr(predicates::str::contains("Total processing time:"));
     Ok(())
 }
+
+#[test]
+fn test_format_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test --format option with various formats
+    for format in ["json", "yaml", "toml", "ini", "xml", "csv"] {
+        let mut cmd = diffx_cmd();
+        cmd.arg("../tests/fixtures/file1.json")
+            .arg("../tests/fixtures/file2.json")
+            .arg("--format")
+            .arg(format);
+        
+        let output = cmd.output()?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Should recognize format option
+            assert!(!stderr.contains("unrecognized"), 
+                    "Format {} should be recognized", format);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn test_output_format_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test --output option with various output formats
+    for output_format in ["cli", "json", "yaml", "unified"] {
+        let mut cmd = diffx_cmd();
+        cmd.arg("../tests/fixtures/file1.json")
+            .arg("../tests/fixtures/file2.json")
+            .arg("--output")
+            .arg(output_format);
+        
+        let output = cmd.output()?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            assert!(!stderr.contains("unrecognized"), 
+                    "Output format {} should be recognized", output_format);
+        }
+    }
+    Ok(())
+}
+
+#[test]
+fn test_context_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test --context option
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--context")
+        .arg("3");
+    
+    let output = cmd.output()?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(!stderr.contains("unrecognized"), 
+                "Context option should be recognized");
+    }
+    Ok(())
+}
+
+#[test]
+fn test_recursive_option() -> Result<(), Box<dyn std::error::Error>> {
+    // Test --recursive option with directories
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures")
+        .arg("../tests/fixtures") // Same directory
+        .arg("--recursive");
+    
+    cmd.assert()
+        .code(0); // No differences in same directory
+    Ok(())
+}
+
+#[test]
+fn test_version_option() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("--version");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("0.3.2")
+                .or(predicate::str::contains("diffx")));
+    Ok(())
+}
+
+#[test]
+fn test_help_option() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("--help");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("diffx"))
+        .stdout(predicate::str::contains("Usage:"))
+        .stdout(predicate::str::contains("Arguments:"))
+        .stdout(predicate::str::contains("Options:"));
+    Ok(())
+}
