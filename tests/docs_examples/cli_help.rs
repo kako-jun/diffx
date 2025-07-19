@@ -13,7 +13,7 @@ fn test_help_output_matches_docs() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicates::str::contains("diffx"))
-        .stdout(predicates::str::contains("USAGE"))
+        .stdout(predicates::str::contains("Usage:"))
         .stdout(predicates::str::contains("--ignore-case"))
         .stdout(predicates::str::contains("--ignore-whitespace"))
         .stdout(predicates::str::contains("--quiet"))
