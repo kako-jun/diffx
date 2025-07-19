@@ -24,7 +24,7 @@ fn test_help_command() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .success()
         .stdout(predicates::str::contains("diffx"))
-        .stdout(predicates::str::contains("USAGE"));
+        .stdout(predicates::str::contains("Usage:"));
     Ok(())
 }
 
