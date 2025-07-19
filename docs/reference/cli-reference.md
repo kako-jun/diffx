@@ -442,6 +442,35 @@ diffx configs/ configs.backup/ --recursive --verbose
 - CI/CD pipeline diagnostics
 - Support and maintenance tasks
 
+#### `--no-color`
+- **Type**: Boolean flag
+- **Default**: False (colored output enabled)
+- **Description**: Disable colored output for better compatibility with scripts, pipelines, or terminals that don't support ANSI colors
+
+**Examples:**
+```bash
+# Basic usage without colors
+diffx config.json config.new.json --no-color
+# Output will be plain text without color formatting
+
+# Use in CI/CD pipelines
+diffx deploy.yaml deploy.new.yaml --no-color --output json > diff_report.json
+
+# Combine with other output options
+diffx large.json large.new.json --no-color --brief --quiet
+
+# Directory comparison without colors
+diffx configs/ configs.backup/ --recursive --no-color
+```
+
+**Use Cases:**
+- CI/CD pipeline integration where color codes interfere with log parsing
+- Automated scripts that process diffx output
+- Text file output redirection where ANSI codes aren't desired
+- Terminal environments that don't support color
+- Accessibility compliance for screen readers
+- Creating clean text reports for documentation
+
 ### Directory Options
 
 #### `-r, --recursive`

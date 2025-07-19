@@ -1,3 +1,4 @@
-mod core_tests;
-mod large_data_tests;
-mod performance_tests;
+// Unit tests for diffx core functionality
+// Tests individual functions and modules in isolation
+
+pub mod unit_tests;

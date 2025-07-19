@@ -15,6 +15,35 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 use walkdir::WalkDir;
 
+/// Color helper functions to support --no-color option
+mod color_utils {
+    use colored::*;
+    
+    pub fn blue(text: &str, no_color: bool) -> ColoredString {
+        if no_color { text.normal() } else { text.blue() }
+    }
+    
+    pub fn yellow(text: &str, no_color: bool) -> ColoredString {
+        if no_color { text.normal() } else { text.yellow() }
+    }
+    
+    pub fn cyan(text: &str, no_color: bool) -> ColoredString {
+        if no_color { text.normal() } else { text.cyan() }
+    }
+    
+    pub fn magenta(text: &str, no_color: bool) -> ColoredString {
+        if no_color { text.normal() } else { text.magenta() }
+    }
+    
+    pub fn green(text: &str, no_color: bool) -> ColoredString {
+        if no_color { text.normal() } else { text.green() }
+    }
+    
+    pub fn red(text: &str, no_color: bool) -> ColoredString {
+        if no_color { text.normal() } else { text.red() }
+    }
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -77,6 +106,10 @@ struct Args {
     /// Show verbose processing information including performance metrics, configuration details, and diagnostic output
     #[arg(short, long)]
     verbose: bool,
+
+    /// Disable colored output
+    #[arg(long)]
+    no_color: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
@@ -163,7 +196,7 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
     }
 }
 
-fn print_cli_output_basic(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value) {
+fn print_cli_output_basic(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value, no_color: bool) {
     if differences.is_empty() {
         // Follow diff convention: output nothing when no differences
         return;
@@ -187,15 +220,14 @@ fn print_cli_output_basic(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &V
         let indent = "  ".repeat(depth);
 
         let diff_str = match diff {
-            DiffResult::Added(k, value) => format!("+ {k}: {value}").blue(),
-            DiffResult::Removed(k, value) => format!("- {k}: {value}").yellow(),
-            DiffResult::Modified(k, v1, v2) => format!("~ {k}: {v1} -> {v2}").cyan(),
-            DiffResult::TypeChanged(k, v1, v2) => format!(
+            DiffResult::Added(k, value) => color_utils::blue(&format!("+ {k}: {value}"), no_color),
+            DiffResult::Removed(k, value) => color_utils::yellow(&format!("- {k}: {value}"), no_color),
+            DiffResult::Modified(k, v1, v2) => color_utils::cyan(&format!("~ {k}: {v1} -> {v2}"), no_color),
+            DiffResult::TypeChanged(k, v1, v2) => color_utils::magenta(&format!(
                 "! {k}: {v1} ({}) -> {v2} ({})",
                 value_type_name(v1),
                 value_type_name(v2)
-            )
-            .magenta(),
+            ), no_color),
         };
 
         println!("{indent}{diff_str}");
@@ -226,15 +258,14 @@ fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value, 
         let indent = "  ".repeat(depth);
 
         let diff_str = match diff {
-            DiffResult::Added(k, value) => format!("+ {k}: {value}").blue(),
-            DiffResult::Removed(k, value) => format!("- {k}: {value}").yellow(),
-            DiffResult::Modified(k, v1, v2) => format!("~ {k}: {v1} -> {v2}").cyan(),
-            DiffResult::TypeChanged(k, v1, v2) => format!(
+            DiffResult::Added(k, value) => color_utils::blue(&format!("+ {k}: {value}"), _args.no_color),
+            DiffResult::Removed(k, value) => color_utils::yellow(&format!("- {k}: {value}"), _args.no_color),
+            DiffResult::Modified(k, v1, v2) => color_utils::cyan(&format!("~ {k}: {v1} -> {v2}"), _args.no_color),
+            DiffResult::TypeChanged(k, v1, v2) => color_utils::magenta(&format!(
                 "! {k}: {v1} ({}) -> {v2} ({})",
                 value_type_name(v1),
                 value_type_name(v2)
-            )
-            .magenta(),
+            ), _args.no_color),
         };
 
         println!("{indent}{diff_str}");
@@ -436,6 +467,7 @@ fn run() -> Result<()> {
             batch_size,
             args.recursive,
             args.verbose,
+            args.no_color,
         )?;
 
         // Exit with appropriate code following diff tool conventions
@@ -612,6 +644,7 @@ fn compare_directories(
     batch_size: usize,
     recursive: bool,
     verbose: bool,
+    no_color: bool,
 ) -> Result<bool> {
     let mut files1: HashMap<PathBuf, PathBuf> = HashMap::new();
     let mut subdirs1: std::collections::HashSet<PathBuf> = std::collections::HashSet::new();
@@ -766,7 +799,7 @@ fn compare_directories(
                 match output {
                     OutputFormat::Cli => {
                         // For directory comparison, use basic output without new options
-                        print_cli_output_basic(differences, &v1, &v2);
+                        print_cli_output_basic(differences, &v1, &v2, no_color);
                     }
                     OutputFormat::Json => print_json_output(differences)?,
                     OutputFormat::Yaml => print_yaml_output(differences)?,
