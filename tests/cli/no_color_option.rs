@@ -171,3 +171,55 @@ fn test_diffx_no_color_with_side_by_side() -> Result<(), Box<dyn std::error::Err
     
     Ok(())
 }
+
+#[test]
+fn test_diffx_no_color_with_json_output() -> Result<(), Box<dyn std::error::Error>> {
+    let test_file1 = create_test_csv1()?;
+    let test_file2 = create_test_csv2()?;
+    
+    let output = Command::new("cargo")
+        .args(["run", "--bin", "diffx", "--", 
+               test_file1.path().to_str().unwrap(),
+               test_file2.path().to_str().unwrap(),
+               "--no-color", "--output", "json"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("Failed to execute diffx with --no-color and --output json");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    
+    // JSON output should not contain ANSI color codes
+    assert!(!stdout.contains("\x1b["), 
+           "JSON output should not contain ANSI color codes when --no-color is specified");
+    
+    // Should be valid JSON if not empty
+    if !stdout.trim().is_empty() {
+        let _: serde_json::Value = serde_json::from_str(&stdout)
+            .expect("Output should be valid JSON");
+    }
+    
+    Ok(())
+}
+
+#[test]
+fn test_diffx_no_color_with_yaml_output() -> Result<(), Box<dyn std::error::Error>> {
+    let test_file1 = create_test_csv1()?;
+    let test_file2 = create_test_csv2()?;
+    
+    let output = Command::new("cargo")
+        .args(["run", "--bin", "diffx", "--", 
+               test_file1.path().to_str().unwrap(),
+               test_file2.path().to_str().unwrap(),
+               "--no-color", "--output", "yaml"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("Failed to execute diffx with --no-color and --output yaml");
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    
+    // YAML output should not contain ANSI color codes
+    assert!(!stdout.contains("\x1b["), 
+           "YAML output should not contain ANSI color codes when --no-color is specified");
+    
+    Ok(())
+}
