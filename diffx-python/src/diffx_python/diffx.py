@@ -33,6 +33,7 @@ class DiffOptions:
     quiet: bool = False
     brief: bool = False
     debug: bool = False
+    no_color: bool = False
 
 
 class DiffResult:
@@ -220,6 +221,10 @@ def diff(
     if options.debug:
         args.append("--debug")
     
+    # Add no-color option
+    if options.no_color:
+        args.append("--no-color")
+    
     stdout, stderr = _execute_diffx(args)
     
     # If output format is JSON, parse the result
@@ -295,3 +300,39 @@ def is_diffx_available() -> bool:
         return True
     except DiffError:
         return False
+
+
+def get_version() -> str:
+    """
+    Get version information from diffx CLI
+    
+    Returns:
+        Version string from diffx CLI tool
+        
+    Examples:
+        >>> version = get_version()
+        >>> print(f"diffx version: {version}")
+    """
+    try:
+        stdout, _ = _execute_diffx(["--version"])
+        return stdout.strip()
+    except DiffError as e:
+        raise DiffError(f"Failed to get version: {e}", -1, "") from e
+
+
+def get_help() -> str:
+    """
+    Get help information from diffx CLI
+    
+    Returns:
+        Help text from diffx CLI tool
+        
+    Examples:
+        >>> help_text = get_help()
+        >>> print(help_text)
+    """
+    try:
+        stdout, _ = _execute_diffx(["--help"])
+        return stdout.strip()
+    except DiffError as e:
+        raise DiffError(f"Failed to get help: {e}", -1, "") from e

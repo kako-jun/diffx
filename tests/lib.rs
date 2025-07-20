@@ -22,8 +22,8 @@ pub mod features;
 // Documentation examples tests - ensure docs stay current
 pub mod docs_examples;
 
-// Unit tests - test individual functions and modules in isolation
-pub mod unit;
+// Unit tests are now in unit.rs as a top-level integration test
+// pub mod unit;
 
 // Integration tests - test interaction between components
 pub mod integration;
