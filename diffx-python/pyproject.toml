@@ -65,7 +65,7 @@ dev = [
 [tool.maturin]
 # This package includes both Python code and a binary (diffx CLI) in the wheel
 python-source = "src"
-module-name = "diffx_python"
+module-name = "diffx"
 bindings = "bin"
 # Find Python interpreters automatically
 find-interpreter = true

@@ -175,34 +175,30 @@ async function runTests() {
 
         // Test 6: Stdin processing
         info('Test 6: Testing stdin processing...');
-        const stdinResult = await runCommand('node', [
-            path.join(__dirname, 'index.js'),
-            '-',
-            'test2.json'
-        ]);
         
-        stdinResult.child = spawn('node', [
+        // Use spawn directly with proper stdin handling
+        const stdinChild = spawn('node', [
             path.join(__dirname, 'index.js'),
             '-',
-            'test2.json'
+            path.join(__dirname, 'fixtures', 'test2.json')
         ], { stdio: ['pipe', 'pipe', 'pipe'] });
         
-        stdinResult.child.stdin.write(testData.json1);
-        stdinResult.child.stdin.end();
+        stdinChild.stdin.write(testData.json1);
+        stdinChild.stdin.end();
         
         let stdinOutput = '';
-        stdinResult.child.stdout.on('data', (data) => {
+        stdinChild.stdout.on('data', (data) => {
             stdinOutput += data.toString();
         });
         
-        await new Promise((resolve) => {
-            stdinResult.child.on('close', () => resolve());
+        const stdinExitCode = await new Promise((resolve) => {
+            stdinChild.on('close', (code) => resolve(code));
         });
         
-        if (stdinOutput.includes('version')) {
+        if (stdinExitCode === 1 && stdinOutput.includes('debug')) {
             success('Stdin processing works correctly');
         } else {
-            info('Stdin test skipped (may require manual verification)');
+            info(`Stdin test result: exit code ${stdinExitCode}, output length: ${stdinOutput.length}`);
         }
 
         // Test 7: Error handling
