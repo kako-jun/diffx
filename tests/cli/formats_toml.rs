@@ -1,5 +1,6 @@
 use assert_cmd::prelude::*;
-use std::process::Command;
+use predicates::prelude::*;
+use assert_cmd::Command;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -18,5 +19,114 @@ fn test_basic_toml_diff() -> Result<(), Box<dyn std::error::Error>> {
             "~ city: \"New York\" -> \"Boston\"",
         ))
         .stdout(predicates::str::contains("  + items[2]: \"orange\""));
+    Ok(())
+}
+
+#[test]
+fn test_format_toml_explicit() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.toml")
+        .arg("../tests/fixtures/file2.toml")
+        .arg("--format")
+        .arg("toml");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ age: 30 -> 31"));
+    Ok(())
+}
+
+#[test]
+fn test_toml_tables_and_arrays() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--format")
+        .arg("toml");
+    cmd.write_stdin("[server]\nhost = \"localhost\"\nport = 8080\n\n[[users]]\nname = \"Alice\"\nage = 30\n")
+        .write_stdin("[server]\nhost = \"example.com\"\nport = 8080\n\n[[users]]\nname = \"Alice\"\nage = 31\n");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ server.host:"))
+        .stdout(predicates::str::contains("~ users[0].age:"));
+    Ok(())
+}
+
+#[test]
+fn test_toml_nested_tables() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--format")
+        .arg("toml");
+    cmd.write_stdin("[database]\nhost = \"localhost\"\n[database.pool]\nmax_connections = 10\n")
+        .write_stdin("[database]\nhost = \"localhost\"\n[database.pool]\nmax_connections = 20\n");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ database.pool.max_connections: 10 -> 20"));
+    Ok(())
+}
+
+#[test]
+fn test_toml_array_of_tables() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--format")
+        .arg("toml");
+    cmd.write_stdin("[[products]]\nname = \"Hammer\"\nprice = 15.99\n\n[[products]]\nname = \"Screwdriver\"\nprice = 8.50\n")
+        .write_stdin("[[products]]\nname = \"Hammer\"\nprice = 16.99\n\n[[products]]\nname = \"Drill\"\nprice = 45.00\n");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ products[0].price:"))
+        .stdout(predicates::str::contains("~ products[1].name:"));
+    Ok(())
+}
+
+#[test]
+fn test_toml_different_data_types() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--format")
+        .arg("toml");
+    cmd.write_stdin("title = \"Config\"\nenabled = true\ncount = 42\npi = 3.14\ndate = 2023-01-01T10:00:00Z\n")
+        .write_stdin("title = \"New Config\"\nenabled = false\ncount = 42\npi = 3.14159\ndate = 2023-01-02T10:00:00Z\n");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ title:"))
+        .stdout(predicates::str::contains("~ enabled: true -> false"))
+        .stdout(predicates::str::contains("~ pi:"))
+        .stdout(predicates::str::contains("~ date:"));
+    Ok(())
+}
+
+#[test]
+fn test_toml_multiline_strings() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--format")
+        .arg("toml");
+    cmd.write_stdin("description = \"\"\"\nThis is a\nmultiline string\n\"\"\"\n")
+        .write_stdin("description = \"\"\"\nThis is a\ndifferent multiline string\n\"\"\"\n");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ description:"));
+    Ok(())
+}
+
+#[test]
+fn test_toml_inline_tables() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--format")
+        .arg("toml");
+    cmd.write_stdin("point = { x = 1, y = 2 }\ncolor = { r = 255, g = 128, b = 0 }\n")
+        .write_stdin("point = { x = 3, y = 2 }\ncolor = { r = 255, g = 128, b = 64 }\n");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ point.x: 1 -> 3"))
+        .stdout(predicates::str::contains("~ color.b: 0 -> 64"));
     Ok(())
 }
