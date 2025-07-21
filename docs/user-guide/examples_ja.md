@@ -1,29 +1,34 @@
-# 実用例集
+# 実用例
 
-このガイドでは、`diffx` を実際の業務で活用するための具体的な例を、業界・用途別に整理して提供します。
+このガイドでは、実際のシナリオでの `diffx` の実用的な使用例を、用途と業界別に整理して提供します。
 
 ## 目次
 
 - [設定管理](#設定管理)
-- [DevOps・インフラストラクチャ](#devops・インフラストラクチャ)
-- [API 開発・テスト](#api-開発・テスト)
-- [データ処理・ETL](#データ処理・etl)
+- [DevOpsとインフラストラクチャ](#devopsとインフラストラクチャ)
+- [API開発とテスト](#api開発とテスト)
+- [データ処理とETL](#データ処理とetl)
 - [データベース管理](#データベース管理)
-- [監視・アラート](#監視・アラート)
+- [監視とアラート](#監視とアラート)
 - [ソフトウェア開発](#ソフトウェア開発)
-- [セキュリティ・コンプライアンス](#セキュリティ・コンプライアンス)
+- [セキュリティとコンプライアンス](#セキュリティとコンプライアンス)
 
 ## 設定管理
 
-### 環境間設定比較
+### 環境設定比較
 
-開発環境と本番環境の設定を比較して、意図しない差異を検出：
+異なる環境間での設定比較：
 
 ```bash
-# 開発環境と本番環境の比較
+# 開発環境 vs 本番環境
 diffx config/dev.json config/prod.json \
   --ignore-keys-regex "^(host|port|password|secret_.*)" \
   --output json > env_diff.json
+
+# デプロイ前のステージング検証
+diffx config/staging.yaml config/prod.yaml \
+  --path "application" \
+  --output yaml
 ```
 
 **サンプルファイル:**
@@ -33,18 +38,12 @@ diffx config/dev.json config/prod.json \
   "application": {
     "name": "myapp",
     "version": "1.0.0",
-    "debug": true,
-    "log_level": "debug"
+    "debug": true
   },
   "database": {
     "host": "localhost",
     "port": 5432,
-    "name": "myapp_dev",
-    "ssl": false
-  },
-  "cache": {
-    "enabled": true,
-    "ttl": 300
+    "name": "myapp_dev"
   }
 }
 
@@ -52,19 +51,13 @@ diffx config/dev.json config/prod.json \
 {
   "application": {
     "name": "myapp",
-    "version": "1.0.0",
-    "debug": false,
-    "log_level": "info"
+    "version": "1.0.0", 
+    "debug": false
   },
   "database": {
     "host": "prod-db.example.com",
     "port": 5432,
-    "name": "myapp_prod", 
-    "ssl": true
-  },
-  "cache": {
-    "enabled": true,
-    "ttl": 3600
+    "name": "myapp_prod"
   }
 }
 ```
@@ -72,286 +65,209 @@ diffx config/dev.json config/prod.json \
 **期待される出力:**
 ```
 ~ application.debug: true -> false
-~ application.log_level: "debug" -> "info"
-+ database.ssl: true
-~ cache.ttl: 300 -> 3600
 ```
 
 ### Kubernetes設定ドリフト検出
 
-Kubernetesマニフェストの設定ドリフトを監視：
+Kubernetesデプロイメントでの設定ドリフトを監視：
 
 ```bash
-# 現在のデプロイメントと期待状態の比較
+# 現在のデプロイメントと希望状態を比較
 kubectl get deployment myapp -o json > current-deployment.json
 diffx desired-deployment.json current-deployment.json \
   --ignore-keys-regex "^(metadata\\.(creationTimestamp|resourceVersion|uid)|status\\..*)" \
-  --output json > k8s_drift.json
-
-# 重要な変更を検出
-if jq -e '.[] | select(.Removed or .TypeChanged)' k8s_drift.json > /dev/null; then
-  echo "重要な設定変更が検出されました"
-  cat k8s_drift.json
-fi
+  --output json
 ```
 
-### Docker Compose環境比較
+### Docker Compose環境バリエーション
 
-異なる環境のDocker Compose設定を比較：
+異なる環境のDocker Composeファイルを比較：
 
 ```bash
-# ベース設定とオーバーライドの比較
+# ベースcomposeとオーバーライドを比較
 diffx docker-compose.yml docker-compose.override.yml \
   --path "services" \
-  --output unified > compose_diff.patch
-
-# 本番用設定との比較
-diffx docker-compose.yml docker-compose.prod.yml \
-  --ignore-keys-regex "^(build|volumes\\.\\d+)" \
-  --output yaml
+  --output unified
 ```
 
-## DevOps・インフラストラクチャ
+## DevOpsとインフラストラクチャ
 
-### Terraform状態比較
+### Terraformステート比較
 
-Terraformの状態ファイルを比較してインフラドリフトを検出：
+インフラストラクチャドリフト検出のためのTerraformステートファイル比較：
 
 ```bash
-# 現在の状態とバックアップの比較
+# 現在の状態とバックアップを比較
 diffx terraform.tfstate terraform.tfstate.backup \
   --path "resources" \
   --ignore-keys-regex "^(last_updated|timeouts)" \
   --output json > infrastructure_drift.json
 
-# 計画された変更の確認
+# 計画された変更を比較
 terraform show -json plan.out > planned.json
 diffx current_state.json planned.json \
-  --path "planned_values.root_module" \
-  --output yaml
+  --path "planned_values.root_module"
 ```
 
-### インフラストラクチャ・アズ・コード検証
+### Infrastructure as Code検証
 
-デプロイ前の設定検証：
+デプロイメント前のインフラストラクチャ変更検証：
 
 ```bash
-# CloudFormationテンプレートの比較
+# CloudFormationテンプレート比較
 diffx infrastructure/base.yaml infrastructure/updated.yaml \
   --ignore-keys-regex "^(Metadata|Description)" \
-  --output yaml > cf_changes.yaml
+  --output yaml
 
-# Ansibleプレイブックの比較
+# Ansibleプレイブック比較
 diffx playbook-v1.yml playbook-v2.yml \
   --path "tasks" \
   --output cli
-
-# Helmチャートの比較
-helm template myapp ./chart > current_manifest.yaml
-helm template myapp ./chart-new > new_manifest.yaml
-diffx current_manifest.yaml new_manifest.yaml \
-  --ignore-keys-regex "^(metadata\\.(labels\\.chart|labels\\.heritage))"
 ```
 
 ### CI/CDパイプライン設定
 
-CI/CDパイプラインの設定変更を監視：
+CI/CDパイプライン設定変更の監視：
 
 ```bash
-# GitHub Actionsワークフローの比較
+# GitHub Actionsワークフロー比較
 diffx .github/workflows/ci.yml .github/workflows/ci.new.yml \
-  --output unified > workflow_changes.patch
+  --output unified
 
-# GitLab CI設定の比較
+# GitLab CI比較
 diffx .gitlab-ci.yml .gitlab-ci.backup.yml \
-  --ignore-keys-regex "^(variables\\.CI_.*)" \
-  --output json
-
-# Jenkins Pipelineの比較
-diffx Jenkinsfile Jenkinsfile.new \
-  --format yaml \
-  --output cli
+  --ignore-keys-regex "^(variables\\.CI_.*)"
 ```
 
-## API 開発・テスト
+## API開発とテスト
 
 ### APIレスポンス検証
 
-APIレスポンスが期待される構造に準拠しているかチェック：
+期待されるスキーマに対するAPIレスポンスの検証：
 
 ```bash
-# APIレスポンスと期待値の比較
+# APIレスポンスと期待される構造を比較
 curl -s https://api.example.com/v1/users/123 > actual_response.json
 diffx expected_user_response.json actual_response.json \
   --ignore-keys-regex "^(timestamp|request_id|server_time)" \
-  --output json > api_validation.json
+  --output json
 
-# 複数エンドポイントの一括検証
-for endpoint in users products orders; do
-  echo "=== Testing $endpoint endpoint ==="
-  curl -s "https://api.example.com/v1/$endpoint" > "actual_$endpoint.json"
-  
-  if diffx "expected_$endpoint.json" "actual_$endpoint.json" \
-     --ignore-keys-regex "^(id|timestamp|request_id)" \
-     --output json > "diff_$endpoint.json"; then
-    echo "✅ $endpoint: 構造が一致"
-  else
-    echo "❌ $endpoint: 予期しない変更"
-    cat "diff_$endpoint.json"
-  fi
-done
+# APIエンドポイント変更の検証
+diffx api/v1/schema.json api/v2/schema.json \
+  --path "definitions" \
+  --output yaml
 ```
 
-**サンプル期待レスポンス:**
-```json
-// expected_user_response.json
-{
+**サンプルAPI検証:**
+```bash
+# ユーザー作成エンドポイントのテスト
+echo '{
   "id": 123,
-  "name": "John Doe", 
+  "name": "John Doe",
   "email": "john@example.com",
-  "profile": {
-    "avatar": "https://example.com/avatar.jpg",
-    "bio": "Software Engineer"
-  },
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
-}
+  "created_at": "2024-01-01T00:00:00Z"
+}' > expected_user.json
+
+curl -s -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com"}' > actual_user.json
+
+diffx expected_user.json actual_user.json \
+  --ignore-keys-regex "^(id|created_at|updated_at)$"
 ```
 
 ### OpenAPI仕様比較
 
-OpenAPI仕様の変更を検出して互換性をチェック：
+破壊的変更のためのOpenAPI仕様比較：
 
 ```bash
-# API仕様のバージョン間比較
+# APIバージョン比較
 diffx openapi-v1.yaml openapi-v2.yaml \
   --path "paths" \
   --output json > api_changes.json
 
-# 互換性破壊的変更の検出
+# 後方互換性検証
 diffx api-spec.yaml api-spec.new.yaml \
   --ignore-keys-regex "^(info\\.(version|title)|servers)" \
-  --output unified > breaking_changes.diff
-
-# スキーマ定義の比較
-diffx openapi-v1.yaml openapi-v2.yaml \
-  --path "components.schemas" \
-  --output yaml
+  --output unified
 ```
 
 ### GraphQLスキーマ検証
 
-GraphQLスキーマの変更を追跡：
+GraphQLスキーマの比較：
 
 ```bash
-# GraphQLスキーマをJSONに変換して比較
-graphql-introspection schema-v1.graphql > schema-v1.json
-graphql-introspection schema-v2.graphql > schema-v2.json
-
+# GraphQLをJSONに変換して比較
+graphql-to-json schema-v1.graphql > schema-v1.json
+graphql-to-json schema-v2.graphql > schema-v2.json
 diffx schema-v1.json schema-v2.json \
-  --path "data.__schema.types" \
-  --array-id-key "name" \
-  --output yaml > schema_changes.yaml
-```
-
-## データ処理・ETL
-
-### データパイプライン検証
-
-ETLパイプラインでのデータ変換を検証：
-
-```bash
-# 入力データと出力データの構造比較
-diffx input_data_sample.json output_data_sample.json \
-  --array-id-key "record_id" \
-  --epsilon 0.001 \
-  --ignore-keys-regex "^(processed_at|batch_id|execution_time)" \
-  --output json > transformation_validation.json
-
-# データ移行の検証
-diffx source_schema.json target_schema.json \
-  --path "tables" \
-  --array-id-key "table_name" \
   --output yaml
 ```
 
-**サンプルデータ:**
-```json
-// input_data_sample.json
-[
-  {
-    "record_id": "R001",
-    "customer_name": "田中太郎",
-    "order_amount": 15000,
-    "currency": "JPY",
-    "raw_timestamp": "2024-01-01 09:00:00"
-  }
-]
+## データ処理とETL
 
-// output_data_sample.json
-[
-  {
-    "record_id": "R001", 
-    "customer_name": "田中太郎",
-    "order_amount": 15000,
-    "currency": "JPY",
-    "processed_timestamp": "2024-01-01T09:00:00Z",
-    "processed_at": "2024-01-01T10:00:00Z",
-    "batch_id": "B20240101001"
-  }
-]
+### データパイプライン検証
+
+ETLパイプラインでのデータ変換検証：
+
+```bash
+# 入力データと出力データ構造を比較
+diffx input_data_sample.json output_data_sample.json \
+  --array-id-key "record_id" \
+  --epsilon 0.001 \
+  --output json
+
+# データマイグレーション検証
+diffx source_schema.json target_schema.json \
+  --path "tables" \
+  --output yaml
 ```
 
 ### データ品質チェック
 
-データ品質をパイプライン段階間で監視：
+パイプライン段階でのデータ品質監視：
 
 ```bash
-# 日次データの比較
-yesterday=$(date -d yesterday +%Y%m%d)
-today=$(date +%Y%m%d)
+# データスナップショット比較
+diffx data_snapshot_t1.json data_snapshot_t2.json \
+  --ignore-keys-regex "^(timestamp|batch_id|process_time)" \
+  --array-id-key "id" \
+  --epsilon 0.01
 
-diffx "daily_metrics_$yesterday.json" "daily_metrics_$today.json" \
+# 集計結果検証
+diffx daily_metrics.json expected_metrics.json \
   --epsilon 0.05 \
-  --ignore-keys-regex "^(date|timestamp|execution_.*)" \
-  --output json > daily_data_diff.json
-
-# 集計結果の検証
-diffx expected_aggregation.json actual_aggregation.json \
-  --epsilon 0.01 \
-  --output yaml
+  --output json
 ```
 
-### データ変換設定管理
+### 設定駆動ETL
 
-ETL設定の変更管理：
+ETL設定ファイルの比較：
 
 ```bash
-# データソース設定の比較
+# データソース設定比較
 diffx etl_config_staging.yaml etl_config_prod.yaml \
-  --ignore-keys-regex "^(credentials|connection_string|host|port)" \
-  --path "data_sources" \
-  --output json
+  --ignore-keys-regex "^(credentials|connection_string)" \
+  --path "data_sources"
 
-# 変換ルールの比較
+# 変換ルール検証
 diffx transform_rules_v1.json transform_rules_v2.json \
-  --array-id-key "rule_id" \
-  --output cli
+  --array-id-key "rule_id"
 ```
 
 ## データベース管理
 
-### スキーマ移行検証
+### スキーママイグレーション検証
 
-データベーススキーマの変更を追跡：
+データベーススキーマ変更の検証：
 
 ```bash
-# スキーマ移行前後の比較
+# データベーススキーマ比較
 pg_dump --schema-only mydb > schema_before.sql
 # マイグレーション実行
 pg_dump --schema-only mydb > schema_after.sql
 
-# カスタムスクリプトでSQL→JSON変換
+# 比較用のJSONに変換（カスタムスクリプト使用）
 sql-to-json schema_before.sql > schema_before.json
 sql-to-json schema_after.sql > schema_after.json
 
@@ -362,20 +278,14 @@ diffx schema_before.json schema_after.json \
 
 ### データバックアップ検証
 
-バックアップの整合性確認：
+バックアップの整合性検証：
 
 ```bash
-# 本番データとバックアップの比較
+# 現在のデータとバックアップを比較
 diffx production_export.json backup_export.json \
   --array-id-key "id" \
   --epsilon 0.001 \
-  --ignore-keys-regex "^(last_updated|backup_timestamp|export_time)" \
-  --output json > backup_validation.json
-
-# データ一貫性チェック
-diffx current_snapshot.json previous_snapshot.json \
-  --array-id-key "primary_key" \
-  --output cli
+  --ignore-keys-regex "^(last_updated|backup_timestamp)"
 ```
 
 ### データベース設定管理
@@ -383,304 +293,221 @@ diffx current_snapshot.json previous_snapshot.json \
 データベース設定ファイルの比較：
 
 ```bash
-# PostgreSQL設定の比較
+# PostgreSQL設定比較
 diffx postgresql.conf postgresql.conf.backup \
   --format ini \
-  --ignore-keys-regex "^(log_.*|shared_preload_libraries)" \
-  --output unified
+  --ignore-keys-regex "^(log_.*|shared_preload_libraries)"
 
-# MongoDB設定の比較
+# MongoDB設定比較
 diffx mongod.conf mongod.conf.new \
   --format yaml \
-  --path "storage" \
-  --output json
-
-# MySQL設定の比較
-diffx my.cnf my.cnf.tuned \
-  --format ini \
-  --ignore-keys-regex "^(innodb_buffer_pool_size|query_cache_size)" \
-  --output cli
+  --path "storage"
 ```
 
-## 監視・アラート
+## 監視とアラート
 
 ### 設定ドリフト検出
 
-本番環境での設定変更を継続的に監視：
+本番環境での設定変更監視：
 
 ```bash
+# スケジュールされた設定チェック
 #!/bin/bash
-# config_drift_monitor.sh - 定期実行スクリプト
+# check_config_drift.sh
 
 EXPECTED_CONFIG="/opt/app/config/expected.json"
 CURRENT_CONFIG="/opt/app/config/current.json"
-ALERT_WEBHOOK="https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
 
 # 現在の設定を取得
 curl -s http://localhost:8080/api/config > "$CURRENT_CONFIG"
 
-# 期待設定と比較
-if ! diffx "$EXPECTED_CONFIG" "$CURRENT_CONFIG" \
-     --ignore-keys-regex "^(timestamp|uptime|last_.*|temp_.*)" \
-     --output json > config_drift.json; then
-  
-  echo "設定ドリフトが検出されました！"
-  
-  # 重要な変更をフィルタリング
-  CRITICAL_CHANGES=$(jq -r '.[] | select(.Removed or .TypeChanged or 
-    (.Modified and (.Modified[0] | contains("security") or contains("database") or contains("auth"))))' \
-    config_drift.json)
-  
-  if [ -n "$CRITICAL_CHANGES" ]; then
-    echo "🚨 重要な設定変更が検出されました"
-    echo "$CRITICAL_CHANGES" | jq .
-    
-    # Slackにアラート送信
-    curl -X POST "$ALERT_WEBHOOK" \
-      -H "Content-Type: application/json" \
-      -d "{
-        \"text\": \"🚨 Critical configuration drift detected!\",
-        \"attachments\": [{
-          \"color\": \"danger\",
-          \"text\": \"$(cat config_drift.json | jq -c .)\",
-          \"fields\": [{
-            \"title\": \"Host\",
-            \"value\": \"$(hostname)\",
-            \"short\": true
-          }]
-        }]
-      }"
-  else
-    echo "⚠️ 軽微な設定変更が検出されました"
-    cat config_drift.json
-  fi
+# 期待値と比較
+if diffx "$EXPECTED_CONFIG" "$CURRENT_CONFIG" \
+   --ignore-keys-regex "^(timestamp|uptime|last_.*)" \
+   --output json > config_drift.json; then
+  echo "設定ドリフトは検出されませんでした"
 else
-  echo "✅ 設定ドリフトなし"
+  echo "設定ドリフトが検出されました！"
+  cat config_drift.json
+  # アラートを送信
+  alert-manager send --file config_drift.json
 fi
 ```
 
 ### サービスヘルス監視
 
-サービスヘルス設定の変更を追跡：
+サービスヘルス設定の監視：
 
 ```bash
-# ヘルスチェック設定の比較
+# ヘルスチェック設定比較
 diffx health_config_baseline.json health_config_current.json \
-  --ignore-keys-regex "^(last_check|status_timestamp|response_time)" \
-  --output json > health_config_changes.json
+  --ignore-keys-regex "^(last_check|status_timestamp)" \
+  --output json
 
-# 監視ルールの検証
+# 監視ルール検証
 diffx prometheus_rules.yaml prometheus_rules.new.yaml \
   --path "groups" \
-  --array-id-key "name" \
   --output unified
 ```
 
 ### アラート設定管理
 
-アラートルールの変更管理：
+アラートルール変更の管理：
 
 ```bash
-# AlertManager設定の比較
+# アラートマネージャー設定比較
 diffx alertmanager.yml alertmanager.new.yml \
   --path "route" \
-  --output yaml > alerting_changes.yaml
+  --output yaml
 
-# Grafanaダッシュボードの比較
+# Grafanaダッシュボード変更検証
 diffx dashboard_v1.json dashboard_v2.json \
-  --ignore-keys-regex "^(id|uid|version|time|refresh)" \
-  --path "panels" \
-  --array-id-key "id" \
-  --output json
+  --ignore-keys-regex "^(id|uid|version|time)" \
+  --path "panels"
 ```
 
 ## ソフトウェア開発
 
-### パッケージ依存関係追跡
+### パッケージ依存性追跡
 
-パッケージファイルの変更を監視：
+パッケージ依存性の変更追跡：
 
 ```bash
-# package.jsonの変更追跡
+# パッケージファイル比較
 diffx package.json package.json.backup \
-  --ignore-keys-regex "^(name|description|author|scripts\\..*)" \
-  --path "dependencies" \
+  --ignore-keys-regex "^(name|description|author)" \
+  --path "dependencies"
+
+# ロックファイル比較
+diffx yarn.lock yarn.lock.backup \
   --output json > dependency_changes.json
 
-# 新しい依存関係の検出
-if jq -e '.[] | select(.Added)' dependency_changes.json > /dev/null; then
-  echo "新しい依存関係が追加されました："
-  jq -r '.[] | select(.Added) | .Added[0] + ": " + .Added[1]' dependency_changes.json
-  echo "セキュリティ監査を実行してください"
-  npm audit
-fi
-
-# Python requirements.txtの比較
+# Python要件比較
 diffx requirements.txt requirements.new.txt \
-  --format ini \
-  --output cli
-
-# Cargo.tomlの比較
-diffx Cargo.toml Cargo.toml.backup \
-  --format toml \
-  --ignore-keys-regex "^(package\\.(build|publish))" \
-  --output yaml
+  --format ini  # キー値ペアとして扱う
 ```
 
 ### ビルド設定変更
 
-ビルド設定の変更を追跡：
+ビルド設定変更の監視：
 
 ```bash
-# webpack設定の比較
+# webpack設定比較
 diffx webpack.config.js webpack.config.new.js \
   --format json \
-  --output unified > webpack_changes.diff
+  --output unified
 
-# TypeScript設定の比較
-diffx tsconfig.json tsconfig.new.json \
-  --ignore-keys-regex "^(compilerOptions\\.outDir)" \
-  --output cli
-
-# Docker設定の比較
-diffx Dockerfile Dockerfile.new \
-  --format yaml \
-  --output cli
+# Cargo.tomlファイル比較
+diffx Cargo.toml Cargo.toml.backup \
+  --format toml \
+  --ignore-keys-regex "^(build|publish)"
 ```
 
 ### コード品質設定
 
-コード品質ツールの設定変更：
+コード品質ツール設定の追跡：
 
 ```bash
-# ESLint設定の比較
+# ESLint設定比較
 diffx .eslintrc.json .eslintrc.new.json \
   --path "rules" \
-  --output json > eslint_changes.json
+  --output json
 
-# Prettier設定の比較
-diffx .prettierrc.json .prettierrc.new.json \
-  --output cli
-
-# テスト設定の比較
+# テスト設定比較
 diffx jest.config.js jest.config.new.js \
   --format json \
-  --path "testMatch" \
-  --output yaml
+  --path "testMatch"
 ```
 
-## セキュリティ・コンプライアンス
+## セキュリティとコンプライアンス
 
 ### セキュリティ設定監査
 
-セキュリティ設定の変更を監視：
+セキュリティ設定の監査：
 
 ```bash
-# セキュリティポリシーの比較
+# セキュリティポリシー比較
 diffx security_policy_v1.json security_policy_v2.json \
   --path "permissions" \
-  --array-id-key "resource" \
   --output json > security_changes.json
 
-# 重要な権限変更の検出
-CRITICAL_SECURITY=$(jq -r '.[] | select(.Removed or .TypeChanged or 
-  (.Modified and (.Modified[0] | contains("admin") or contains("root") or contains("sudo"))))' \
-  security_changes.json)
-
-if [ -n "$CRITICAL_SECURITY" ]; then
-  echo "🚨 重要なセキュリティ変更が検出されました"
-  echo "$CRITICAL_SECURITY" | jq .
-fi
-
-# IAM設定の比較
+# IAM設定検証
 diffx iam_policy_prod.json iam_policy_staging.json \
-  --ignore-keys-regex "^(arn|account_id|creation_date)" \
+  --ignore-keys-regex "^(arn|account_id)" \
   --output yaml
 ```
 
 ### コンプライアンス監視
 
-コンプライアンス関連設定の追跡：
+コンプライアンス関連設定の監視：
 
 ```bash
-# GDPR準拠設定の比較
+# GDPR準拠設定比較
 diffx gdpr_config.json gdpr_config.new.json \
   --path "data_retention" \
-  --output json > gdpr_changes.json
+  --output json
 
-# SOX準拠設定の検証
+# SOX準拠検証
 diffx sox_controls.yaml sox_controls.updated.yaml \
   --array-id-key "control_id" \
-  --output unified > sox_changes.diff
-
-# ISO27001準拠設定の監査
-diffx iso27001_config.json iso27001_config.audit.json \
-  --ignore-keys-regex "^(audit_date|auditor|last_review)" \
-  --output json
+  --output unified
 ```
 
 ### アクセス制御検証
 
-アクセス制御設定の変更管理：
+アクセス制御変更の検証：
 
 ```bash
-# RBAC設定の比較
+# RBAC設定比較
 diffx rbac_roles.yaml rbac_roles.new.yaml \
   --array-id-key "name" \
   --path "rules" \
-  --output json > rbac_changes.json
+  --output json
 
-# OAuth設定の比較
+# OAuth設定検証
 diffx oauth_config.json oauth_config.backup.json \
-  --ignore-keys-regex "^(client_secret|private_key|refresh_token)" \
-  --output cli
-
-# Active Directory設定の比較
-diffx ad_groups.json ad_groups.new.json \
-  --array-id-key "group_name" \
-  --ignore-keys-regex "^(last_modified|member_count)" \
-  --output yaml
+  --ignore-keys-regex "^(client_secret|private_key)"
 ```
 
 ## UNIXコマンドパターン
 
-diffx は一般的な UNIX diff パターンの構造化データ版を提供します：
+diffxは、構造化データに適応した一般的なUNIX diffパターンの同等機能を提供します：
 
-### `diff -q` 相当: 高速ファイル変更検出
+### `diff -q` 同等: 高速ファイル変更検出
 
 ```bash
-# 設定ファイルが変更されているかをexit codeのみで判定
+# 設定ファイルが異なるかチェック（終了コードのみ）
 if ! diffx config.json config.backup.json --quiet; then
-  echo "設定が変更されています。デプロイを開始します"
+  echo "設定が変更されました、デプロイメントをトリガーします"
   deploy_app.sh
 fi
 
-# 複数の設定ファイルを一括チェック
+# 複数の設定ファイルのバッチチェック
 for config in configs/*.json; do
   if ! diffx "$config" "backups/$(basename $config)" --quiet; then
-    echo "$(basename $config) が変更されています"
+    echo "$(basename $config) が変更されました"
   fi
 done
 
-# watchコマンドと組み合わせて継続監視
-watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "設定ドリフトを検出！"'
+# 継続的監視のためのwatch使用
+watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "設定ドリフトが検出されました！"'
 ```
 
-### `diff --brief` 相当: ファイル名のみ表示
+### `diff --brief` 同等: 変更されたファイル名のみ表示
 
 ```bash
-# ディレクトリ全体の変更ファイルを高速スキャン
+# 変更されたファイルの高速ディレクトリスキャン
 diffx config_dir/ backup_dir/ --recursive --brief
 
-# CI パイプラインでの変更検出
+# 変更検出のためのCIパイプラインでの使用
 changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
 if [ -n "$changed_files" ]; then
-  echo "設定変更を検出:"
+  echo "設定変更が検出されました:"
   echo "$changed_files"
   trigger_validation_pipeline.sh
 fi
 
-# findコマンドと組み合わせて選択的チェック
+# 選択的チェックのためのfindとの組み合わせ
 find . -name "*.json" -newer last_deploy.marker | while read file; do
   backup_file="backups/${file}"
   if [ -f "$backup_file" ]; then
@@ -689,57 +516,57 @@ find . -name "*.json" -newer last_deploy.marker | while read file; do
 done
 ```
 
-### `diff -i` 相当: 大文字小文字無視比較
+### `diff -i` 同等: 大文字小文字を区別しない比較
 
 ```bash
-# API レスポンスでenum値の大文字小文字違いを無視
+# 列挙値の大文字小文字の違いを無視したAPIレスポンス比較
 curl -s https://api.example.com/status > current_status.json
 diffx expected_status.json current_status.json --ignore-case
 
-# 大文字小文字が不統一な設定ファイルの比較
+# 一貫性のない大文字小文字の設定ファイル
 diffx config_template.yaml user_config.yaml \
   --ignore-case \
   --ignore-keys-regex "^(name|description)"
 
-# 大文字小文字混在のデータベース設定比較
+# 大文字小文字が混在するフィールド名のデータベース設定
 diffx db_schema.json migrated_schema.json \
   --ignore-case \
   --array-id-key "table_name" \
   --output json
 ```
 
-### `diff -w` 相当: 空白差異無視
+### `diff -w` 同等: 空白の違いを無視
 
 ```bash
-# フォーマットが異なるJSONファイルの比較
+# 異なるフォーマットの可能性があるJSONファイル比較
 diffx api_response_pretty.json api_response_minified.json --ignore-whitespace
 
-# 設定ファイルのフォーマット差異を無視
+# 設定内のフォーマット差異を無視
 diffx config.json config_reformatted.json \
   --ignore-whitespace \
   --output json
 
-# 空白のバリエーションがあるデータエクスポートの比較
+# 空白のバリエーションがあるデータエクスポート比較
 diffx data_export.json data_import_processed.json \
   --ignore-whitespace \
   --array-id-key "id" \
   --epsilon 0.001
 ```
 
-### `diff -C3` 相当: unified diff でのコンテキスト表示
+### `diff -C3` 同等: 統一出力でのコンテキスト行
 
 ```bash
-# 変更箇所の前後3行を表示
+# 変更周辺の3行のコンテキストを表示
 diffx large_config.json large_config_new.json \
   --output unified \
   --context 3
 
-# 最小コンテキストで集中的な差分表示
+# 焦点を絞った差分のための最小コンテキスト
 diffx api_schema.json api_schema_v2.json \
   --output unified \
   --context 1
 
-# コンテキストなしで変更のみ表示
+# 変更のみビューのためのコンテキストなし
 diffx database_config.json database_config_updated.json \
   --output unified \
   --context 0
@@ -748,25 +575,25 @@ diffx database_config.json database_config_updated.json \
 ### 組み合わせUNIXスタイルパターン
 
 ```bash
-# diff -qiw file1 file2 相当
+# 同等: diff -qiw file1 file2
 diffx config.json config.backup.json \
   --quiet \
   --ignore-case \
   --ignore-whitespace
 
-# diff -r --brief dir1/ dir2/ 相当
+# 同等: diff -r --brief dir1/ dir2/
 diffx config_dir/ backup_dir/ \
   --recursive \
   --brief
 
-# 高度なパターン: 大文字小文字無視 + 選択的フィールド除外
+# 高度なパターン: 選択的フィールド無視での大文字小文字無視
 diffx user_data.json user_data_migrated.json \
   --ignore-case \
   --ignore-whitespace \
   --ignore-keys-regex "^(created_at|updated_at|timestamp)" \
   --array-id-key "user_id"
 
-# Git スタイルワークフロー統合
+# Gitスタイルワークフロー統合
 git show HEAD:config.json > /tmp/old_config.json
 diffx /tmp/old_config.json config.json \
   --ignore-whitespace \
@@ -777,20 +604,20 @@ diffx /tmp/old_config.json config.json \
 ### シェル統合例
 
 ```bash
-# pre-commit フック相当
+# pre-commitフック同等
 #!/bin/bash
 # .git/hooks/pre-commit
 if ! diffx config/production.json config/staging.json \
    --ignore-keys-regex "^(environment|debug)" \
    --quiet; then
-  echo "本番環境とステージング環境の設定に意味的な差異があります"
+  echo "本番環境とステージング環境の設定にセマンティックな差異があります"
   echo "コミット前に確認してください:"
   diffx config/production.json config/staging.json \
     --ignore-keys-regex "^(environment|debug)"
   exit 1
 fi
 
-# デプロイ検証スクリプト
+# デプロイメント検証スクリプト
 #!/bin/bash
 # validate_deploy.sh
 deployment_config="$1"
@@ -800,15 +627,15 @@ if diffx "$baseline_config" "$deployment_config" \
    --ignore-case \
    --ignore-whitespace \
    --quiet; then
-  echo "✅ 設定に変更なし - 安全にデプロイ可能"
+  echo "✅ 設定は変更されていません - デプロイ可能です"
   exit 0
 else
-  echo "⚠️  設定変更を検出:"
+  echo "⚠️  設定変更が検出されました:"
   diffx "$baseline_config" "$deployment_config" \
     --ignore-case \
     --ignore-whitespace \
     --brief
-  echo "デプロイを続行しますか? (y/N)"
+  echo "デプロイメントを続行しますか？ (y/N)"
   read -r response
   [[ "$response" =~ ^[Yy]$ ]] || exit 1
 fi
@@ -821,7 +648,7 @@ while true; do
      --ignore-keys-regex "^(hostname|instance_id|last_update)" \
      --quiet; then
     
-    # 詳細付きアラート送信
+    # 詳細でアラートを送信
     diffx /etc/app/config.json /opt/app/expected_config.json \
       --ignore-keys-regex "^(hostname|instance_id|last_update)" \
       --output json | \
@@ -829,13 +656,13 @@ while true; do
            -H "Content-Type: application/json" \
            -d @-
   fi
-  sleep 300  # 5分間隔でチェック
+  sleep 300  # 5分ごとにチェック
 done
 ```
 
 ## 高度な使用パターン
 
-### 複数環境パイプライン
+### マルチ環境パイプライン
 
 包括的な環境比較パイプライン：
 
@@ -845,41 +672,30 @@ done
 
 ENVIRONMENTS=("dev" "staging" "prod")
 BASE_ENV="prod"
-REPORT_DIR="reports"
-
-mkdir -p "$REPORT_DIR"
 
 for env in "${ENVIRONMENTS[@]}"; do
   if [ "$env" != "$BASE_ENV" ]; then
-    echo "=== $env と $BASE_ENV の比較 ==="
+    echo "$envと$BASE_ENVを比較中"
     
     # アプリケーション設定
     diffx "config/$BASE_ENV.json" "config/$env.json" \
       --ignore-keys-regex "^(host|port|database|secret_.*)" \
-      --output json > "$REPORT_DIR/diff_${env}_${BASE_ENV}_app.json"
+      --output json > "diff_${env}_${BASE_ENV}_app.json"
     
-    # インフラ設定  
+    # インフラストラクチャ設定  
     diffx "infra/$BASE_ENV.yaml" "infra/$env.yaml" \
       --path "resources" \
-      --output json > "$REPORT_DIR/diff_${env}_${BASE_ENV}_infra.json"
+      --output json > "diff_${env}_${BASE_ENV}_infra.json"
     
-    # セキュリティ設定
-    diffx "security/$BASE_ENV.json" "security/$env.json" \
-      --path "policies" \
-      --output json > "$REPORT_DIR/diff_${env}_${BASE_ENV}_security.json"
-    
-    # レポート生成
-    generate_html_report.py "$REPORT_DIR/diff_${env}_${BASE_ENV}_*.json" \
-      > "$REPORT_DIR/report_${env}.html"
+    # サマリーレポート生成
+    generate_report.py "diff_${env}_${BASE_ENV}_*.json" > "report_${env}.html"
   fi
 done
-
-echo "比較レポートが $REPORT_DIR に生成されました"
 ```
 
-### データ移行検証ワークフロー
+### データマイグレーション検証
 
-完全なデータ移行検証：
+完全なデータマイグレーション検証ワークフロー：
 
 ```bash
 #!/bin/bash
@@ -887,109 +703,95 @@ echo "比較レポートが $REPORT_DIR に生成されました"
 
 SOURCE_DB="legacy_system"
 TARGET_DB="new_system"
-VALIDATION_DIR="migration_validation"
 
-mkdir -p "$VALIDATION_DIR"
+# スキーマエクスポート
+export_schema.py "$SOURCE_DB" > source_schema.json
+export_schema.py "$TARGET_DB" > target_schema.json
 
-echo "=== スキーマ比較 ==="
-export_schema.py "$SOURCE_DB" > "$VALIDATION_DIR/source_schema.json"
-export_schema.py "$TARGET_DB" > "$VALIDATION_DIR/target_schema.json"
-
-diffx "$VALIDATION_DIR/source_schema.json" "$VALIDATION_DIR/target_schema.json" \
+# スキーマ比較
+diffx source_schema.json target_schema.json \
   --array-id-key "table_name" \
-  --output json > "$VALIDATION_DIR/schema_diff.json"
+  --output json > schema_diff.json
 
-echo "=== データサンプル比較 ==="
-export_sample_data.py "$SOURCE_DB" --limit 1000 > "$VALIDATION_DIR/source_data.json"
-export_sample_data.py "$TARGET_DB" --limit 1000 > "$VALIDATION_DIR/target_data.json"
+# サンプルデータエクスポート
+export_sample_data.py "$SOURCE_DB" > source_data.json
+export_sample_data.py "$TARGET_DB" > target_data.json
 
-diffx "$VALIDATION_DIR/source_data.json" "$VALIDATION_DIR/target_data.json" \
+# データ構造比較
+diffx source_data.json target_data.json \
   --array-id-key "id" \
   --epsilon 0.001 \
-  --ignore-keys-regex "^(migrated_at|batch_id|source_system)" \
-  --output json > "$VALIDATION_DIR/data_diff.json"
+  --ignore-keys-regex "^(migrated_at|batch_id)" \
+  --output json > data_diff.json
 
-echo "=== 集約データ比較 ==="
-export_aggregates.py "$SOURCE_DB" > "$VALIDATION_DIR/source_aggregates.json"
-export_aggregates.py "$TARGET_DB" > "$VALIDATION_DIR/target_aggregates.json"
-
-diffx "$VALIDATION_DIR/source_aggregates.json" "$VALIDATION_DIR/target_aggregates.json" \
-  --epsilon 0.01 \
-  --output json > "$VALIDATION_DIR/aggregates_diff.json"
-
-# 移行レポート生成
-generate_migration_report.py \
-  "$VALIDATION_DIR/schema_diff.json" \
-  "$VALIDATION_DIR/data_diff.json" \
-  "$VALIDATION_DIR/aggregates_diff.json" \
-  > "$VALIDATION_DIR/migration_report.html"
-
-echo "移行検証レポートが $VALIDATION_DIR/migration_report.html に生成されました"
+# マイグレーションレポート生成
+generate_migration_report.py schema_diff.json data_diff.json
 ```
 
 ### 自動テスト統合
 
-自動化されたテストフレームワークとの統合：
+自動テストフレームワークとの統合：
 
 ```bash
-#!/bin/bash
 # test_api_contract.sh
+#!/bin/bash
 
 API_BASE="https://api.example.com"
 EXPECTED_DIR="tests/fixtures/api_responses"
-RESULTS_DIR="test_results"
-
-mkdir -p "$RESULTS_DIR"
 
 # 複数エンドポイントのテスト
-endpoints=("users" "products" "orders" "categories")
-
-echo "=== API契約テスト開始 ==="
+endpoints=("users" "products" "orders")
 
 for endpoint in "${endpoints[@]}"; do
-  echo "Testing $endpoint endpoint..."
+  echo "$endpointエンドポイントをテスト中..."
   
-  # 実際のレスポンス取得
-  curl -s "$API_BASE/$endpoint" \
-    -H "Accept: application/json" \
-    -H "Authorization: Bearer $API_TOKEN" \
-    > "$RESULTS_DIR/actual_$endpoint.json"
+  # 実際のレスポンスを取得
+  curl -s "$API_BASE/$endpoint" > "actual_$endpoint.json"
   
-  # 期待レスポンスと比較
-  if diffx "$EXPECTED_DIR/$endpoint.json" "$RESULTS_DIR/actual_$endpoint.json" \
-     --ignore-keys-regex "^(timestamp|request_id|server_time)" \
-     --output json > "$RESULTS_DIR/diff_$endpoint.json"; then
-    echo "✅ $endpoint: 契約に準拠"
-    PASSED_TESTS=$((PASSED_TESTS + 1))
+  # 期待値と比較
+  if diffx "$EXPECTED_DIR/$endpoint.json" "actual_$endpoint.json" \
+     --ignore-keys-regex "^(timestamp|request_id)" \
+     --output json > "diff_$endpoint.json"; then
+    echo "✅ $endpointは期待される構造と一致しています"
   else
-    echo "❌ $endpoint: 契約違反を検出"
-    cat "$RESULTS_DIR/diff_$endpoint.json"
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    
-    # 詳細分析
-    if jq -e '.[] | select(.Removed)' "$RESULTS_DIR/diff_$endpoint.json" > /dev/null; then
-      echo "  ⚠️ フィールドの削除が検出されました（互換性破壊的変更）"
-    fi
-    
-    if jq -e '.[] | select(.TypeChanged)' "$RESULTS_DIR/diff_$endpoint.json" > /dev/null; then
-      echo "  ⚠️ データ型の変更が検出されました（互換性破壊的変更）"
-    fi
+    echo "❌ $endpointに予期しない変更があります"
+    cat "diff_$endpoint.json"
+    exit 1
   fi
-  echo ""
 done
 
-echo "=== テスト結果 ==="
-echo "成功: $PASSED_TESTS"
-echo "失敗: $FAILED_TESTS"
-
-if [ "$FAILED_TESTS" -gt 0 ]; then
-  echo "API契約テストが失敗しました"
-  exit 1
-else
-  echo "すべてのAPI契約テストが成功しました"
-fi
+echo "すべてのAPIコントラクトテストが成功しました！"
 ```
 
----
+## パフォーマンス最適化例
 
-これらの実用例を参考に、あなたの業務環境に適した `diffx` の活用方法を見つけてください。構造化データの差分を効率的に検出し、システムの品質向上と運用の自動化に役立ててください。
+### 大容量ファイル処理
+
+大容量ファイルのためのdiffx最適化：
+
+```bash
+# 大容量設定ファイル
+diffx large_config.json large_config.new.json \
+  --path "critical.services" \
+  --ignore-keys-regex "^(logs|metrics|debug_.*)" \
+  --output json
+
+# 複数ファイルのバッチ処理
+find configs/ -name "*.json" -print0 | \
+  xargs -0 -P $(nproc) -I {} \
+  sh -c 'diffx {} {}.backup --output json > {}.diff || echo "{}で差分が見つかりました"'
+```
+
+### メモリ効率的処理
+
+大容量データセットの効率的処理：
+
+```bash
+# ストリーム処理（概念的）
+diffx --stream large_dataset_v1.json large_dataset_v2.json \
+  --array-id-key "id" \
+  --chunk-size 1000 \
+  --output json
+```
+
+これらの例は、様々な業界と用途にわたる `diffx` の汎用性とパワーを実証しています。各例には実用的なコマンド、サンプルデータ、期待される出力が含まれており、特定のニーズに適応するのに役立ちます。

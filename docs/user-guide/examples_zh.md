@@ -1,23 +1,23 @@
-# 实际使用示例
+# 实际应用示例
 
-本指南提供在真实场景中使用 `diffx` 的实用示例，按用例和行业组织。
+本指南提供了在实际场景中使用 `diffx` 的实用示例，按使用场景和行业进行组织。
 
 ## 目录
 
 - [配置管理](#配置管理)
-- [DevOps 和基础设施](#devops-和基础设施)
-- [API 开发和测试](#api-开发和测试)
-- [数据处理和 ETL](#数据处理和-etl)
+- [DevOps和基础设施](#devops和基础设施)
+- [API开发和测试](#api开发和测试)
+- [数据处理和ETL](#数据处理和etl)
 - [数据库管理](#数据库管理)
-- [监控和警报](#监控和警报)
+- [监控和报警](#监控和报警)
 - [软件开发](#软件开发)
-- [安全和合规](#安全和合规)
+- [安全与合规](#安全与合规)
 
 ## 配置管理
 
 ### 环境配置比较
 
-比较不同环境的配置：
+比较不同环境间的配置：
 
 ```bash
 # 开发环境 vs 生产环境
@@ -25,13 +25,13 @@ diffx config/dev.json config/prod.json \
   --ignore-keys-regex "^(host|port|password|secret_.*)" \
   --output json > env_diff.json
 
-# 部署前的预发布验证
+# 部署前的准备环境验证
 diffx config/staging.yaml config/prod.yaml \
   --path "application" \
   --output yaml
 ```
 
-**示例文件:**
+**示例文件：**
 ```json
 // config/dev.json
 {
@@ -62,39 +62,39 @@ diffx config/staging.yaml config/prod.yaml \
 }
 ```
 
-**预期输出:**
+**预期输出：**
 ```
 ~ application.debug: true -> false
 ```
 
-### Kubernetes 配置漂移检测
+### Kubernetes配置漂移检测
 
-监控 Kubernetes 部署中的配置漂移：
+监控Kubernetes部署中的配置漂移：
 
 ```bash
 # 比较当前部署与期望状态
 kubectl get deployment myapp -o json > current-deployment.json
 diffx desired-deployment.json current-deployment.json \
-  --ignore-keys-regex "^(metadata\\.(creationTimestamp|resourceVersion|uid)|status\\..*)" \
+  --ignore-keys-regex "^(metadata\\.(creationTimestamp|resourceVersion|uid)|status\\.*)" \
   --output json
 ```
 
-### Docker Compose 环境变体
+### Docker Compose环境变体
 
-比较不同环境的 Docker Compose 文件：
+比较不同环境的Docker Compose文件：
 
 ```bash
-# 比较基础 compose 与覆盖文件
+# 比较基础compose与覆盖文件
 diffx docker-compose.yml docker-compose.override.yml \
   --path "services" \
   --output unified
 ```
 
-## DevOps 和基础设施
+## DevOps和基础设施
 
-### Terraform 状态比较
+### Terraform状态比较
 
-比较 Terraform 状态文件以检测基础设施漂移：
+比较Terraform状态文件以检测基础设施漂移：
 
 ```bash
 # 比较当前状态与备份
@@ -103,7 +103,7 @@ diffx terraform.tfstate terraform.tfstate.backup \
   --ignore-keys-regex "^(last_updated|timeouts)" \
   --output json > infrastructure_drift.json
 
-# 比较计划更改
+# 比较计划的更改
 terraform show -json plan.out > planned.json
 diffx current_state.json planned.json \
   --path "planned_values.root_module"
@@ -114,51 +114,51 @@ diffx current_state.json planned.json \
 在部署前验证基础设施更改：
 
 ```bash
-# 比较 CloudFormation 模板
+# 比较CloudFormation模板
 diffx infrastructure/base.yaml infrastructure/updated.yaml \
   --ignore-keys-regex "^(Metadata|Description)" \
   --output yaml
 
-# 比较 Ansible playbooks
+# 比较Ansible剧本
 diffx playbook-v1.yml playbook-v2.yml \
   --path "tasks" \
   --output cli
 ```
 
-### CI/CD 管道配置
+### CI/CD流水线配置
 
-监控 CI/CD 管道配置更改：
+监控CI/CD流水线配置更改：
 
 ```bash
-# GitHub Actions 工作流比较
+# GitHub Actions工作流比较
 diffx .github/workflows/ci.yml .github/workflows/ci.new.yml \
   --output unified
 
-# GitLab CI 比较
+# GitLab CI比较
 diffx .gitlab-ci.yml .gitlab-ci.backup.yml \
   --ignore-keys-regex "^(variables\\.CI_.*)"
 ```
 
-## API 开发和测试
+## API开发和测试
 
-### API 响应验证
+### API响应验证
 
-根据预期模式验证 API 响应：
+根据预期模式验证API响应：
 
 ```bash
-# 将 API 响应与预期结构比较
+# 比较API响应与预期结构
 curl -s https://api.example.com/v1/users/123 > actual_response.json
 diffx expected_user_response.json actual_response.json \
   --ignore-keys-regex "^(timestamp|request_id|server_time)" \
   --output json
 
-# 验证 API 端点更改
+# 验证API端点更改
 diffx api/v1/schema.json api/v2/schema.json \
   --path "definitions" \
   --output yaml
 ```
 
-**示例 API 验证:**
+**示例API验证：**
 ```bash
 # 测试用户创建端点
 echo '{
@@ -176,12 +176,12 @@ diffx expected_user.json actual_user.json \
   --ignore-keys-regex "^(id|created_at|updated_at)$"
 ```
 
-### OpenAPI 规范比较
+### OpenAPI规范比较
 
-比较 OpenAPI 规范以检测破坏性更改：
+比较OpenAPI规范以检查破坏性更改：
 
 ```bash
-# 比较 API 版本
+# 比较API版本
 diffx openapi-v1.yaml openapi-v2.yaml \
   --path "paths" \
   --output json > api_changes.json
@@ -192,476 +192,606 @@ diffx api-spec.yaml api-spec.new.yaml \
   --output unified
 ```
 
-### GraphQL 模式验证
+### GraphQL模式验证
 
-比较 GraphQL 模式：
+比较GraphQL模式：
 
 ```bash
-# 将 GraphQL 转换为 JSON 并比较
-npm install -g graphql-json-schema
-graphql-json-schema schema-v1.graphql > schema-v1.json
-graphql-json-schema schema-v2.graphql > schema-v2.json
+# 将GraphQL转换为JSON并比较
+graphql-to-json schema-v1.graphql > schema-v1.json
+graphql-to-json schema-v2.graphql > schema-v2.json
 diffx schema-v1.json schema-v2.json \
-  --path "types" \
   --output yaml
 ```
 
-## 数据处理和 ETL
+## 数据处理和ETL
 
-### 数据质量验证
+### 数据流水线验证
 
-在 ETL 管道中验证数据质量：
+验证ETL流水线中的数据转换：
 
 ```bash
-# 比较处理前后的数据
-diffx raw_data.json processed_data.json \
-  --array-id-key "id" \
-  --ignore-keys-regex "^(processed_at|etl_timestamp)" \
-  --output json > data_changes.json
-
-# 验证数据转换
-diffx input_records.json output_records.json \
+# 比较输入与输出数据结构
+diffx input_data_sample.json output_data_sample.json \
   --array-id-key "record_id" \
   --epsilon 0.001 \
-  --output unified
+  --output json
+
+# 验证数据迁移
+diffx source_schema.json target_schema.json \
+  --path "tables" \
+  --output yaml
 ```
 
-**示例数据验证:**
+### 数据质量检查
+
+监控流水线各阶段的数据质量：
+
 ```bash
-# 验证用户数据处理
-echo '[
-  {"id": 1, "name": "Alice Smith", "age": 30, "score": 85.5},
-  {"id": 2, "name": "Bob Johnson", "age": 25, "score": 92.3}
-]' > input_users.json
-
-echo '[
-  {"id": 1, "full_name": "Alice Smith", "age_group": "adult", "grade": "B"},
-  {"id": 2, "full_name": "Bob Johnson", "age_group": "adult", "grade": "A"}
-]' > transformed_users.json
-
-# 验证转换规则
-diffx input_users.json transformed_users.json \
+# 比较数据快照
+diffx data_snapshot_t1.json data_snapshot_t2.json \
+  --ignore-keys-regex "^(timestamp|batch_id|process_time)" \
   --array-id-key "id" \
+  --epsilon 0.01
+
+# 验证聚合结果
+diffx daily_metrics.json expected_metrics.json \
+  --epsilon 0.05 \
   --output json
 ```
 
-### 数据库迁移验证
+### 配置驱动ETL
 
-验证数据库迁移结果：
-
-```bash
-# 比较迁移前后的数据
-diffx pre_migration_dump.json post_migration_dump.json \
-  --array-id-key "primary_key" \
-  --ignore-keys-regex "^(created_at|updated_at|version)" \
-  --output json > migration_changes.json
-
-# 验证数据完整性
-diffx source_data.json migrated_data.json \
-  --array-id-key "id" \
-  --epsilon 0.01 \
-  --quiet
-echo $? # 0 = 数据一致, 1 = 发现差异
-```
-
-### 批处理作业验证
-
-监控批处理作业的数据变化：
+比较ETL配置文件：
 
 ```bash
-# 每日批处理比较
-diffx daily_report_$(date -d yesterday +%Y%m%d).json \
-     daily_report_$(date +%Y%m%d).json \
-  --array-id-key "transaction_id" \
-  --ignore-keys-regex "^(report_date|generated_at)" \
-  --output json > daily_changes.json
+# 比较数据源配置
+diffx etl_config_staging.yaml etl_config_prod.yaml \
+  --ignore-keys-regex "^(credentials|connection_string)" \
+  --path "data_sources"
 
-# 验证汇总数据
-diffx summary_before.json summary_after.json \
-  --epsilon 0.001 \
-  --output unified
+# 验证转换规则
+diffx transform_rules_v1.json transform_rules_v2.json \
+  --array-id-key "rule_id"
 ```
 
 ## 数据库管理
 
-### 模式比较
+### 模式迁移验证
 
-比较数据库模式：
+验证数据库模式更改：
 
 ```bash
-# 比较表结构
-pg_dump --schema-only mydb_dev > dev_schema.sql
-pg_dump --schema-only mydb_prod > prod_schema.sql
+# 比较数据库模式
+pg_dump --schema-only mydb > schema_before.sql
+# 运行迁移
+pg_dump --schema-only mydb > schema_after.sql
 
-# 转换为 JSON 进行比较（使用自定义脚本）
-./sql_to_json.sh dev_schema.sql > dev_schema.json
-./sql_to_json.sh prod_schema.sql > prod_schema.json
+# 转换为JSON进行比较（使用自定义脚本）
+sql-to-json schema_before.sql > schema_before.json
+sql-to-json schema_after.sql > schema_after.json
 
-diffx dev_schema.json prod_schema.json \
-  --path "tables" \
-  --output unified
+diffx schema_before.json schema_after.json \
+  --array-id-key "table_name" \
+  --output json > migration_report.json
 ```
 
-### 数据一致性检查
+### 数据备份验证
 
-验证不同环境间的数据一致性：
-
-```bash
-# 比较关键表数据
-diffx production_users.json staging_users.json \
-  --array-id-key "user_id" \
-  --ignore-keys-regex "^(last_login|session_token|password_hash)" \
-  --output json > user_consistency.json
-
-# 验证引用完整性
-diffx prod_orders.json staging_orders.json \
-  --array-id-key "order_id" \
-  --path "order_items" \
-  --output yaml
-```
-
-### 备份验证
-
-验证数据库备份的完整性：
+验证备份完整性：
 
 ```bash
-# 比较备份与实时数据
-diffx live_data_export.json backup_restore_export.json \
+# 比较当前数据与备份
+diffx production_export.json backup_export.json \
   --array-id-key "id" \
-  --ignore-keys-regex "^(backup_timestamp|restore_time)" \
-  --output json > backup_verification.json
+  --epsilon 0.001 \
+  --ignore-keys-regex "^(last_updated|backup_timestamp)"
+```
 
-# 增量备份验证
-diffx full_backup.json incremental_backup.json \
-  --array-id-key "record_id" \
-  --quiet
-if [ $? -eq 0 ]; then
-    echo "增量备份验证成功"
+### 数据库配置管理
+
+比较数据库配置文件：
+
+```bash
+# 比较PostgreSQL配置
+diffx postgresql.conf postgresql.conf.backup \
+  --format ini \
+  --ignore-keys-regex "^(log_.*|shared_preload_libraries)"
+
+# 比较MongoDB配置
+diffx mongod.conf mongod.conf.new \
+  --format yaml \
+  --path "storage"
+```
+
+## 监控和报警
+
+### 配置漂移检测
+
+监控生产环境中的配置更改：
+
+```bash
+# 计划配置检查
+#!/bin/bash
+# check_config_drift.sh
+
+EXPECTED_CONFIG="/opt/app/config/expected.json"
+CURRENT_CONFIG="/opt/app/config/current.json"
+
+# 获取当前配置
+curl -s http://localhost:8080/api/config > "$CURRENT_CONFIG"
+
+# 与预期配置比较
+if diffx "$EXPECTED_CONFIG" "$CURRENT_CONFIG" \
+   --ignore-keys-regex "^(timestamp|uptime|last_.*)" \
+   --output json > config_drift.json; then
+  echo "未检测到配置漂移"
 else
-    echo "增量备份发现差异"
+  echo "检测到配置漂移！"
+  cat config_drift.json
+  # 发送警报
+  alert-manager send --file config_drift.json
 fi
 ```
 
-## 监控和警报
+### 服务健康监控
 
-### 系统指标比较
-
-比较系统性能指标：
+监控服务健康配置：
 
 ```bash
-# 比较不同时间点的指标
-diffx metrics_baseline.json metrics_current.json \
-  --ignore-keys-regex "^(timestamp|collection_time)" \
-  --epsilon 0.05 \
-  --output json > performance_drift.json
+# 比较健康检查配置
+diffx health_config_baseline.json health_config_current.json \
+  --ignore-keys-regex "^(last_check|status_timestamp)" \
+  --output json
 
-# 服务健康状况比较
-diffx service_health_before.json service_health_after.json \
-  --path "services" \
+# 验证监控规则
+diffx prometheus_rules.yaml prometheus_rules.new.yaml \
+  --path "groups" \
   --output unified
 ```
 
-### 日志分析
+### 报警配置管理
 
-分析日志模式的变化：
+管理警报规则更改：
 
 ```bash
-# 比较日志聚合结果
-diffx yesterday_log_summary.json today_log_summary.json \
-  --ignore-keys-regex "^(date|timestamp)" \
-  --output json > log_pattern_changes.json
-
-# 错误率分析
-diffx error_stats_week1.json error_stats_week2.json \
-  --epsilon 0.001 \
+# 比较警报管理器配置
+diffx alertmanager.yml alertmanager.new.yml \
+  --path "route" \
   --output yaml
-```
 
-### 容量规划
-
-监控资源使用趋势：
-
-```bash
-# 比较资源使用报告
-diffx resource_usage_month1.json resource_usage_month2.json \
-  --path "clusters" \
-  --epsilon 0.01 \
-  --output json > capacity_trends.json
-
-# 存储增长分析
-diffx storage_report_q1.json storage_report_q2.json \
-  --array-id-key "volume_id" \
-  --output unified
+# 验证Grafana仪表板更改
+diffx dashboard_v1.json dashboard_v2.json \
+  --ignore-keys-regex "^(id|uid|version|time)" \
+  --path "panels"
 ```
 
 ## 软件开发
 
-### 配置文件版本控制
+### 包依赖跟踪
 
-跟踪配置文件的变化：
-
-```bash
-# 功能分支配置比较
-diffx main_config.json feature_config.json \
-  --ignore-keys-regex "^(developer|debug_.*)" \
-  --output unified
-
-# 发布配置验证
-diffx release_v1.json release_v2.json \
-  --path "features" \
-  --output json > release_changes.json
-```
-
-### 依赖关系管理
-
-比较项目依赖：
+跟踪包依赖的更改：
 
 ```bash
-# Node.js 依赖比较
-diffx package-lock.json package-lock.new.json \
-  --path "dependencies" \
+# 比较包文件
+diffx package.json package.json.backup \
+  --ignore-keys-regex "^(name|description|author)" \
+  --path "dependencies"
+
+# 比较锁定文件
+diffx yarn.lock yarn.lock.backup \
   --output json > dependency_changes.json
 
-# Python 依赖比较
-pip freeze > requirements_current.txt
-pip list --format=json > requirements_current.json
-diffx requirements_baseline.json requirements_current.json \
-  --array-id-key "name" \
-  --output yaml
+# 比较Python要求
+diffx requirements.txt requirements.new.txt \
+  --format ini  # 作为键值对处理
 ```
 
-### 测试结果分析
+### 构建配置更改
 
-分析测试结果的变化：
+监控构建配置更改：
 
 ```bash
-# 比较测试报告
-diffx test_results_baseline.json test_results_current.json \
-  --path "test_suites" \
-  --ignore-keys-regex "^(execution_time|timestamp)" \
-  --output json > test_changes.json
-
-# 代码覆盖率比较
-diffx coverage_before.json coverage_after.json \
-  --path "files" \
-  --epsilon 0.01 \
+# 比较webpack配置
+diffx webpack.config.js webpack.config.new.js \
+  --format json \
   --output unified
+
+# 比较Cargo.toml文件
+diffx Cargo.toml Cargo.toml.backup \
+  --format toml \
+  --ignore-keys-regex "^(build|publish)"
 ```
 
-## 安全和合规
+### 代码质量配置
 
-### 安全策略验证
-
-验证安全配置：
+跟踪代码质量工具配置：
 
 ```bash
-# 比较防火墙规则
-diffx firewall_rules_baseline.json firewall_rules_current.json \
-  --array-id-key "rule_id" \
+# 比较ESLint配置
+diffx .eslintrc.json .eslintrc.new.json \
+  --path "rules" \
+  --output json
+
+# 比较测试配置
+diffx jest.config.js jest.config.new.js \
+  --format json \
+  --path "testMatch"
+```
+
+## 安全与合规
+
+### 安全配置审计
+
+审计安全配置：
+
+```bash
+# 比较安全策略
+diffx security_policy_v1.json security_policy_v2.json \
+  --path "permissions" \
   --output json > security_changes.json
 
-# IAM 策略比较
-diffx iam_policies_v1.json iam_policies_v2.json \
-  --path "policies" \
+# 验证IAM配置
+diffx iam_policy_prod.json iam_policy_staging.json \
+  --ignore-keys-regex "^(arn|account_id)" \
   --output yaml
 ```
 
-### 合规性检查
+### 合规监控
 
-确保配置符合合规要求：
+监控合规相关配置：
 
 ```bash
-# 审计配置更改
-diffx compliant_config.json current_config.json \
-  --ignore-keys-regex "^(last_modified|auditor)" \
-  --output json > compliance_violations.json
+# 比较GDPR合规配置
+diffx gdpr_config.json gdpr_config.new.json \
+  --path "data_retention" \
+  --output json
 
-# 安全基线验证
-diffx security_baseline.json production_config.json \
-  --path "security_settings" \
+# 验证SOX合规性
+diffx sox_controls.yaml sox_controls.updated.yaml \
+  --array-id-key "control_id" \
   --output unified
 ```
 
-### 漏洞扫描结果比较
+### 访问控制验证
 
-跟踪安全漏洞修复进度：
+验证访问控制更改：
 
 ```bash
-# 比较扫描结果
-diffx vulnerability_scan_before.json vulnerability_scan_after.json \
-  --array-id-key "cve_id" \
-  --ignore-keys-regex "^(scan_date|scanner_version)" \
-  --output json > vulnerability_changes.json
+# 比较RBAC配置
+diffx rbac_roles.yaml rbac_roles.new.yaml \
+  --array-id-key "name" \
+  --path "rules" \
+  --output json
 
-# 依赖漏洞分析
-diffx security_audit_baseline.json security_audit_current.json \
-  --path "vulnerabilities" \
-  --output yaml
+# 验证OAuth配置
+diffx oauth_config.json oauth_config.backup.json \
+  --ignore-keys-regex "^(client_secret|private_key)"
+```
+
+## UNIX命令模式
+
+diffx为结构化数据提供了常见UNIX diff模式的等效功能：
+
+### `diff -q` 等效：快速文件更改检测
+
+```bash
+# 检查配置文件是否不同（仅退出代码）
+if ! diffx config.json config.backup.json --quiet; then
+  echo "配置已更改，触发部署"
+  deploy_app.sh
+fi
+
+# 批量检查多个配置文件
+for config in configs/*.json; do
+  if ! diffx "$config" "backups/$(basename $config)" --quiet; then
+    echo "$(basename $config) 已更改"
+  fi
+done
+
+# 使用watch进行持续监控
+watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "检测到配置漂移！"'
+```
+
+### `diff --brief` 等效：仅显示已更改的文件名
+
+```bash
+# 快速目录扫描以查找更改的文件
+diffx config_dir/ backup_dir/ --recursive --brief
+
+# 在CI流水线中用于更改检测
+changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
+if [ -n "$changed_files" ]; then
+  echo "检测到配置更改："
+  echo "$changed_files"
+  trigger_validation_pipeline.sh
+fi
+
+# 结合find进行选择性检查
+find . -name "*.json" -newer last_deploy.marker | while read file; do
+  backup_file="backups/${file}"
+  if [ -f "$backup_file" ]; then
+    diffx "$file" "$backup_file" --brief
+  fi
+done
+```
+
+### `diff -i` 等效：大小写不敏感比较
+
+```bash
+# 忽略枚举值的大小写差异来比较API响应
+curl -s https://api.example.com/status > current_status.json
+diffx expected_status.json current_status.json --ignore-case
+
+# 大小写不一致的配置文件
+diffx config_template.yaml user_config.yaml \
+  --ignore-case \
+  --ignore-keys-regex "^(name|description)"
+
+# 字段名大小写混合的数据库配置
+diffx db_schema.json migrated_schema.json \
+  --ignore-case \
+  --array-id-key "table_name" \
+  --output json
+```
+
+### `diff -w` 等效：忽略空白差异
+
+```bash
+# 比较可能具有不同格式的JSON文件
+diffx api_response_pretty.json api_response_minified.json --ignore-whitespace
+
+# 忽略配置中的格式差异
+diffx config.json config_reformatted.json \
+  --ignore-whitespace \
+  --output json
+
+# 比较具有空白变化的数据导出
+diffx data_export.json data_import_processed.json \
+  --ignore-whitespace \
+  --array-id-key "id" \
+  --epsilon 0.001
+```
+
+### `diff -C3` 等效：统一输出中的上下文行
+
+```bash
+# 在更改周围显示3行上下文
+diffx large_config.json large_config_new.json \
+  --output unified \
+  --context 3
+
+# 针对性差异的最小上下文
+diffx api_schema.json api_schema_v2.json \
+  --output unified \
+  --context 1
+
+# 仅更改视图的无上下文
+diffx database_config.json database_config_updated.json \
+  --output unified \
+  --context 0
+```
+
+### 组合UNIX风格模式
+
+```bash
+# 等效于：diff -qiw file1 file2
+diffx config.json config.backup.json \
+  --quiet \
+  --ignore-case \
+  --ignore-whitespace
+
+# 等效于：diff -r --brief dir1/ dir2/
+diffx config_dir/ backup_dir/ \
+  --recursive \
+  --brief
+
+# 高级模式：大小写不敏感与选择性字段忽略
+diffx user_data.json user_data_migrated.json \
+  --ignore-case \
+  --ignore-whitespace \
+  --ignore-keys-regex "^(created_at|updated_at|timestamp)" \
+  --array-id-key "user_id"
+
+# Git风格工作流集成
+git show HEAD:config.json > /tmp/old_config.json
+diffx /tmp/old_config.json config.json \
+  --ignore-whitespace \
+  --context 2 \
+  --output unified
+```
+
+### Shell集成示例
+
+```bash
+# 预提交钩子等效
+#!/bin/bash
+# .git/hooks/pre-commit
+if ! diffx config/production.json config/staging.json \
+   --ignore-keys-regex "^(environment|debug)" \
+   --quiet; then
+  echo "生产和准备环境配置存在语义差异"
+  echo "提交前请检查："
+  diffx config/production.json config/staging.json \
+    --ignore-keys-regex "^(environment|debug)"
+  exit 1
+fi
+
+# 部署验证脚本
+#!/bin/bash
+# validate_deploy.sh
+deployment_config="$1"
+baseline_config="configs/baseline.json"
+
+if diffx "$baseline_config" "$deployment_config" \
+   --ignore-case \
+   --ignore-whitespace \
+   --quiet; then
+  echo "✅ 配置未更改 - 可安全部署"
+  exit 0
+else
+  echo "⚠️  检测到配置更改："
+  diffx "$baseline_config" "$deployment_config" \
+    --ignore-case \
+    --ignore-whitespace \
+    --brief
+  echo "继续部署？(y/N)"
+  read -r response
+  [[ "$response" =~ ^[Yy]$ ]] || exit 1
+fi
+
+# 带报警的监控脚本
+#!/bin/bash
+# monitor_config_drift.sh
+while true; do
+  if ! diffx /etc/app/config.json /opt/app/expected_config.json \
+     --ignore-keys-regex "^(hostname|instance_id|last_update)" \
+     --quiet; then
+    
+    # 发送详细警报
+    diffx /etc/app/config.json /opt/app/expected_config.json \
+      --ignore-keys-regex "^(hostname|instance_id|last_update)" \
+      --output json | \
+      curl -X POST https://alerts.example.com/webhook \
+           -H "Content-Type: application/json" \
+           -d @-
+  fi
+  sleep 300  # 每5分钟检查一次
+done
 ```
 
 ## 高级使用模式
 
-### 批量文件处理
+### 多环境流水线
 
-处理多个文件的批量比较：
+全面的环境比较流水线：
 
 ```bash
-# 批量配置文件比较
-for env in dev staging prod; do
-    echo "Comparing $env environment..."
-    diffx config/base.json config/$env.json \
-        --ignore-keys-regex "^(environment|debug)" \
-        --output json > diff_$env.json
+#!/bin/bash
+# multi_env_compare.sh
+
+ENVIRONMENTS=("dev" "staging" "prod")
+BASE_ENV="prod"
+
+for env in "${ENVIRONMENTS[@]}"; do
+  if [ "$env" != "$BASE_ENV" ]; then
+    echo "正在比较 $env 与 $BASE_ENV"
+    
+    # 应用程序配置
+    diffx "config/$BASE_ENV.json" "config/$env.json" \
+      --ignore-keys-regex "^(host|port|database|secret_.*)" \
+      --output json > "diff_${env}_${BASE_ENV}_app.json"
+    
+    # 基础设施配置  
+    diffx "infra/$BASE_ENV.yaml" "infra/$env.yaml" \
+      --path "resources" \
+      --output json > "diff_${env}_${BASE_ENV}_infra.json"
+    
+    # 生成摘要报告
+    generate_report.py "diff_${env}_${BASE_ENV}_*.json" > "report_${env}.html"
+  fi
+done
+```
+
+### 数据迁移验证
+
+完整的数据迁移验证工作流：
+
+```bash
+#!/bin/bash
+# data_migration_validation.sh
+
+SOURCE_DB="legacy_system"
+TARGET_DB="new_system"
+
+# 导出模式
+export_schema.py "$SOURCE_DB" > source_schema.json
+export_schema.py "$TARGET_DB" > target_schema.json
+
+# 比较模式
+diffx source_schema.json target_schema.json \
+  --array-id-key "table_name" \
+  --output json > schema_diff.json
+
+# 导出样本数据
+export_sample_data.py "$SOURCE_DB" > source_data.json
+export_sample_data.py "$TARGET_DB" > target_data.json
+
+# 比较数据结构
+diffx source_data.json target_data.json \
+  --array-id-key "id" \
+  --epsilon 0.001 \
+  --ignore-keys-regex "^(migrated_at|batch_id)" \
+  --output json > data_diff.json
+
+# 生成迁移报告
+generate_migration_report.py schema_diff.json data_diff.json
+```
+
+### 自动化测试集成
+
+与自动化测试框架的集成：
+
+```bash
+# test_api_contract.sh
+#!/bin/bash
+
+API_BASE="https://api.example.com"
+EXPECTED_DIR="tests/fixtures/api_responses"
+
+# 测试多个端点
+endpoints=("users" "products" "orders")
+
+for endpoint in "${endpoints[@]}"; do
+  echo "正在测试 $endpoint 端点..."
+  
+  # 获取实际响应
+  curl -s "$API_BASE/$endpoint" > "actual_$endpoint.json"
+  
+  # 与预期值比较
+  if diffx "$EXPECTED_DIR/$endpoint.json" "actual_$endpoint.json" \
+     --ignore-keys-regex "^(timestamp|request_id)" \
+     --output json > "diff_$endpoint.json"; then
+    echo "✅ $endpoint 匹配预期结构"
+  else
+    echo "❌ $endpoint 有意外更改"
+    cat "diff_$endpoint.json"
+    exit 1
+  fi
 done
 
-# 目录递归比较
-diffx config_v1/ config_v2/ \
-  --recursive \
-  --ignore-keys-regex "^(timestamp|version)" \
-  --output json > directory_changes.json
+echo "所有API合约测试通过！"
 ```
 
-### 自动化工作流集成
+## 性能优化示例
 
-将 diffx 集成到自动化工作流中：
+### 大文件处理
+
+为大文件优化diffx：
 
 ```bash
-#!/bin/bash
-# 部署验证脚本
+# 大配置文件
+diffx large_config.json large_config.new.json \
+  --path "critical.services" \
+  --ignore-keys-regex "^(logs|metrics|debug_.*)" \
+  --output json
 
-# 1. 获取当前配置
-kubectl get configmap myapp-config -o json > current_config.json
-
-# 2. 与期望配置比较
-diffx expected_config.json current_config.json \
-  --ignore-keys-regex "^(metadata\\..*)" \
-  --quiet
-
-# 3. 根据退出代码采取行动
-if [ $? -eq 0 ]; then
-    echo "配置一致，继续部署"
-elif [ $? -eq 1 ]; then
-    echo "配置漂移检测，生成报告"
-    diffx expected_config.json current_config.json \
-      --output json > config_drift_report.json
-    # 发送警报或创建工单
-else
-    echo "配置比较失败"
-    exit 1
-fi
+# 批量处理多个文件
+find configs/ -name "*.json" -print0 | \
+  xargs -0 -P $(nproc) -I {} \
+  sh -c 'diffx {} {}.backup --output json > {}.diff || echo "在 {} 中发现差异"'
 ```
 
-### 数据管道监控
+### 内存高效处理
 
-在数据管道中监控数据质量：
+高效处理大数据集：
 
 ```bash
-# ETL 管道质量检查
-#!/bin/bash
-PIPELINE_NAME="user_analytics"
-INPUT_DATA="input_$(date +%Y%m%d).json"
-OUTPUT_DATA="output_$(date +%Y%m%d).json"
-EXPECTED_SCHEMA="expected_schema.json"
-
-# 验证输出数据结构
-diffx $EXPECTED_SCHEMA $OUTPUT_DATA \
-  --path "schema" \
-  --quiet
-
-if [ $? -ne 0 ]; then
-    echo "数据结构验证失败"
-    diffx $EXPECTED_SCHEMA $OUTPUT_DATA \
-      --path "schema" \
-      --output json > schema_validation_errors.json
-    # 触发数据质量警报
-fi
-
-# 验证数据完整性
-RECORD_COUNT_INPUT=$(jq 'length' $INPUT_DATA)
-RECORD_COUNT_OUTPUT=$(jq 'length' $OUTPUT_DATA)
-
-if [ $RECORD_COUNT_INPUT -ne $RECORD_COUNT_OUTPUT ]; then
-    echo "数据记录数不匹配: 输入 $RECORD_COUNT_INPUT, 输出 $RECORD_COUNT_OUTPUT"
-fi
+# 流处理（概念性）
+diffx --stream large_dataset_v1.json large_dataset_v2.json \
+  --array-id-key "id" \
+  --chunk-size 1000 \
+  --output json
 ```
 
-## 最佳实践
-
-### 性能优化
-
-1. **使用适当的过滤器**
-   ```bash
-   # 专注于相关更改
-   diffx large_file1.json large_file2.json \
-     --path "critical_section" \
-     --ignore-keys-regex "^(debug_|temp_)"
-   ```
-
-2. **为大型数据集使用数组ID**
-   ```bash
-   # 高效的数组比较
-   diffx users_old.json users_new.json \
-     --array-id-key "user_id"
-   ```
-
-3. **利用退出代码进行脚本编写**
-   ```bash
-   # 条件逻辑
-   if diffx file1.json file2.json --quiet; then
-       echo "无变化"
-   else
-       echo "检测到变化"
-   fi
-   ```
-
-### 错误处理
-
-1. **验证文件格式**
-   ```bash
-   # 确保正确的格式解释
-   diffx --format json file1.txt file2.txt
-   ```
-
-2. **处理大文件**
-   ```bash
-   # 内存效率
-   diffx large1.json large2.json   ```
-
-3. **调试比较问题**
-   ```bash
-   # 详细输出用于调试
-   diffx problematic1.json problematic2.json \
-     --output unified \
-     --context 5
-   ```
-
-### 集成模式
-
-1. **CI/CD 集成**
-   ```yaml
-   # GitHub Actions 示例
-   - name: 验证配置更改
-     run: |
-       diffx expected_config.json actual_config.json \
-         --quiet || exit 1
-   ```
-
-2. **监控集成**
-   ```bash
-   # 定期配置漂移检查
-   */15 * * * * diffx baseline.json current.json --quiet || \
-     echo "配置漂移检测" | mail -s "警报" admin@example.com
-   ```
-
-3. **数据质量管道**
-   ```bash
-   # 数据验证步骤
-   diffx expected_output.json actual_output.json \
-     --array-id-key "id" \
-     --epsilon 0.001 \
-     --output json > quality_report.json
-   ```
-
----
-
-**提示**: 这些示例可以根据您的具体需求进行调整。有关更多选项和高级功能，请参阅 [CLI 参考](../reference/cli-reference_zh.md)。
+这些示例展示了 `diffx` 在各种行业和使用场景中的多功能性和强大功能。每个示例都包含实用的命令、示例数据和预期输出，以帮助您将其适应到您的特定需求。

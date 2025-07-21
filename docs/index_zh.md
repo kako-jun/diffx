@@ -6,35 +6,34 @@
 
 ## 快速链接
 
-- **[快速入门](user-guide/getting-started_zh.md)** - 学习基础知识和核心概念
-- **[安装指南](user-guide/installation_zh.md)** - 在您的系统上设置 diffx
-- **[CLI 参考](reference/cli-reference_zh.md)** - 完整的命令行文档
-- **[实际示例](user-guide/examples_zh.md)** - 跨行业的实际用例
+- **[快速入门](user-guide/getting-started.md)** - 学习基础知识和核心概念
+- **[安装指南](user-guide/installation.md)** - 在您的系统上设置 diffx
+- **[CLI 参考](reference/cli-reference.md)** - 完整的命令行文档
+- **[实际示例](user-guide/examples.md)** - 跨行业的实际用例
 
 ## 文档结构
 
 ### 📚 用户指南
 *入门和日常使用的必备指南*
 
-- **[安装](user-guide/installation_zh.md)** - 平台特定的安装说明
-- **[快速入门](user-guide/getting-started_zh.md)** - 基础概念和第一步
-- **[配置](user-guide/configuration_zh.md)** - 配置文件和设置
-- **[示例](user-guide/examples_zh.md)** - 8 个行业类别的实际示例
-- **[常见问题](user-guide/faq_zh.md)** - 常见问题和故障排除
+- **[安装](user-guide/installation.md)** - 平台特定的安装说明
+- **[快速入门](user-guide/getting-started.md)** - 基础概念和第一步
+- **[示例](user-guide/examples.md)** - 8 个行业类别的实际示例
+- **[常见问题](user-guide/faq.md)** - 常见问题和故障排除
 
 ### 📖 参考
 *完整的技术参考文档*
 
-- **[diffx 格式规范](reference/diffx-format_zh.md)** - diffx 格式的完整规范
-- **[CLI 参考](reference/cli-reference_zh.md)** - 完整的命令行接口文档
-- **[API 参考](reference/api-reference_zh.md)** - Rust crate API 文档
-- **[工具比较](reference/comparison_zh.md)** - diffx 与其他工具的比较
+- **[diffx格式规范](reference/diffx-format.md)** - diffx格式的完整规范
+- **[CLI参考](reference/cli-reference.md)** - 完整的命令行接口文档
+- **[API参考](reference/api-reference.md)** - Rust crate API 文档
+- **[工具比较](reference/comparison.md)** - diffx 与其他工具的比较
 
 ### 🛠️ 指南
 *高级主题和集成指导*
 
-- **[集成指南](guides/integrations_zh.md)** - CI/CD、开发工具和自动化
-- **[性能指南](guides/performance_zh.md)** - 基准测试和优化策略
+- **[集成指南](guides/integrations.md)** - CI/CD、开发工具和自动化
+- **[性能指南](guides/performance.md)** - 基准测试和优化策略
 
 ### 📋 项目信息
 *项目治理和开发信息*
@@ -80,7 +79,6 @@ $ diffx config1.json config2.json
 
 - **[English Documentation](./index.md)** - 英文版本
 - **[日本語ドキュメント](./index_ja.md)** - 日文版本
-- **[中文文档](./index_zh.md)** - 中文版本（当前）
 
 ## 社区和支持
 
@@ -90,4 +88,4 @@ $ diffx config1.json config2.json
 
 ---
 
-*寻找特定内容？使用搜索功能或查看我们的[常见问题](user-guide/faq_zh.md)获取常见问题的答案。*
+*寻找特定内容？使用搜索功能或查看我们的[常见问题](user-guide/faq.md)获取常见问题的答案。*
