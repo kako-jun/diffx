@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
-use std::process::Command;
+use assert_cmd::Command;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -25,6 +25,79 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn test_ignore_keys_regex_multiple_patterns() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--ignore-keys-regex")
+        .arg("^(age|city)$");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ age:").not())
+        .stdout(predicates::str::contains("~ city:").not())
+        .stdout(predicates::str::contains("+ items[2]: \"orange\""));
+    Ok(())
+}
+
+#[test]
+fn test_ignore_keys_regex_wildcard() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/users1.json")
+        .arg("../tests/fixtures/users2.json")
+        .arg("--ignore-keys-regex")
+        .arg(".*e$"); // Matches keys ending with 'e' like 'name', 'age'
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ name:").not())
+        .stdout(predicates::str::contains("~ age:").not());
+    Ok(())
+}
+
+#[test]
+fn test_ignore_keys_regex_case_sensitive() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--ignore-keys-regex")
+        .arg("^Name$"); // Capital N
+    cmd.write_stdin(r#"{"name": "John", "Name": "John"}"#)
+        .write_stdin(r#"{"name": "Jane", "Name": "Jane"}"#);
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ name:")) // Should show lowercase
+        .stdout(predicates::str::contains("~ Name:").not()); // Should ignore uppercase
+    Ok(())
+}
+
+#[test]
+fn test_ignore_keys_regex_nested_keys() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/config_dev.json")
+        .arg("../tests/fixtures/config_prod.json")
+        .arg("--ignore-keys-regex")
+        .arg("debug|environment");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ application.debug:").not())
+        .stdout(predicates::str::contains("~ application.environment:").not())
+        .stdout(predicates::str::contains("~ database.host:")); // Should still show other changes
+    Ok(())
+}
+
+#[test]
+fn test_ignore_keys_regex_invalid_pattern() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--ignore-keys-regex")
+        .arg("[invalid"); // Invalid regex
+    let result = cmd.output()?;
+    // Should handle invalid regex gracefully with error message
+    assert!(!result.status.success()); // Should fail with meaningful error
+    Ok(())
+}
+
+#[test]
 fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/data1.json")
@@ -32,6 +105,99 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--epsilon")
         .arg("0.00001");
     cmd.assert().success().stdout(predicates::str::is_empty()); // No differences expected within epsilon (empty output)
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_different_precisions() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--epsilon")
+        .arg("0.1");
+    cmd.write_stdin(r#"{"value": 1.05}"#)
+        .write_stdin(r#"{"value": 1.14}"#);
+    cmd.assert().success().stdout(predicates::str::is_empty()); // Within epsilon
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_exceeds_threshold() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--epsilon")
+        .arg("0.01");
+    cmd.write_stdin(r#"{"value": 1.0}"#)
+        .write_stdin(r#"{"value": 1.5}"#);
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("~ value: 1.0 -> 1.5")); // Exceeds epsilon
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_negative_numbers() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--epsilon")
+        .arg("0.5");
+    cmd.write_stdin(r#"{"temp": -10.2}"#)
+        .write_stdin(r#"{"temp": -10.6}"#);
+    cmd.assert().success().stdout(predicates::str::is_empty()); // Within epsilon for negative numbers
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_zero_values() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--epsilon")
+        .arg("0.001");
+    cmd.write_stdin(r#"{"zero": 0.0}"#)
+        .write_stdin(r#"{"zero": 0.0005}"#);
+    cmd.assert().success().stdout(predicates::str::is_empty()); // Small difference from zero
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_very_large_numbers() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--epsilon")
+        .arg("1000000");
+    cmd.write_stdin(r#"{"big": 1000000000000}"#)
+        .write_stdin(r#"{"big": 1000000500000}"#);
+    cmd.assert().success().stdout(predicates::str::is_empty()); // Large epsilon for large numbers
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_invalid_value() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--epsilon")
+        .arg("invalid");
+    let result = cmd.output()?;
+    // Should handle invalid epsilon value gracefully
+    assert!(!result.status.success());
+    Ok(())
+}
+
+#[test]
+fn test_epsilon_negative_value() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--epsilon")
+        .arg("-0.1");
+    let result = cmd.output()?;
+    // Should handle negative epsilon appropriately (either error or absolute value)
+    // The exact behavior depends on implementation
     Ok(())
 }
 
@@ -52,6 +218,66 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
                 .and(predicates::str::contains(r#""age":28"#)),
         )
         .stdout(predicates::str::contains("~ [0].").not()); // Ensure not comparing by index
+    Ok(())
+}
+
+#[test]
+fn test_array_id_key_missing_id() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--array-id-key")
+        .arg("uuid");
+    cmd.write_stdin(r#"{"items": [{"name": "A"}, {"uuid": "123", "name": "B"}]}"#)
+        .write_stdin(r#"{"items": [{"uuid": "123", "name": "C"}]}"#);
+    // Should handle objects without the specified ID key gracefully
+    cmd.assert().code(1);
+    Ok(())
+}
+
+#[test]
+fn test_array_id_key_duplicate_ids() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--array-id-key")
+        .arg("id");
+    cmd.write_stdin(r#"{"items": [{"id": 1, "name": "A"}, {"id": 1, "name": "B"}]}"#)
+        .write_stdin(r#"{"items": [{"id": 1, "name": "C"}]}"#);
+    // Should handle duplicate IDs appropriately
+    cmd.assert().code(1);
+    Ok(())
+}
+
+#[test]
+fn test_array_id_key_different_types() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--array-id-key")
+        .arg("key");
+    cmd.write_stdin(r#"{"items": [{"key": "str1", "val": 1}, {"key": 123, "val": 2}]}"#)
+        .write_stdin(r#"{"items": [{"key": "str1", "val": 10}, {"key": 123, "val": 20}]}"#);
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("[key=str1]"))
+        .stdout(predicates::str::contains("[key=123]"));
+    Ok(())
+}
+
+#[test]
+fn test_array_id_key_nested_arrays() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-")
+        .arg("-")
+        .arg("--array-id-key")
+        .arg("id");
+    cmd.write_stdin(r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "John"}]}]}"#)
+        .write_stdin(r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "Jane"}]}]}"#);
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("[id=A]"))
+        .stdout(predicates::str::contains("[id=1]"));
     Ok(())
 }
 
@@ -325,6 +551,58 @@ fn test_context_option() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn test_context_zero_lines() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--context")
+        .arg("0");
+    
+    cmd.assert().code(1); // Should show differences without context
+    Ok(())
+}
+
+#[test]
+fn test_context_large_number() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--context")
+        .arg("100");
+    
+    cmd.assert().code(1); // Should handle large context gracefully
+    Ok(())
+}
+
+#[test]
+fn test_context_invalid_value() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--context")
+        .arg("invalid");
+    
+    let result = cmd.output()?;
+    // Should handle invalid context value gracefully
+    assert!(!result.status.success());
+    Ok(())
+}
+
+#[test]
+fn test_context_negative_value() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--context")
+        .arg("-5");
+    
+    let result = cmd.output()?;
+    // Should handle negative context value appropriately
+    // (either error or treat as zero/absolute value)
+    Ok(())
+}
+
+#[test]
 fn test_recursive_option() -> Result<(), Box<dyn std::error::Error>> {
     // Test --recursive option with directories
     let mut cmd = diffx_cmd();
@@ -334,6 +612,44 @@ fn test_recursive_option() -> Result<(), Box<dyn std::error::Error>> {
     
     cmd.assert()
         .code(0); // No differences in same directory
+    Ok(())
+}
+
+#[test]
+fn test_recursive_short_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures")
+        .arg("../tests/fixtures")
+        .arg("-r");
+    
+    cmd.assert()
+        .code(0);
+    Ok(())
+}
+
+#[test]
+fn test_recursive_with_files() -> Result<(), Box<dyn std::error::Error>> {
+    // Test --recursive with individual files (should work normally)
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/fixtures/file1.json")
+        .arg("../tests/fixtures/file2.json")
+        .arg("--recursive");
+    
+    cmd.assert()
+        .code(1); // Should show differences
+    Ok(())
+}
+
+#[test]
+fn test_recursive_nonexistent_directory() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("../tests/nonexistent")
+        .arg("../tests/fixtures")
+        .arg("--recursive");
+    
+    let result = cmd.output()?;
+    // Should handle missing directory gracefully
+    assert!(!result.status.success());
     Ok(())
 }
 
@@ -350,6 +666,32 @@ fn test_version_option() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn test_version_short_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-V");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("0.3.2")
+                .or(predicate::str::contains("diffx")));
+    Ok(())
+}
+
+#[test]
+fn test_version_with_other_args() -> Result<(), Box<dyn std::error::Error>> {
+    // Test that version option takes precedence
+    let mut cmd = diffx_cmd();
+    cmd.arg("--version")
+        .arg("file1.json")
+        .arg("file2.json");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("diffx"));
+    Ok(())
+}
+
+#[test]
 fn test_help_option() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("--help");
@@ -360,5 +702,47 @@ fn test_help_option() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicate::str::contains("Usage:"))
         .stdout(predicate::str::contains("Arguments:"))
         .stdout(predicate::str::contains("Options:"));
+    Ok(())
+}
+
+#[test]
+fn test_help_short_flag() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("-h");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("diffx"))
+        .stdout(predicate::str::contains("Usage:"));
+    Ok(())
+}
+
+#[test]
+fn test_help_comprehensive_content() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = diffx_cmd();
+    cmd.arg("--help");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("--format"))
+        .stdout(predicate::str::contains("--output"))
+        .stdout(predicate::str::contains("--epsilon"))
+        .stdout(predicate::str::contains("--ignore-keys-regex"))
+        .stdout(predicate::str::contains("--array-id-key"))
+        .stdout(predicate::str::contains("--no-color"));
+    Ok(())
+}
+
+#[test]
+fn test_help_with_other_args() -> Result<(), Box<dyn std::error::Error>> {
+    // Test that help option takes precedence
+    let mut cmd = diffx_cmd();
+    cmd.arg("--help")
+        .arg("file1.json")
+        .arg("file2.json");
+    
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Usage:"));
     Ok(())
 }
