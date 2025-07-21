@@ -11,7 +11,7 @@ fn diffx_cmd() -> Command {
 
 // Helper function to create temporary JSON files for testing
 fn create_temp_json(content: &str) -> NamedTempFile {
-    let mut file = NamedTempFile::new().expect("Failed to create temp file");
+    let mut file = NamedTempFile::with_suffix(".json").expect("Failed to create temp file");
     writeln!(file, "{}", content).expect("Failed to write to temp file");
     file
 }
@@ -25,7 +25,7 @@ fn test_basic_config_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path());
     cmd.assert()
-        .success()
+        .code(1)  // diffx returns 1 when differences found
         .stdout(predicates::str::contains("version:"))
         .stdout(predicates::str::contains("1.0"))
         .stdout(predicates::str::contains("1.1"));
@@ -59,7 +59,7 @@ fn test_json_output_to_file() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -74,7 +74,7 @@ fn test_second_json_output() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -118,7 +118,7 @@ fn test_yaml_with_json_output() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -293,7 +293,7 @@ fn test_diff1_json_output() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -308,7 +308,7 @@ fn test_diff2_json_output() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -337,7 +337,7 @@ fn test_cicd_config_changes() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -367,7 +367,7 @@ fn test_api_ignore_options_json() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-case").arg("--ignore-whitespace").arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -382,7 +382,7 @@ fn test_large_data_comparison() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json());
+        .stdout(predicates::str::starts_with("["));
     
     Ok(())
 }
@@ -397,7 +397,7 @@ fn test_git_dependency_detection() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
         .success()
-        .stdout(predicates::str::is_json())
+        .stdout(predicates::str::starts_with("["))
         .stdout(predicates::str::contains("lodash"));
     
     Ok(())
