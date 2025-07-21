@@ -1,11 +1,11 @@
 # 統合ガイド
 
-この包括的なガイドでは、`diffx` を様々な開発ワークフロー、CI/CD パイプライン、自動化システムに統合する方法を説明します。
+この包括的なガイドは、`diffx` を様々な開発ワークフロー、CI/CD パイプライン、自動化システムに統合する方法を説明します。
 
 ## 目次
 
 - [CI/CD プラットフォーム](#cicd-プラットフォーム)
-- [バージョン管理統合](#バージョン管理統合)
+- [バージョン管理統合](#バージョン管理統合) 
 - [コンテナエコシステム](#コンテナエコシステム)
 - [クラウドプラットフォーム](#クラウドプラットフォーム)
 - [監視とアラート](#監視とアラート)
@@ -47,56 +47,58 @@ jobs:
     
     - name: Validate configuration changes
       run: |
-        # 変更されたファイルを取得
+        # Get changed files
         CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(json|yaml|yml|toml)$' || true)
         
         if [ -n "$CHANGED_FILES" ]; then
-          echo "変更された設定ファイルを検証中:"
+          echo "Validating changed configuration files:"
           echo "$CHANGED_FILES"
           
           for file in $CHANGED_FILES; do
             if [ -f "$file" ]; then
-              echo "=== $file を分析中 ==="
+              echo "=== Analyzing $file ==="
               
-              # ベースブランチ版と比較
+              # Compare with base branch version
               git show origin/${{ github.base_ref }}:"$file" > /tmp/base_file 2>/dev/null || {
-                echo "新しいファイル: $file"
+                echo "New file: $file"
                 continue
               }
               
-              # 設定固有の設定で diffx を実行
+              # Run diffx with configuration-specific settings
               diffx /tmp/base_file "$file" \
                 --ignore-keys-regex "^(timestamp|lastModified|createdAt|updatedAt|buildTime)$" \
+                --ignore-case \
+                --ignore-whitespace \
                 --output json > "/tmp/diff_${file//\//_}.json"
               
-              # 重要な変更をチェック
+              # Check for critical changes
               if [ -s "/tmp/diff_${file//\//_}.json" ]; then
-                echo "$file で変更を検出:"
+                echo "Changes detected in $file:"
                 cat "/tmp/diff_${file//\//_}.json" | jq -r '.[] | 
                   if .Added then "  + \(.Added[0]): \(.Added[1])"
                   elif .Removed then "  - \(.Removed[0]): \(.Removed[1])"
                   elif .Modified then "  ~ \(.Modified[0]): \(.Modified[1]) → \(.Modified[2])"
-                  elif .TypeChanged then "  ! \(.TypeChanged[0]): \(.TypeChanged[1]) → \(.TypeChanged[2]) (型変更)"
+                  elif .TypeChanged then "  ! \(.TypeChanged[0]): \(.TypeChanged[1]) → \(.TypeChanged[2]) (type changed)"
                   else . end'
                 
-                # 重要な変更にフラグを立てる
+                # Flag critical changes
                 CRITICAL=$(cat "/tmp/diff_${file//\//_}.json" | jq -r '.[] | 
                   select(.Removed or .TypeChanged or 
                          (.Modified and (.Modified[0] | contains("security") or contains("database") or contains("auth"))))')
                 
                 if [ -n "$CRITICAL" ]; then
-                  echo "⚠️ $file で重要な変更を検出 - レビューが必要"
+                  echo "⚠️ Critical changes detected in $file - requires review"
                   echo "$CRITICAL" | jq -r '.[]'
                   echo "::warning title=Critical Config Change::Critical changes detected in $file"
                 fi
               else
-                echo "✅ $file にセマンティックな変更なし（フォーマットのみ）"
+                echo "✅ No semantic changes in $file (formatting only)"
               fi
               echo ""
             fi
           done
         else
-          echo "設定ファイルの変更なし"
+          echo "No configuration files changed"
         fi
 ```
 
@@ -107,7 +109,7 @@ name: API Contract Validation
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # 4時間ごと
+    - cron: '0 */4 * * *'  # Every 4 hours
   workflow_dispatch:
 
 jobs:
@@ -129,28 +131,28 @@ jobs:
         #!/bin/bash
         set -e
         
-        # テストするエンドポイントを定義
+        # Define endpoints to test
         ENDPOINTS=("users" "products" "orders" "health")
         FAILED_TESTS=()
         
         for endpoint in "${ENDPOINTS[@]}"; do
-          echo "$endpoint エンドポイントをテスト中..."
+          echo "Testing $endpoint endpoint..."
           
-          # 現在のレスポンスを取得
+          # Fetch current response
           curl -H "Authorization: Bearer $API_KEY" \
                -H "Accept: application/json" \
                "$API_BASE_URL/$endpoint" > "actual_$endpoint.json"
           
-          # 期待されるスキーマと比較
+          # Compare with expected schema
           if diffx "tests/api_contracts/$endpoint.json" "actual_$endpoint.json" \
              --ignore-keys-regex "^(timestamp|requestId|serverId|responseTime)$" \
              --output json > "diff_$endpoint.json"; then
-            echo "✅ $endpoint 契約は一致"
+            echo "✅ $endpoint contract matches"
           else
-            echo "❌ $endpoint 契約違反を検出"
+            echo "❌ $endpoint contract violation detected"
             FAILED_TESTS+=("$endpoint")
             
-            # 詳細レポートを作成
+            # Create detailed report
             echo "## $endpoint Contract Violation" >> contract_violations.md
             echo '```json' >> contract_violations.md
             cat "diff_$endpoint.json" >> contract_violations.md
@@ -159,11 +161,11 @@ jobs:
           fi
         done
         
-        # 結果をレポート
+        # Report results
         if [ ${#FAILED_TESTS[@]} -gt 0 ]; then
-          echo "契約違反が見つかりました: ${FAILED_TESTS[*]}"
+          echo "Contract violations found in: ${FAILED_TESTS[*]}"
           
-          # 違反に対してGitHubイシューを作成
+          # Create GitHub issue for violations
           if [ -f contract_violations.md ]; then
             gh issue create \
               --title "API Contract Violations Detected" \
@@ -173,7 +175,7 @@ jobs:
           
           exit 1
         else
-          echo "すべてのAPI契約が正常に検証されました"
+          echo "All API contracts validated successfully"
         fi
 ```
 
@@ -203,28 +205,28 @@ validate_configs:
     - *install_diffx
   script:
     - |
-      # 環境間の設定一貫性を検証
+      # Validate configuration consistency across environments
       ENVIRONMENTS=("development" "staging" "production")
       
       for env in "${ENVIRONMENTS[@]}"; do
         if [ "$env" != "production" ]; then
-          echo "$env と本番環境の設定を比較中..."
+          echo "Comparing $env with production configuration..."
           
-          # アプリ設定を比較
+          # Compare app configs
           diffx "config/production.yaml" "config/$env.yaml" \
             --ignore-keys-regex "^(environment|host|port|replicas|resources\..*)" \
             --output json > "diff_${env}_prod.json"
           
-          # 予期しない差分をチェック
+          # Check for unexpected differences
           UNEXPECTED_DIFFS=$(cat "diff_${env}_prod.json" | jq -r '.[] | 
             select(.Added or .Removed or 
                    (.Modified and (.Modified[0] | 
                     contains("security") or contains("auth") or contains("database"))))')
           
           if [ -n "$UNEXPECTED_DIFFS" ]; then
-            echo "⚠️ $env と本番環境間で予期しない設定差分:"
+            echo "⚠️ Unexpected configuration differences between $env and production:"
             echo "$UNEXPECTED_DIFFS" | jq -r '.'
-            echo "セキュリティと互換性についてこれらの変更を確認してください。"
+            echo "Please review these changes for security and compatibility."
           fi
         fi
       done
@@ -250,38 +252,120 @@ validate_terraform:
     - *install_diffx
   script:
     - |
-      # Terraform プランの変更を検証
+      # Validate Terraform plan changes
       terraform init
       terraform plan -out=tfplan
       terraform show -json tfplan > planned_changes.json
       
-      # 現在の状態と比較
+      # Compare with current state
       terraform show -json > current_state.json
       
-      # リソースの変更に焦点
+      # Focus on resource changes
       diffx current_state.json planned_changes.json \
         --path "planned_values.root_module.resources" \
         --ignore-keys-regex "^(timeouts|creation_time|last_updated)" \
         --output json > terraform_diff.json
       
-      # 影響を分析
+      # Analyze impact
       CRITICAL_CHANGES=$(cat terraform_diff.json | jq -r '.[] | 
         select(.Removed or (.Modified and (.Modified[0] | 
           contains("security_group") or contains("iam") or contains("vpc"))))')
       
       if [ -n "$CRITICAL_CHANGES" ]; then
-        echo "🔴 重要なインフラ変更を検出!"
+        echo "🔴 Critical infrastructure changes detected!"
         echo "$CRITICAL_CHANGES" | jq -r '.'
-        echo "デプロイには手動承認が必要です。"
+        echo "Manual approval required for deployment."
         exit 1
       fi
   when: manual
   allow_failure: false
 ```
 
-### Jenkins Pipeline
+#### CI/CD での高需要オプション
 
-#### 設定管理用宣言型パイプライン
+新しい高需要オプションは強力な自動化機能を提供します：
+
+```yaml
+# Quick deployment validation
+validate_deployment:
+  stage: deploy-validation
+  script:
+    - |
+      # Fast check if configs changed (exit code only)
+      if ! diffx baseline_config.json deployment_config.json --quiet; then
+        echo "Configuration changes detected, running full validation"
+        
+        # Show only filenames for quick overview  
+        diffx configs/ updated_configs/ --recursive --brief
+        
+        # Detailed analysis with ignore options
+        diffx baseline_config.json deployment_config.json \
+          --ignore-case \
+          --ignore-whitespace \
+          --ignore-keys-regex "^(deploy_time|build_id|version)" \
+          --output json > deployment_diff.json
+          
+        # Send for approval if changes detected
+        trigger_approval_workflow.sh deployment_diff.json
+      else
+        echo "No semantic changes - auto-deploying"
+        auto_deploy.sh
+      fi
+
+# Continuous configuration monitoring
+monitor_config_drift:
+  stage: monitor
+  schedule:
+    - cron: "*/15 * * * *"  # Every 15 minutes
+  script:
+    - |
+      # Check for configuration drift
+      if ! diffx /etc/app/config.json expected_config.json \
+         --ignore-keys-regex "^(hostname|instance_id|last_.*)" \
+         --ignore-case \
+         --quiet; then
+        
+        # Alert with context
+        diffx /etc/app/config.json expected_config.json \
+          --ignore-keys-regex "^(hostname|instance_id|last_.*)" \
+          --ignore-case \
+          --context 2 \
+          --output unified | \
+          send_alert.sh "Configuration Drift Detected"
+      fi
+
+# Batch file validation
+validate_all_configs:
+  stage: validate
+  script:
+    - |
+      # Quick scan of all config files
+      failed_files=()
+      
+      find configs/ -name "*.json" | while read config; do
+        baseline="baselines/$(basename $config)"
+        if [ -f "$baseline" ]; then
+          if ! diffx "$baseline" "$config" --quiet; then
+            echo "Changed: $(basename $config)"
+            failed_files+=("$config")
+          fi
+        fi
+      done
+      
+      # Detailed analysis only for changed files
+      for file in "${failed_files[@]}"; do
+        baseline="baselines/$(basename $file)"
+        echo "=== Analysis: $file ==="
+        diffx "$baseline" "$file" \
+          --ignore-whitespace \
+          --context 1 \
+          --output unified
+      done
+```
+
+### Jenkins パイプライン
+
+#### 設定管理のための宣言的パイプライン
 
 ```groovy
 pipeline {
@@ -295,7 +379,7 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    // diffx がない場合はインストール
+                    // Install diffx if not present
                     sh '''
                         if ! command -v diffx &> /dev/null; then
                             curl -L "https://github.com/kako-jun/diffx/releases/latest/download/diffx-x86_64-unknown-linux-gnu.tar.gz" | tar -xz
@@ -320,7 +404,7 @@ pipeline {
                     
                     if (changedFiles) {
                         changedFiles.split('\n').each { file ->
-                            echo "${file} を分析中..."
+                            echo "Analyzing ${file}..."
                             
                             sh """
                                 git show HEAD~1:${file} > old_${file} 2>/dev/null || echo '{}' > old_${file}
@@ -330,10 +414,10 @@ pipeline {
                                     --output json > diff_${file.replaceAll('/', '_')}.json || true
                                 
                                 if [ -s diff_${file.replaceAll('/', '_')}.json ]; then
-                                    echo "${file} で変更を検出:"
+                                    echo "Changes detected in ${file}:"
                                     cat diff_${file.replaceAll('/', '_')}.json | jq -r '.[]'
                                 else
-                                    echo "${file} にセマンティックな変更なし"
+                                    echo "No semantic changes in ${file}"
                                 fi
                             """
                         }
@@ -353,8 +437,8 @@ pipeline {
             }
             steps {
                 script {
-                    // ここにデプロイロジック
-                    echo "設定変更をデプロイ中..."
+                    // Deployment logic here
+                    echo "Deploying configuration changes..."
                 }
             }
         }
@@ -363,8 +447,8 @@ pipeline {
     post {
         failure {
             emailext (
-                subject: "設定検証失敗: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
-                body: "設定検証が失敗しました。詳細はビルドログを確認してください。",
+                subject: "Configuration Validation Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}",
+                body: "Configuration validation failed. Please check the build logs for details.",
                 to: "${env.CHANGE_AUTHOR_EMAIL}"
             )
         }
@@ -376,47 +460,47 @@ pipeline {
 
 ### Git フック
 
-#### 設定検証用プリコミットフック
+#### 設定検証のための Pre-commit フック
 
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit
 
-# diffx が利用可能かチェック
+# Check if diffx is available
 if ! command -v diffx &> /dev/null; then
-    echo "警告: diffx が見つかりません。次でインストール: cargo install diffx"
+    echo "Warning: diffx not found. Install with: cargo install diffx"
     exit 0
 fi
 
-# ステージされたファイルを取得
+# Get staged files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=AM | grep -E '\.(json|yaml|yml|toml)$' || true)
 
 if [ -z "$STAGED_FILES" ]; then
     exit 0
 fi
 
-echo "ステージされた設定ファイルを検証中..."
+echo "Validating staged configuration files..."
 
 VALIDATION_FAILED=false
 
 for file in $STAGED_FILES; do
-    echo "$file を検証中..."
+    echo "Validating $file..."
     
-    # ファイルが HEAD に存在するかチェック（変更の場合）
+    # Check if file exists in HEAD (for modifications)
     if git cat-file -e HEAD:"$file" 2>/dev/null; then
-        # ステージ版と HEAD を比較
+        # Compare staged version with HEAD
         git show HEAD:"$file" > /tmp/head_version
         git show :"$file" > /tmp/staged_version
         
-        # 厳密な検証で diffx を実行
+        # Run diffx with strict validation
         if diffx /tmp/head_version /tmp/staged_version \
            --ignore-keys-regex "^(timestamp|lastModified)$" \
            --output json > /tmp/diff_output.json; then
-            echo "✅ $file: セマンティックな変更なし"
+            echo "✅ $file: No semantic changes"
         else
-            echo "📝 $file: 変更を検出"
+            echo "📝 $file: Changes detected"
             
-            # 潜在的に危険な変更をチェック
+            # Check for potentially dangerous changes
             DANGEROUS_CHANGES=$(cat /tmp/diff_output.json | jq -r '.[] | 
                 select(.Removed or .TypeChanged or 
                        (.Modified and (.Modified[0] | 
@@ -424,10 +508,10 @@ for file in $STAGED_FILES; do
                         contains("secret") or contains("key"))))')
             
             if [ -n "$DANGEROUS_CHANGES" ]; then
-                echo "⚠️  警告: $file で潜在的に危険な変更:"
+                echo "⚠️  WARNING: Potentially dangerous changes in $file:"
                 echo "$DANGEROUS_CHANGES" | jq -r '.'
                 echo ""
-                read -p "コミットを続行しますか? (y/N): " -n 1 -r
+                read -p "Continue with commit? (y/N): " -n 1 -r
                 echo
                 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
                     VALIDATION_FAILED=true
@@ -435,57 +519,57 @@ for file in $STAGED_FILES; do
             fi
         fi
         
-        # クリーンアップ
+        # Cleanup
         rm -f /tmp/head_version /tmp/staged_version /tmp/diff_output.json
     else
-        echo "ℹ️  $file: 新しいファイル"
+        echo "ℹ️  $file: New file"
     fi
 done
 
 if [ "$VALIDATION_FAILED" = true ]; then
-    echo "検証の懸念によりコミットが中止されました。"
+    echo "Commit aborted due to validation concerns."
     exit 1
 fi
 
-echo "設定検証が正常に完了しました。"
+echo "Configuration validation completed successfully."
 ```
 
-#### デプロイ検証用ポストレシーブフック
+#### デプロイ検証のための Post-receive フック
 
 ```bash
 #!/bin/bash
 # hooks/post-receive
 
 while read oldrev newrev refname; do
-    # main ブランチのみ処理
+    # Only process main branch
     if [ "$refname" = "refs/heads/main" ]; then
-        echo "main ブランチのデプロイ準備を検証中..."
+        echo "Validating deployment readiness for main branch..."
         
-        # 変更された設定ファイルを取得
+        # Get changed configuration files
         CHANGED_CONFIGS=$(git diff --name-only $oldrev..$newrev | grep -E 'config/.*\.(json|yaml|yml)$' || true)
         
         if [ -n "$CHANGED_CONFIGS" ]; then
-            echo "設定変更を検出:"
+            echo "Configuration changes detected:"
             echo "$CHANGED_CONFIGS"
             
-            # 変更された各設定を検証
+            # Validate each changed config
             for config in $CHANGED_CONFIGS; do
-                echo "$config を検証中..."
+                echo "Validating $config..."
                 
-                # 旧バージョンと新バージョンを抽出
+                # Extract old and new versions
                 git show $oldrev:$config > /tmp/old_config 2>/dev/null || echo '{}' > /tmp/old_config
                 git show $newrev:$config > /tmp/new_config
                 
-                # 包括的な検証を実行
+                # Run comprehensive validation
                 diffx /tmp/old_config /tmp/new_config \
                     --ignore-keys-regex "^(version|buildNumber|timestamp)$" \
                     --output json > /tmp/config_diff.json
                 
                 if [ -s /tmp/config_diff.json ]; then
-                    # デプロイパイプラインをトリガー
-                    echo "設定変更にはデプロイ更新が必要"
+                    # Trigger deployment pipeline
+                    echo "Configuration changes require deployment update"
                     
-                    # 例: Jenkins ジョブをトリガー
+                    # Example: Trigger Jenkins job
                     curl -X POST "$JENKINS_URL/job/deploy-config/build" \
                          --user "$JENKINS_USER:$JENKINS_TOKEN" \
                          --data-urlencode "json={\"parameter\": [{\"name\":\"config_file\", \"value\":\"$config\"}]}"
@@ -500,20 +584,20 @@ done
 
 ### Git エイリアス
 
-`.gitconfig` に追加:
+`.gitconfig` に追加：
 
 ```ini
 [alias]
-    # 現在のファイルを前のコミットと比較
+    # Compare current file with previous commit
     diffx-prev = "!f() { git show HEAD~1:\"$1\" | diffx - \"$1\"; }; f"
     
-    # 2つのコミット間でファイルを比較
+    # Compare file between two commits
     diffx-commits = "!f() { git show \"$1\":\"$3\" | diffx - <(git show \"$2\":\"$3\"); }; f"
     
-    # git log でセマンティック差分を表示
+    # Show semantic diff in git log
     logx = "!f() { git log --oneline \"$@\" | while read commit msg; do echo \"$commit: $msg\"; git diffx-prev HEAD~1 HEAD 2>/dev/null | head -5; echo; done; }; f"
     
-    # プッシュ前にすべての設定を検証
+    # Validate all configs before push
     validate-configs = "!find . -name '*.json' -o -name '*.yaml' -o -name '*.yml' | xargs -I {} sh -c 'echo \"Validating {}\"; diffx {} {} --output json > /dev/null && echo \"✅ {}\" || echo \"❌ {}\"'"
 ```
 
@@ -531,20 +615,20 @@ RUN cargo install diffx
 FROM node:18-alpine AS app-builder
 COPY --from=diffx-builder /usr/local/cargo/bin/diffx /usr/local/bin/
 
-# 設定ファイルをコピー
+# Copy configuration files
 COPY config/ ./config/
 COPY config.schema.json ./
 
-# ビルド中に設定を検証
+# Validate configuration during build
 RUN diffx config/default.json config/production.json \
     --ignore-keys-regex "^(environment|host|port)$" \
     --output json > /tmp/config_diff.json && \
     if [ -s /tmp/config_diff.json ]; then \
-        echo "設定検証完了"; \
+        echo "Configuration validation completed"; \
         cat /tmp/config_diff.json; \
     fi
 
-# アプリビルドを続行...
+# Continue with app build...
 COPY package*.json ./
 RUN npm install
 COPY . .
@@ -556,7 +640,7 @@ COPY --from=app-builder /app/dist ./dist
 COPY --from=app-builder /app/config ./config
 COPY --from=app-builder /tmp/config_diff.json ./
 
-# 設定検証を含むヘルスチェックを追加
+# Add health check that includes config validation
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node health-check.js && diffx config/runtime.json config/expected.json --output json > /dev/null
 ```
@@ -603,24 +687,24 @@ MONITOR_FILE="/tmp/config-monitor/status"
 
 while true; do
     if [ -f "$CURRENT_CONFIG" ] && [ -f "$BASELINE_CONFIG" ]; then
-        # 設定ドリフトをチェック
+        # Check for configuration drift
         if ! diffx "$BASELINE_CONFIG" "$CURRENT_CONFIG" \
              --ignore-keys-regex "^(timestamp|uptime|pid)$" \
              --output json > /tmp/config_drift.json; then
             
-            echo "$(date): 設定ドリフトを検出" >> "$MONITOR_FILE"
+            echo "$(date): Configuration drift detected" >> "$MONITOR_FILE"
             cat /tmp/config_drift.json >> "$MONITOR_FILE"
             
-            # アラートメカニズム（webhook、slack等）
+            # Alert mechanism (webhook, slack, etc.)
             curl -X POST "$ALERT_WEBHOOK_URL" \
                  -H "Content-Type: application/json" \
-                 -d "{\"message\": \"設定ドリフトを検出\", \"details\": $(cat /tmp/config_drift.json)}"
+                 -d "{\"message\": \"Configuration drift detected\", \"details\": $(cat /tmp/config_drift.json)}"
         else
-            echo "$(date): 設定安定" >> "$MONITOR_FILE"
+            echo "$(date): Configuration stable" >> "$MONITOR_FILE"
         fi
     fi
     
-    sleep 300  # 5分ごとにチェック
+    sleep 300  # Check every 5 minutes
 done
 ```
 
@@ -646,20 +730,20 @@ spec:
         - |
           cargo install diffx
           
-          # 現在の ConfigMap を取得
+          # Get current ConfigMap
           kubectl get configmap app-config -o jsonpath='{.data.config\.json}' > current_config.json
           
-          # 期待される設定と比較
+          # Compare with expected configuration
           diffx expected_config.json current_config.json \
             --ignore-keys-regex "^(namespace|resourceVersion|creationTimestamp)$" \
             --output json > config_validation.json
           
           if [ -s config_validation.json ]; then
-            echo "設定検証の問題を発見:"
+            echo "Configuration validation issues found:"
             cat config_validation.json
             exit 1
           else
-            echo "設定検証が通過"
+            echo "Configuration validation passed"
           fi
         volumeMounts:
         - name: expected-config
@@ -673,7 +757,7 @@ spec:
   backoffLimit: 4
 ```
 
-#### 設定検証付き Helm チャート
+#### 設定検証付き Helm Chart
 
 ```yaml
 # templates/config-validation-job.yaml
@@ -695,10 +779,10 @@ spec:
         - sh
         - -c
         - |
-          # diffx をインストール
+          # Install diffx
           cargo install diffx
           
-          # Helm で生成された設定をスキーマと検証
+          # Validate Helm-generated config against schema
           echo '{{ .Values.config | toJson }}' > generated_config.json
           
           diffx schema_config.json generated_config.json \
@@ -706,7 +790,7 @@ spec:
             --output json > validation_result.json
           
           if [ -s validation_result.json ]; then
-            echo "Helm 設定検証失敗:"
+            echo "Helm configuration validation failed:"
             cat validation_result.json
             exit 1
           fi
@@ -726,7 +810,7 @@ spec:
 
 ### AWS 統合
 
-#### S3 設定監視用 Lambda 関数
+#### S3 設定監視のための Lambda 関数
 
 ```python
 # lambda_function.py
@@ -739,28 +823,28 @@ from datetime import datetime
 def lambda_handler(event, context):
     s3 = boto3.client('s3')
     
-    # diffx バイナリをダウンロード（Lambda 用にプリコンパイル済み）
+    # Download diffx binary (pre-compiled for Lambda)
     if not os.path.exists('/tmp/diffx'):
         s3.download_file('my-tools-bucket', 'diffx-lambda', '/tmp/diffx')
         os.chmod('/tmp/diffx', 0o755)
     
-    # この関数をトリガーした S3 オブジェクトを取得
+    # Get the S3 object that triggered this function
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
     
     if not key.endswith(('.json', '.yaml', '.yml')):
-        return {'statusCode': 200, 'body': '設定ファイルではありません'}
+        return {'statusCode': 200, 'body': 'Not a configuration file'}
     
-    # 現在とベースラインの設定をダウンロード
+    # Download current and baseline configurations
     s3.download_file(bucket, key, '/tmp/current_config')
     
     baseline_key = key.replace('current/', 'baseline/')
     try:
         s3.download_file(bucket, baseline_key, '/tmp/baseline_config')
     except:
-        return {'statusCode': 200, 'body': 'ベースライン設定が見つかりません'}
+        return {'statusCode': 200, 'body': 'No baseline configuration found'}
     
-    # diffx 比較を実行
+    # Run diffx comparison
     result = subprocess.run([
         '/tmp/diffx', 
         '/tmp/baseline_config', 
@@ -770,10 +854,10 @@ def lambda_handler(event, context):
     ], capture_output=True, text=True)
     
     if result.returncode != 0:
-        # 設定ドリフトを検出
+        # Configuration drift detected
         diff_data = json.loads(result.stdout) if result.stdout else []
         
-        # アラート用に SNS に送信
+        # Send to SNS for alerting
         sns = boto3.client('sns')
         message = {
             'bucket': bucket,
@@ -785,18 +869,18 @@ def lambda_handler(event, context):
         sns.publish(
             TopicArn=os.environ['SNS_TOPIC_ARN'],
             Message=json.dumps(message),
-            Subject=f'設定ドリフトを検出: {key}'
+            Subject=f'Configuration Drift Detected: {key}'
         )
         
         return {
             'statusCode': 200,
             'body': json.dumps({
-                'message': '設定ドリフトを検出してアラートを送信',
+                'message': 'Configuration drift detected and alert sent',
                 'differences': diff_data
             })
         }
     
-    return {'statusCode': 200, 'body': '設定ドリフトは検出されませんでした'}
+    return {'statusCode': 200, 'body': 'No configuration drift detected'}
 ```
 
 #### CloudFormation テンプレート検証
@@ -804,12 +888,12 @@ def lambda_handler(event, context):
 ```yaml
 # cloudformation-config-validator.yaml
 AWSTemplateFormatVersion: '2010-09-09'
-Description: '設定検証パイプライン'
+Description: 'Configuration validation pipeline'
 
 Parameters:
   ConfigBucket:
     Type: String
-    Description: 設定ファイルを含む S3 バケット
+    Description: S3 bucket containing configuration files
 
 Resources:
   ConfigValidationRole:
@@ -861,20 +945,20 @@ Resources:
             build:
               commands:
                 - |
-                  # S3 から設定をダウンロード
+                  # Download configurations from S3
                   aws s3 cp s3://$CONFIG_BUCKET/production.json production.json
                   aws s3 cp s3://$CONFIG_BUCKET/staging.json staging.json
                   
-                  # 一貫性を検証
+                  # Validate consistency
                   diffx production.json staging.json \
                     --ignore-keys-regex "^(environment|host|replicas)$" \
                     --output json > validation_result.json
                   
-                  # 結果をアップロード
+                  # Upload results
                   aws s3 cp validation_result.json s3://$CONFIG_BUCKET/validation/
                   
                   if [ -s validation_result.json ]; then
-                    echo "設定の不整合を発見"
+                    echo "Configuration inconsistencies found"
                     cat validation_result.json
                     exit 1
                   fi
@@ -903,13 +987,13 @@ variables:
 
 stages:
 - stage: Validate
-  displayName: '設定検証'
+  displayName: 'Configuration Validation'
   jobs:
   - job: ValidateConfigs
-    displayName: '設定ファイル検証'
+    displayName: 'Validate Configuration Files'
     steps:
     - task: Bash@3
-      displayName: 'diffx インストール'
+      displayName: 'Install diffx'
       inputs:
         targetType: 'inline'
         script: |
@@ -918,47 +1002,47 @@ stages:
           diffx --version
     
     - task: Bash@3
-      displayName: '設定変更検証'
+      displayName: 'Validate Configuration Changes'
       inputs:
         targetType: 'inline'
         script: |
-          # このコミットで変更されたファイルを取得
+          # Get changed files in this commit
           CHANGED_FILES=$(git diff HEAD~1 HEAD --name-only | grep -E '\.(json|yaml|yml)$' || true)
           
           if [ -n "$CHANGED_FILES" ]; then
-            echo "変更された設定ファイルを検証中:"
+            echo "Validating changed configuration files:"
             echo "$CHANGED_FILES"
             
             for file in $CHANGED_FILES; do
-              echo "=== $file を検証中 ==="
+              echo "=== Validating $file ==="
               
-              # 前のバージョンを取得
+              # Get previous version
               git show HEAD~1:"$file" > "previous_$file" 2>/dev/null || echo '{}' > "previous_$file"
               
-              # バージョンを比較
+              # Compare versions
               diffx "previous_$file" "$file" \
                 --ignore-keys-regex "^(buildId|timestamp|version)$" \
                 --output json > "diff_$(echo $file | tr '/' '_').json"
               
-              # 結果を処理
+              # Process results
               if [ -s "diff_$(echo $file | tr '/' '_').json" ]; then
-                echo "$file で変更を検出:"
+                echo "Changes detected in $file:"
                 cat "diff_$(echo $file | tr '/' '_').json" | jq -r '.[] | 
                   if .Added then "  + \(.Added[0]): \(.Added[1])"
                   elif .Removed then "  - \(.Removed[0]): \(.Removed[1])"
                   elif .Modified then "  ~ \(.Modified[0]): \(.Modified[1]) → \(.Modified[2])"
                   else . end'
               else
-                echo "$file にセマンティックな変更なし"
+                echo "No semantic changes in $file"
               fi
               echo ""
             done
           else
-            echo "設定ファイルの変更なし"
+            echo "No configuration files changed"
           fi
     
     - task: PublishBuildArtifacts@1
-      displayName: '検証結果公開'
+      displayName: 'Publish Validation Results'
       inputs:
         pathtoPublish: 'diff_*.json'
         artifactName: 'config-validation-results'
@@ -967,7 +1051,7 @@ stages:
 
 ### Google Cloud Platform
 
-#### 設定監視用 Cloud Function
+#### 設定監視のための Cloud Function
 
 ```python
 # main.py for Google Cloud Function
@@ -979,37 +1063,37 @@ from google.cloud import storage
 from google.cloud import pubsub_v1
 
 def validate_config_change(event, context):
-    """Cloud Storage バケットへの変更によってトリガーされる。"""
+    """Triggered by a change to a Cloud Storage bucket."""
     
     file_name = event['name']
     bucket_name = event['bucket']
     
     if not file_name.endswith(('.json', '.yaml', '.yml')):
-        print(f'非設定ファイルを無視: {file_name}')
+        print(f'Ignoring non-config file: {file_name}')
         return
     
-    # diffx バイナリをダウンロード（関数にプリデプロイ済み）
-    diffx_path = '/workspace/diffx'  # デプロイメントに含まれる
+    # Download diffx binary (pre-deployed in the function)
+    diffx_path = '/workspace/diffx'  # Included in deployment
     
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     
-    # 現在のファイルをダウンロード
+    # Download current file
     blob = bucket.blob(file_name)
     current_config = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
     blob.download_to_filename(current_config.name)
     
-    # ベースライン設定をダウンロード
+    # Download baseline config
     baseline_name = file_name.replace('current/', 'baseline/')
     try:
         baseline_blob = bucket.blob(baseline_name)
         baseline_config = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
         baseline_blob.download_to_filename(baseline_config.name)
     except:
-        print(f'{file_name} のベースラインが見つかりません')
+        print(f'No baseline found for {file_name}')
         return
     
-    # diffx を実行
+    # Run diffx
     result = subprocess.run([
         diffx_path,
         baseline_config.name,
@@ -1018,15 +1102,15 @@ def validate_config_change(event, context):
         '--output', 'json'
     ], capture_output=True, text=True)
     
-    # 一時ファイルをクリーンアップ
+    # Clean up temp files
     os.unlink(current_config.name)
     os.unlink(baseline_config.name)
     
     if result.returncode != 0:
-        # 設定ドリフトを検出
+        # Configuration drift detected
         diff_data = json.loads(result.stdout) if result.stdout else []
         
-        # アラート用に Pub/Sub に公開
+        # Publish to Pub/Sub for alerting
         publisher = pubsub_v1.PublisherClient()
         topic_path = publisher.topic_path(
             os.environ['GCP_PROJECT'], 
@@ -1040,16 +1124,16 @@ def validate_config_change(event, context):
         }
         
         publisher.publish(topic_path, json.dumps(message_data).encode('utf-8'))
-        print(f'{file_name} で設定ドリフトを検出')
+        print(f'Configuration drift detected in {file_name}')
     else:
-        print(f'{file_name} でドリフト検出なし')
+        print(f'No drift detected in {file_name}')
 ```
 
 ## 監視とアラート
 
 ### Prometheus 統合
 
-#### 設定ドリフト エクスポーター
+#### 設定ドリフト Exporter
 
 ```python
 #!/usr/bin/env python3
@@ -1062,7 +1146,7 @@ import os
 from prometheus_client import start_http_server, Gauge, Counter, Info
 import schedule
 
-# Prometheus メトリクス
+# Prometheus metrics
 config_drift_detected = Gauge('config_drift_detected', 'Configuration drift detected', ['config_file'])
 config_validation_errors = Counter('config_validation_errors_total', 'Total configuration validation errors')
 config_last_check = Gauge('config_last_check_timestamp', 'Last configuration check timestamp')
@@ -1075,7 +1159,7 @@ class ConfigDriftMonitor:
         self.current_dir = os.path.join(config_dir, 'current')
     
     def check_drift(self):
-        """監視対象すべてのファイルで設定ドリフトをチェック。"""
+        """Check for configuration drift in all monitored files."""
         try:
             config_files = [f for f in os.listdir(self.current_dir) 
                           if f.endswith(('.json', '.yaml', '.yml'))]
@@ -1087,7 +1171,7 @@ class ConfigDriftMonitor:
                 if not os.path.exists(baseline_path):
                     continue
                 
-                # diffx を実行
+                # Run diffx
                 result = subprocess.run([
                     'diffx',
                     baseline_path,
@@ -1097,12 +1181,12 @@ class ConfigDriftMonitor:
                 ], capture_output=True, text=True)
                 
                 if result.returncode != 0:
-                    # ドリフトを検出
+                    # Drift detected
                     config_drift_detected.labels(config_file=config_file).set(1)
                     
-                    # 詳細をログ
+                    # Log details
                     diff_data = json.loads(result.stdout) if result.stdout else []
-                    print(f"{config_file} でドリフト検出: {len(diff_data)} 個の差分")
+                    print(f"Drift detected in {config_file}: {len(diff_data)} differences")
                 else:
                     config_drift_detected.labels(config_file=config_file).set(0)
             
@@ -1110,22 +1194,22 @@ class ConfigDriftMonitor:
             
         except Exception as e:
             config_validation_errors.inc()
-            print(f"設定チェック中のエラー: {e}")
+            print(f"Error during configuration check: {e}")
 
 def main():
     monitor = ConfigDriftMonitor()
     
-    # 定期チェックをスケジュール
+    # Schedule regular checks
     schedule.every(5).minutes.do(monitor.check_drift)
     
-    # Prometheus メトリクスサーバー開始
+    # Start Prometheus metrics server
     start_http_server(8000)
-    print("設定ドリフトエクスポーターがポート8000で開始されました")
+    print("Configuration drift exporter started on port 8000")
     
-    # 初期チェック
+    # Initial check
     monitor.check_drift()
     
-    # メインループ
+    # Main loop
     while True:
         schedule.run_pending()
         time.sleep(1)
@@ -1139,10 +1223,10 @@ if __name__ == '__main__':
 ```json
 {
   "dashboard": {
-    "title": "設定ドリフト監視",
+    "title": "Configuration Drift Monitoring",
     "panels": [
       {
-        "title": "設定ドリフト状態",
+        "title": "Configuration Drift Status",
         "type": "stat",
         "targets": [
           {
@@ -1162,22 +1246,22 @@ if __name__ == '__main__':
         }
       },
       {
-        "title": "設定チェックエラー",
+        "title": "Configuration Check Errors",
         "type": "graph",
         "targets": [
           {
             "expr": "rate(config_validation_errors_total[5m])",
-            "legendFormat": "検証エラー/秒"
+            "legendFormat": "Validation Errors/sec"
           }
         ]
       },
       {
-        "title": "最終設定チェック",
+        "title": "Last Configuration Check",
         "type": "stat",
         "targets": [
           {
             "expr": "time() - config_last_check_timestamp",
-            "legendFormat": "最終チェックからの秒数"
+            "legendFormat": "Seconds since last check"
           }
         ]
       }
@@ -1199,10 +1283,10 @@ CONFIG_FILE="$2"
 DIFF_FILE="$3"
 
 if [ ! -f "$DIFF_FILE" ] || [ ! -s "$DIFF_FILE" ]; then
-    exit 0  # レポートする差分なし
+    exit 0  # No differences to report
 fi
 
-# 差分データを解析
+# Parse diff data
 DIFF_SUMMARY=$(cat "$DIFF_FILE" | jq -r '
     group_by(keys[0]) | 
     map({
@@ -1214,26 +1298,26 @@ DIFF_SUMMARY=$(cat "$DIFF_FILE" | jq -r '
     join("\n")'
 )
 
-# Slack メッセージを作成
+# Create Slack message
 SLACK_MESSAGE=$(cat <<EOF
 {
-    "text": "設定変更を検出",
+    "text": "Configuration Change Detected",
     "attachments": [
         {
             "color": "warning",
             "fields": [
                 {
-                    "title": "ファイル",
+                    "title": "File",
                     "value": "$CONFIG_FILE",
                     "short": true
                 },
                 {
-                    "title": "タイムスタンプ",
+                    "title": "Timestamp",
                     "value": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
                     "short": true
                 },
                 {
-                    "title": "変更概要",
+                    "title": "Changes Summary",
                     "value": "\`\`\`$DIFF_SUMMARY\`\`\`",
                     "short": false
                 }
@@ -1241,7 +1325,7 @@ SLACK_MESSAGE=$(cat <<EOF
             "actions": [
                 {
                     "type": "button",
-                    "text": "詳細を見る",
+                    "text": "View Details",
                     "url": "$BUILD_URL"
                 }
             ]
@@ -1251,7 +1335,7 @@ SLACK_MESSAGE=$(cat <<EOF
 EOF
 )
 
-# Slack に送信
+# Send to Slack
 curl -X POST -H 'Content-type: application/json' \
      --data "$SLACK_MESSAGE" \
      "$SLACK_WEBHOOK_URL"
@@ -1261,7 +1345,7 @@ curl -X POST -H 'Content-type: application/json' \
 
 ### VSCode 拡張統合
 
-#### diffx 言語サーバー設定
+#### diffx Language Server 設定
 
 ```json
 // .vscode/settings.json
@@ -1288,7 +1372,7 @@ curl -X POST -H 'Content-type: application/json' \
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "diffx: ベースラインと比較",
+            "label": "diffx: Compare with baseline",
             "type": "shell",
             "command": "diffx",
             "args": [
@@ -1313,7 +1397,7 @@ curl -X POST -H 'Content-type: application/json' \
             }
         },
         {
-            "label": "diffx: すべての設定を検証",
+            "label": "diffx: Validate all configs",
             "type": "shell",
             "command": "find",
             "args": [
@@ -1334,14 +1418,14 @@ curl -X POST -H 'Content-type: application/json' \
 ```xml
 <!-- File: .idea/tools/External Tools.xml -->
 <toolSet name="diffx">
-  <tool name="ベースラインと比較" showInMainMenu="true" showInEditor="true" showInProject="true" showInSearchPopup="true" disabled="false" useConsole="true" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="true">
+  <tool name="Compare with baseline" showInMainMenu="true" showInEditor="true" showInProject="true" showInSearchPopup="true" disabled="false" useConsole="true" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="true">
     <exec>
       <option name="COMMAND" value="diffx" />
       <option name="PARAMETERS" value="config/baseline/$FileNameWithoutExtension$.$FileExt$ $FilePath$ --output cli" />
       <option name="WORKING_DIRECTORY" value="$ProjectFileDir$" />
     </exec>
   </tool>
-  <tool name="git とのセマンティック差分" showInMainMenu="true" showInEditor="true" showInProject="false" showInSearchPopup="false" disabled="false" useConsole="true" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="true">
+  <tool name="Semantic diff with git" showInMainMenu="true" showInEditor="true" showInProject="false" showInSearchPopup="false" disabled="false" useConsole="true" showConsoleOnStdOut="false" showConsoleOnStdErr="false" synchronizeAfterRun="true">
     <exec>
       <option name="COMMAND" value="bash" />
       <option name="PARAMETERS" value="-c &quot;git show HEAD~1:$FileRelativePath$ | diffx - $FilePath$&quot;" />
@@ -1357,41 +1441,41 @@ curl -X POST -H 'Content-type: application/json' \
 
 ```bash
 #!/bin/bash
-# config-manager.sh - diffx を使った包括的設定管理
+# config-manager.sh - Comprehensive configuration management with diffx
 
 set -euo pipefail
 
-# 設定
+# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${CONFIG_DIR:-./config}"
 BASELINE_DIR="${BASELINE_DIR:-./config/baseline}"
 BACKUP_DIR="${BACKUP_DIR:-./config/backups}"
 LOG_FILE="${LOG_FILE:-/var/log/config-manager.log}"
 
-# デフォルト diffx オプション
+# Default diffx options
 IGNORE_REGEX="${IGNORE_REGEX:-^(timestamp|lastModified|createdAt|updatedAt|buildTime|version)$}"
 OUTPUT_FORMAT="${OUTPUT_FORMAT:-json}"
 
-# ログ関数
+# Logging function
 log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
 }
 
-# diffx が利用可能かチェック
+# Check if diffx is available
 check_diffx() {
     if ! command -v diffx &> /dev/null; then
-        log "エラー: diffx が見つかりません。次でインストール: cargo install diffx"
+        log "ERROR: diffx not found. Please install with: cargo install diffx"
         exit 1
     fi
 }
 
-# ディレクトリ構造を作成
+# Create directory structure
 setup_directories() {
     mkdir -p "$CONFIG_DIR" "$BASELINE_DIR" "$BACKUP_DIR"
-    log "ディレクトリ構造を作成しました"
+    log "Directory structure created"
 }
 
-# 現在の設定をバックアップ
+# Backup current configurations
 backup_configs() {
     local backup_timestamp=$(date +'%Y%m%d_%H%M%S')
     local backup_path="$BACKUP_DIR/$backup_timestamp"
@@ -1402,20 +1486,20 @@ backup_configs() {
     while read -r config_file; do
         if [[ ! "$config_file" =~ backup ]]; then
             cp "$config_file" "$backup_path/"
-            log "バックアップ済み: $config_file"
+            log "Backed up: $config_file"
         fi
     done
     
-    log "バックアップ完了: $backup_path"
+    log "Backup completed: $backup_path"
 }
 
-# ベースラインに対して設定を検証
+# Validate configuration against baseline
 validate_config() {
     local config_file="$1"
     local baseline_file="$BASELINE_DIR/$(basename "$config_file")"
     
     if [[ ! -f "$baseline_file" ]]; then
-        log "警告: $config_file のベースラインが見つかりません"
+        log "WARNING: No baseline found for $config_file"
         return 0
     fi
     
@@ -1424,34 +1508,34 @@ validate_config() {
     if diffx "$baseline_file" "$config_file" \
        --ignore-keys-regex "$IGNORE_REGEX" \
        --output "$OUTPUT_FORMAT" > "$diff_output"; then
-        log "✅ $config_file: ベースラインとのセマンティックな差分なし"
+        log "✅ $config_file: No semantic differences from baseline"
         rm "$diff_output"
         return 0
     else
-        log "⚠️  $config_file: ベースラインとの差分を検出"
+        log "⚠️  $config_file: Differences detected from baseline"
         
-        # 差分を分析
+        # Analyze differences
         local added=$(jq '[.[] | select(.Added)] | length' "$diff_output" 2>/dev/null || echo "0")
         local removed=$(jq '[.[] | select(.Removed)] | length' "$diff_output" 2>/dev/null || echo "0")
         local modified=$(jq '[.[] | select(.Modified)] | length' "$diff_output" 2>/dev/null || echo "0")
         local type_changed=$(jq '[.[] | select(.TypeChanged)] | length' "$diff_output" 2>/dev/null || echo "0")
         
-        log "  追加: $added, 削除: $removed, 変更: $modified, 型変更: $type_changed"
+        log "  Added: $added, Removed: $removed, Modified: $modified, Type changed: $type_changed"
         
-        # 重要な変更をチェック
+        # Check for critical changes
         local critical_changes=$(jq '[.[] | select(.Removed or .TypeChanged or 
             (.Modified and (.Modified[0] | 
              contains("security") or contains("auth") or contains("password") or contains("key"))))]' "$diff_output" 2>/dev/null || echo "[]")
         
         if [[ "$critical_changes" != "[]" ]]; then
-            log "🔴 重要: $config_file で潜在的に危険な変更を検出"
+            log "🔴 CRITICAL: Potentially dangerous changes detected in $config_file"
             echo "$critical_changes" | jq -r '.[] | 
-                if .Removed then "  削除: \(.Removed[0])"
-                elif .TypeChanged then "  型変更: \(.TypeChanged[0])"
-                elif .Modified then "  変更: \(.Modified[0])"
+                if .Removed then "  REMOVED: \(.Removed[0])"
+                elif .TypeChanged then "  TYPE_CHANGED: \(.TypeChanged[0])"
+                elif .Modified then "  MODIFIED: \(.Modified[0])"
                 else . end' >> "$LOG_FILE"
             
-            # レビュー用の詳細差分を保存
+            # Save detailed diff for review
             cp "$diff_output" "$BACKUP_DIR/critical_diff_$(basename "$config_file")_$(date +'%Y%m%d_%H%M%S').json"
         fi
         
@@ -1460,11 +1544,11 @@ validate_config() {
     fi
 }
 
-# すべての設定を検証
+# Validate all configurations
 validate_all() {
     local validation_failed=false
     
-    log "設定検証を開始中..."
+    log "Starting configuration validation..."
     
     find "$CONFIG_DIR" -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" | \
     while read -r config_file; do
@@ -1476,46 +1560,46 @@ validate_all() {
     done
     
     if [[ "$validation_failed" == "true" ]]; then
-        log "❌ 設定検証が問題を伴って完了"
+        log "❌ Configuration validation completed with issues"
         return 1
     else
-        log "✅ すべての設定が正常に検証されました"
+        log "✅ All configurations validated successfully"
         return 0
     fi
 }
 
-# 現在の設定でベースラインを更新
+# Update baseline with current configuration
 update_baseline() {
     local config_file="$1"
     local baseline_file="$BASELINE_DIR/$(basename "$config_file")"
     
     cp "$config_file" "$baseline_file"
-    log "ベースライン更新: $baseline_file"
+    log "Updated baseline: $baseline_file"
 }
 
-# 2つの設定ファイルを比較
+# Compare two configuration files
 compare_configs() {
     local file1="$1"
     local file2="$2"
     
-    log "$file1 と $file2 を比較中"
+    log "Comparing $file1 with $file2"
     
     diffx "$file1" "$file2" \
         --ignore-keys-regex "$IGNORE_REGEX" \
         --output cli
 }
 
-# 設定レポートを生成
+# Generate configuration report
 generate_report() {
     local report_file="${1:-config_report_$(date +'%Y%m%d_%H%M%S').html}"
     
-    log "設定レポート生成中: $report_file"
+    log "Generating configuration report: $report_file"
     
     cat > "$report_file" << 'EOF'
 <!DOCTYPE html>
 <html>
 <head>
-    <title>設定検証レポート</title>
+    <title>Configuration Validation Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .summary { background: #f5f5f5; padding: 10px; border-radius: 5px; }
@@ -1526,15 +1610,15 @@ generate_report() {
     </style>
 </head>
 <body>
-    <h1>設定検証レポート</h1>
+    <h1>Configuration Validation Report</h1>
     <div class="summary">
-        <h2>概要</h2>
-        <p>生成日時: $(date)</p>
-        <p>設定ディレクトリ: $CONFIG_DIR</p>
-        <p>ベースラインディレクトリ: $BASELINE_DIR</p>
+        <h2>Summary</h2>
+        <p>Generated: $(date)</p>
+        <p>Configuration Directory: $CONFIG_DIR</p>
+        <p>Baseline Directory: $BASELINE_DIR</p>
     </div>
     
-    <h2>検証結果</h2>
+    <h2>Validation Results</h2>
 EOF
     
     find "$CONFIG_DIR" -name "*.json" -o -name "*.yaml" -o -name "*.yml" -o -name "*.toml" | \
@@ -1548,30 +1632,30 @@ EOF
                 if diffx "$baseline_file" "$config_file" \
                    --ignore-keys-regex "$IGNORE_REGEX" \
                    --output json > "$diff_output"; then
-                    echo '<p class="success">✅ ベースラインとの差分なし</p>' >> "$report_file"
+                    echo '<p class="success">✅ No differences from baseline</p>' >> "$report_file"
                 else
-                    echo '<p class="warning">⚠️ 差分を検出:</p>' >> "$report_file"
+                    echo '<p class="warning">⚠️ Differences detected:</p>' >> "$report_file"
                     echo '<pre>' >> "$report_file"
                     cat "$diff_output" | jq -r '.[] | 
                         if .Added then "+ \(.Added[0]): \(.Added[1])"
                         elif .Removed then "- \(.Removed[0]): \(.Removed[1])"
                         elif .Modified then "~ \(.Modified[0]): \(.Modified[1]) → \(.Modified[2])"
-                        elif .TypeChanged then "! \(.TypeChanged[0]): \(.TypeChanged[1]) → \(.TypeChanged[2]) (型変更)"
+                        elif .TypeChanged then "! \(.TypeChanged[0]): \(.TypeChanged[1]) → \(.TypeChanged[2]) (type changed)"
                         else . end' >> "$report_file"
                     echo '</pre>' >> "$report_file"
                 fi
                 rm "$diff_output"
             else
-                echo '<p class="warning">⚠️ ベースライン設定が見つかりません</p>' >> "$report_file"
+                echo '<p class="warning">⚠️ No baseline configuration found</p>' >> "$report_file"
             fi
         fi
     done
     
     echo '</body></html>' >> "$report_file"
-    log "レポート生成完了: $report_file"
+    log "Report generated: $report_file"
 }
 
-# メイン関数
+# Main function
 main() {
     local command="${1:-help}"
     
@@ -1590,14 +1674,14 @@ main() {
         "validate-file")
             check_diffx
             if [[ -z "${2:-}" ]]; then
-                echo "使用法: $0 validate-file <config-file>"
+                echo "Usage: $0 validate-file <config-file>"
                 exit 1
             fi
             validate_config "$2"
             ;;
         "update-baseline")
             if [[ -z "${2:-}" ]]; then
-                echo "使用法: $0 update-baseline <config-file>"
+                echo "Usage: $0 update-baseline <config-file>"
                 exit 1
             fi
             update_baseline "$2"
@@ -1605,7 +1689,7 @@ main() {
         "compare")
             check_diffx
             if [[ -z "${2:-}" ]] || [[ -z "${3:-}" ]]; then
-                echo "使用法: $0 compare <file1> <file2>"
+                echo "Usage: $0 compare <file1> <file2>"
                 exit 1
             fi
             compare_configs "$2" "$3"
@@ -1616,39 +1700,39 @@ main() {
             ;;
         "monitor")
             check_diffx
-            log "設定監視を開始中..."
+            log "Starting configuration monitoring..."
             while true; do
-                validate_all || log "⚠️ 設定検証が失敗"
-                sleep "${MONITOR_INTERVAL:-300}"  # デフォルト: 5分
+                validate_all || log "⚠️ Configuration validation failed"
+                sleep "${MONITOR_INTERVAL:-300}"  # Default: 5 minutes
             done
             ;;
         "help"|*)
             cat << EOF
-diffx を使った設定マネージャー
+Configuration Manager with diffx
 
-使用法: $0 <コマンド> [オプション]
+Usage: $0 <command> [options]
 
-コマンド:
-    setup                   ディレクトリ構造を作成
-    backup                  現在の設定をバックアップ
-    validate               すべての設定をベースラインと検証
-    validate-file <file>   特定の設定ファイルを検証
-    update-baseline <file> 現在の設定でベースラインを更新
-    compare <file1> <file2> 2つの設定ファイルを比較
-    report [file]          HTML検証レポートを生成
-    monitor                継続監視を開始（MONITOR_INTERVAL環境変数を使用）
-    help                   このヘルプメッセージを表示
+Commands:
+    setup                   Create directory structure
+    backup                  Backup current configurations
+    validate               Validate all configurations against baseline
+    validate-file <file>   Validate specific configuration file
+    update-baseline <file> Update baseline with current configuration
+    compare <file1> <file2> Compare two configuration files
+    report [file]          Generate HTML validation report
+    monitor                Start continuous monitoring (use MONITOR_INTERVAL env var)
+    help                   Show this help message
 
-環境変数:
-    CONFIG_DIR             設定ディレクトリ (デフォルト: ./config)
-    BASELINE_DIR           ベースライン設定ディレクトリ (デフォルト: ./config/baseline)
-    BACKUP_DIR             バックアップディレクトリ (デフォルト: ./config/backups)
-    LOG_FILE               ログファイルパス (デフォルト: /var/log/config-manager.log)
-    IGNORE_REGEX     無視するキーの正規表現パターン
-    OUTPUT_FORMAT    diffx の出力フォーマット (デフォルト: json)
-    MONITOR_INTERVAL       監視間隔（秒） (デフォルト: 300)
+Environment Variables:
+    CONFIG_DIR             Configuration directory (default: ./config)
+    BASELINE_DIR           Baseline configuration directory (default: ./config/baseline)
+    BACKUP_DIR             Backup directory (default: ./config/backups)
+    LOG_FILE               Log file path (default: /var/log/config-manager.log)
+    IGNORE_REGEX     Regex pattern for keys to ignore
+    OUTPUT_FORMAT    Output format for diffx (default: json)
+    MONITOR_INTERVAL       Monitoring interval in seconds (default: 300)
 
-例:
+Examples:
     $0 setup
     $0 backup
     $0 validate
@@ -1661,7 +1745,7 @@ EOF
     esac
 }
 
-# すべての引数でメイン関数を実行
+# Run main function with all arguments
 main "$@"
 ```
 
