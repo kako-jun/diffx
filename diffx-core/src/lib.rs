@@ -811,7 +811,7 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                 // Parse attributes
                 for attr in e.attributes() {
                     let attr = attr?;
-                    let key = format!("@{}", String::from_utf8_lossy(attr.key.as_ref()));
+                    let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
                     let value = String::from_utf8_lossy(&attr.value);
                     attributes.insert(key, Value::String(value.to_string()));
                 }
@@ -821,15 +821,28 @@ pub fn parse_xml(content: &str) -> Result<Value> {
             },
             Event::End(_) => {
                 if let Some((name, mut attributes)) = stack.pop() {
-                    // Add text content if present
-                    if !current_text.trim().is_empty() {
-                        attributes.insert("$text".to_string(), Value::String(current_text.trim().to_string()));
-                    }
-                    
-                    let element_value = if attributes.is_empty() {
-                        Value::Null
-                    } else if attributes.len() == 1 && attributes.contains_key("$text") {
-                        attributes.get("$text").unwrap().clone()
+                    let element_value = if !current_text.trim().is_empty() {
+                        // Handle text content
+                        if attributes.is_empty() {
+                            // Pure text element -> direct string
+                            Value::String(current_text.trim().to_string())
+                        } else {
+                            // Text + attributes -> create object with both
+                            attributes.insert("text".to_string(), Value::String(current_text.trim().to_string()));
+                            Value::Object(attributes.into_iter().collect())
+                        }
+                    } else if attributes.is_empty() {
+                        // Check if this element has child elements already added
+                        if let Some((_parent_name, parent_attrs)) = stack.last() {
+                            if parent_attrs.contains_key(&name) {
+                                // This element will be handled in the parent processing
+                                Value::Null
+                            } else {
+                                Value::Null
+                            }
+                        } else {
+                            Value::Null
+                        }
                     } else {
                         Value::Object(attributes.into_iter().collect())
                     };
@@ -864,7 +877,7 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                 // Parse attributes
                 for attr in e.attributes() {
                     let attr = attr?;
-                    let key = format!("@{}", String::from_utf8_lossy(attr.key.as_ref()));
+                    let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
                     let value = String::from_utf8_lossy(&attr.value);
                     attributes.insert(key, Value::String(value.to_string()));
                 }
