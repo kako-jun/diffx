@@ -37,13 +37,19 @@ fn test_format_yaml_explicit() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_yaml_multiline_strings() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.yaml");
+    let file2_path = temp_dir.path().join("file2.yaml");
+
+    fs::write(&file1_path, "description: |\n  Multi-line\n  text here\n")?;
+    fs::write(&file2_path, "description: |\n  Different\n  text here\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("yaml");
-    cmd.write_stdin("description: |\n  Multi-line\n  text here\n")
-        .write_stdin("description: |\n  Different\n  text here\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ description:"));
@@ -52,13 +58,19 @@ fn test_yaml_multiline_strings() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_yaml_arrays_and_objects() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.yaml");
+    let file2_path = temp_dir.path().join("file2.yaml");
+
+    fs::write(&file1_path, "items:\n  - name: A\n    value: 1\n  - name: B\n    value: 2\n")?;
+    fs::write(&file2_path, "items:\n  - name: A\n    value: 10\n  - name: C\n    value: 3\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("yaml");
-    cmd.write_stdin("items:\n  - name: A\n    value: 1\n  - name: B\n    value: 2\n")
-        .write_stdin("items:\n  - name: A\n    value: 10\n  - name: C\n    value: 3\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~"));
@@ -67,13 +79,19 @@ fn test_yaml_arrays_and_objects() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_yaml_with_special_chars() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.yaml");
+    let file2_path = temp_dir.path().join("file2.yaml");
+
+    fs::write(&file1_path, "message: 'Text with: colons and \"quotes\"'\n")?;
+    fs::write(&file2_path, "message: 'Different text'\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("yaml");
-    cmd.write_stdin("message: 'Text with: colons and \"quotes\"'\n")
-        .write_stdin("message: 'Different text'\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ message:"));

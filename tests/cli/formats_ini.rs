@@ -36,13 +36,19 @@ fn test_format_ini_explicit() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_ini_multiple_sections() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.ini");
+    let file2_path = temp_dir.path().join("file2.ini");
+
+    fs::write(&file1_path, "[database]\nhost=localhost\nport=5432\n\n[cache]\nenabled=true\nttl=3600\n")?;
+    fs::write(&file2_path, "[database]\nhost=prod-server\nport=5432\n\n[cache]\nenabled=false\nttl=7200\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("ini");
-    cmd.write_stdin("[database]\nhost=localhost\nport=5432\n\n[cache]\nenabled=true\nttl=3600\n")
-        .write_stdin("[database]\nhost=prod-server\nport=5432\n\n[cache]\nenabled=false\nttl=7200\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ database.host:"))
@@ -53,29 +59,41 @@ fn test_ini_multiple_sections() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_ini_global_section() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.ini");
+    let file2_path = temp_dir.path().join("file2.ini");
+
+    fs::write(&file1_path, "global_key=global_value\nother_key=value\n[section1]\nkey1=value1\n")?;
+    fs::write(&file2_path, "global_key=new_global_value\nother_key=value\n[section1]\nkey1=new_value1\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("ini");
-    cmd.write_stdin("global_key=global_value\nother_key=value\n[section1]\nkey1=value1\n")
-        .write_stdin("global_key=new_global_value\nother_key=value\n[section1]\nkey1=new_value1\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ global_key:"))
+        .stdout(predicates::str::contains("~ default.global_key:"))
         .stdout(predicates::str::contains("~ section1.key1:"));
     Ok(())
 }
 
 #[test]
 fn test_ini_comments_and_empty_lines() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.ini");
+    let file2_path = temp_dir.path().join("file2.ini");
+
+    fs::write(&file1_path, "; This is a comment\n[section]\nkey=value\n\n; Another comment\nkey2=value2\n")?;
+    fs::write(&file2_path, "; This is a comment\n[section]\nkey=new_value\n\n; Another comment\nkey2=value2\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("ini");
-    cmd.write_stdin("; This is a comment\n[section]\nkey=value\n\n; Another comment\nkey2=value2\n")
-        .write_stdin("; This is a comment\n[section]\nkey=new_value\n\n; Another comment\nkey2=value2\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ section.key:"));
@@ -84,13 +102,19 @@ fn test_ini_comments_and_empty_lines() -> Result<(), Box<dyn std::error::Error>>
 
 #[test]
 fn test_ini_special_characters() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.ini");
+    let file2_path = temp_dir.path().join("file2.ini");
+
+    fs::write(&file1_path, "[paths]\ntemp_dir=C:\\temp\nlog_file=app.log\n")?;
+    fs::write(&file2_path, "[paths]\ntemp_dir=D:\\temp\nlog_file=application.log\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("ini");
-    cmd.write_stdin("[paths]\ntemp_dir=C:\\temp\nlog_file=app.log\n")
-        .write_stdin("[paths]\ntemp_dir=D:\\temp\nlog_file=application.log\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ paths.temp_dir:"))
@@ -100,13 +124,19 @@ fn test_ini_special_characters() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_ini_boolean_and_numeric_values() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.ini");
+    let file2_path = temp_dir.path().join("file2.ini");
+
+    fs::write(&file1_path, "[settings]\nenabled=true\nmax_connections=100\ntimeout=30.5\n")?;
+    fs::write(&file2_path, "[settings]\nenabled=false\nmax_connections=200\ntimeout=60.0\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("ini");
-    cmd.write_stdin("[settings]\nenabled=true\nmax_connections=100\ntimeout=30.5\n")
-        .write_stdin("[settings]\nenabled=false\nmax_connections=200\ntimeout=60.0\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ settings.enabled:"))
@@ -117,13 +147,19 @@ fn test_ini_boolean_and_numeric_values() -> Result<(), Box<dyn std::error::Error
 
 #[test]
 fn test_ini_missing_sections() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.ini");
+    let file2_path = temp_dir.path().join("file2.ini");
+
+    fs::write(&file1_path, "[section1]\nkey1=value1\n[section2]\nkey2=value2\n")?;
+    fs::write(&file2_path, "[section1]\nkey1=value1\n[section3]\nkey3=value3\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("ini");
-    cmd.write_stdin("[section1]\nkey1=value1\n[section2]\nkey2=value2\n")
-        .write_stdin("[section1]\nkey1=value1\n[section3]\nkey3=value3\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("- section2"))
