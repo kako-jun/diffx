@@ -42,7 +42,7 @@ fn test_large_file_performance() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path());
     cmd.assert()
-        .success()
+        .code(1)  // differences found, should return 1
         .stdout(predicates::str::contains("host:"))
         .stdout(predicates::str::contains("enabled:"));
     
@@ -58,7 +58,7 @@ fn test_json_output_to_file() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -73,7 +73,7 @@ fn test_second_json_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -88,7 +88,7 @@ fn test_meta_chaining_diff_reports() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(report1.path()).arg(report2.path());
     cmd.assert()
-        .success();
+        .code(1);  // differences found, should return 1
     
     Ok(())
 }
@@ -102,7 +102,7 @@ fn test_basic_file_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path());
     cmd.assert()
-        .success()
+        .code(1)  // differences found, should return 1
         .stdout(predicates::str::contains("data:"));
     
     Ok(())
@@ -117,7 +117,7 @@ fn test_yaml_with_json_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -132,7 +132,7 @@ fn test_toml_with_yaml_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("yaml");
     cmd.assert()
-        .success();
+        .code(1);
     
     Ok(())
 }
@@ -147,7 +147,7 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path())
         .arg("--ignore-keys-regex").arg("^timestamp$|^_.*");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::contains("data:"));
     
     Ok(())
@@ -162,7 +162,7 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--array-id-key").arg("id");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::contains("name:"));
     
     Ok(())
@@ -221,7 +221,7 @@ fn test_unified_output_with_context() -> Result<(), Box<dyn std::error::Error>> 
     cmd.arg(file1.path()).arg(file2.path())
         .arg("--context").arg("3").arg("--output").arg("unified");
     cmd.assert()
-        .success();
+        .code(1);
     
     Ok(())
 }
@@ -249,7 +249,7 @@ fn test_recursive_brief() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--brief");
     cmd.assert()
-        .success();
+        .code(1);
     
     Ok(())
 }
@@ -263,7 +263,7 @@ fn test_huge_dataset_performance() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path());
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::contains("size:"));
     
     Ok(())
@@ -278,7 +278,7 @@ fn test_directory_recursive() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path());
     cmd.assert()
-        .success();
+        .code(1);
     
     Ok(())
 }
@@ -292,7 +292,7 @@ fn test_diff1_json_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -307,7 +307,7 @@ fn test_diff2_json_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -322,7 +322,7 @@ fn test_meta_diff_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(diff1.path()).arg(diff2.path());
     cmd.assert()
-        .success();
+        .code(1);  // differences found, should return 1
     
     Ok(())
 }
@@ -336,7 +336,7 @@ fn test_cicd_config_changes() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -366,7 +366,7 @@ fn test_api_ignore_options_json() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(file1.path()).arg(file2.path())
         .arg("--ignore-case").arg("--ignore-whitespace").arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -381,7 +381,7 @@ fn test_large_data_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["));
     
     Ok(())
@@ -396,7 +396,7 @@ fn test_git_dependency_detection() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path()).arg(file2.path()).arg("--output").arg("json");
     cmd.assert()
-        .success()
+        .code(1)
         .stdout(predicates::str::starts_with("["))
         .stdout(predicates::str::contains("lodash"));
     
