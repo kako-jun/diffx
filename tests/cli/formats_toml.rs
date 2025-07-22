@@ -37,13 +37,19 @@ fn test_format_toml_explicit() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_toml_tables_and_arrays() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.toml");
+    let file2_path = temp_dir.path().join("file2.toml");
+
+    fs::write(&file1_path, "[server]\nhost = \"localhost\"\nport = 8080\n\n[[users]]\nname = \"Alice\"\nage = 30\n")?;
+    fs::write(&file2_path, "[server]\nhost = \"example.com\"\nport = 8080\n\n[[users]]\nname = \"Alice\"\nage = 31\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("toml");
-    cmd.write_stdin("[server]\nhost = \"localhost\"\nport = 8080\n\n[[users]]\nname = \"Alice\"\nage = 30\n")
-        .write_stdin("[server]\nhost = \"example.com\"\nport = 8080\n\n[[users]]\nname = \"Alice\"\nage = 31\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ server.host:"))
@@ -53,13 +59,19 @@ fn test_toml_tables_and_arrays() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_toml_nested_tables() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.toml");
+    let file2_path = temp_dir.path().join("file2.toml");
+
+    fs::write(&file1_path, "[database]\nhost = \"localhost\"\n[database.pool]\nmax_connections = 10\n")?;
+    fs::write(&file2_path, "[database]\nhost = \"localhost\"\n[database.pool]\nmax_connections = 20\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("toml");
-    cmd.write_stdin("[database]\nhost = \"localhost\"\n[database.pool]\nmax_connections = 10\n")
-        .write_stdin("[database]\nhost = \"localhost\"\n[database.pool]\nmax_connections = 20\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ database.pool.max_connections: 10 -> 20"));
@@ -68,13 +80,19 @@ fn test_toml_nested_tables() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_toml_array_of_tables() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.toml");
+    let file2_path = temp_dir.path().join("file2.toml");
+
+    fs::write(&file1_path, "[[products]]\nname = \"Hammer\"\nprice = 15.99\n\n[[products]]\nname = \"Screwdriver\"\nprice = 8.50\n")?;
+    fs::write(&file2_path, "[[products]]\nname = \"Hammer\"\nprice = 16.99\n\n[[products]]\nname = \"Drill\"\nprice = 45.00\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("toml");
-    cmd.write_stdin("[[products]]\nname = \"Hammer\"\nprice = 15.99\n\n[[products]]\nname = \"Screwdriver\"\nprice = 8.50\n")
-        .write_stdin("[[products]]\nname = \"Hammer\"\nprice = 16.99\n\n[[products]]\nname = \"Drill\"\nprice = 45.00\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ products[0].price:"))
@@ -84,13 +102,19 @@ fn test_toml_array_of_tables() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_toml_different_data_types() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.toml");
+    let file2_path = temp_dir.path().join("file2.toml");
+
+    fs::write(&file1_path, "title = \"Config\"\nenabled = true\ncount = 42\npi = 3.14\ndate = 2023-01-01T10:00:00Z\n")?;
+    fs::write(&file2_path, "title = \"New Config\"\nenabled = false\ncount = 42\npi = 3.14159\ndate = 2023-01-02T10:00:00Z\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("toml");
-    cmd.write_stdin("title = \"Config\"\nenabled = true\ncount = 42\npi = 3.14\ndate = 2023-01-01T10:00:00Z\n")
-        .write_stdin("title = \"New Config\"\nenabled = false\ncount = 42\npi = 3.14159\ndate = 2023-01-02T10:00:00Z\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ title:"))
@@ -102,13 +126,19 @@ fn test_toml_different_data_types() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_toml_multiline_strings() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.toml");
+    let file2_path = temp_dir.path().join("file2.toml");
+
+    fs::write(&file1_path, "description = \"\"\"\nThis is a\nmultiline string\n\"\"\"\n")?;
+    fs::write(&file2_path, "description = \"\"\"\nThis is a\ndifferent multiline string\n\"\"\"\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("toml");
-    cmd.write_stdin("description = \"\"\"\nThis is a\nmultiline string\n\"\"\"\n")
-        .write_stdin("description = \"\"\"\nThis is a\ndifferent multiline string\n\"\"\"\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ description:"));
@@ -117,13 +147,19 @@ fn test_toml_multiline_strings() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_toml_inline_tables() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.toml");
+    let file2_path = temp_dir.path().join("file2.toml");
+
+    fs::write(&file1_path, "point = { x = 1, y = 2 }\ncolor = { r = 255, g = 128, b = 0 }\n")?;
+    fs::write(&file2_path, "point = { x = 3, y = 2 }\ncolor = { r = 255, g = 128, b = 64 }\n")?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
-        .arg("--format")
-        .arg("toml");
-    cmd.write_stdin("point = { x = 1, y = 2 }\ncolor = { r = 255, g = 128, b = 0 }\n")
-        .write_stdin("point = { x = 3, y = 2 }\ncolor = { r = 255, g = 128, b = 64 }\n");
+    cmd.arg(&file1_path)
+        .arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ point.x: 1 -> 3"))

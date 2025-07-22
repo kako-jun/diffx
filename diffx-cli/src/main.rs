@@ -3,7 +3,7 @@ use clap::{Parser, ValueEnum};
 use colored::*;
 use diffx_core::{
     diff, diff_with_config, parse_csv, parse_ini, parse_xml, value_type_name, DiffConfig,
-    DiffResult,
+    DiffResult, transform_xml_paths, extract_xml_structure_info,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -114,8 +114,8 @@ struct Args {
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Serialize, Deserialize)]
 enum OutputFormat {
-    #[serde(rename = "cli")]
-    Cli,
+    #[serde(rename = "diffx")]
+    Diffx,
     #[serde(rename = "json")]
     Json,
     #[serde(rename = "yaml")]
@@ -153,6 +153,29 @@ fn infer_format_from_path(path: &Path) -> Option<Format> {
     }
 }
 
+/// Auto-detect format from content when format inference fails
+fn auto_detect_format(content: &str) -> Option<Format> {
+    // Try JSON first (strict parsing)
+    if let Ok(_) = serde_json::from_str::<serde_json::Value>(content) {
+        return Some(Format::Json);
+    }
+    
+    // Try YAML (more permissive, can parse simple JSON)
+    if let Ok(_) = serde_yml::from_str::<serde_json::Value>(content) {
+        // Check if it looks like YAML (contains newlines and colons without braces)
+        if content.contains('\n') && content.contains(':') && !content.trim_start().starts_with('{') {
+            return Some(Format::Yaml);
+        }
+    }
+    
+    // Try TOML
+    if let Ok(_) = toml::from_str::<serde_json::Value>(content) {
+        return Some(Format::Toml);
+    }
+    
+    None
+}
+
 fn should_auto_optimize(input1: &Path, input2: &Path) -> Result<bool> {
     // Auto-optimize for files larger than 1MB
     let large_file_threshold = 1024 * 1024; // 1MB
@@ -185,14 +208,64 @@ fn read_input(file_path: &Path) -> Result<String> {
     }
 }
 
+/// Clean TOML internal fields like $__toml_private_datetime
+fn clean_toml_internal_fields(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            // Check if this is a TOML datetime object
+            if let Some(datetime_val) = map.get("$__toml_private_datetime") {
+                if let Value::String(datetime_str) = datetime_val {
+                    // Replace the entire object with just the datetime string
+                    *value = Value::String(datetime_str.clone());
+                    return;
+                }
+            }
+            
+            // Recursively clean all values in the object
+            for (_, v) in map.iter_mut() {
+                clean_toml_internal_fields(v);
+            }
+        }
+        Value::Array(arr) => {
+            // Recursively clean all elements in the array
+            for v in arr.iter_mut() {
+                clean_toml_internal_fields(v);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn parse_content(content: &str, format: Format) -> Result<Value> {
     match format {
         Format::Json => serde_json::from_str(content).context("Failed to parse JSON"),
         Format::Yaml => serde_yml::from_str(content).context("Failed to parse YAML"),
-        Format::Toml => toml::from_str(content).context("Failed to parse TOML"),
+        Format::Toml => {
+            let mut value: Value = toml::from_str(content).context("Failed to parse TOML")?;
+            clean_toml_internal_fields(&mut value);
+            Ok(value)
+        },
         Format::Ini => parse_ini(content).context("Failed to parse INI"),
         Format::Xml => parse_xml(content).context("Failed to parse XML"),
         Format::Csv => parse_csv(content).context("Failed to parse CSV"),
+    }
+}
+
+/// Parse content with automatic format detection as fallback
+fn parse_content_with_fallback(content: &str, preferred_format: Option<Format>) -> Result<Value> {
+    // Try preferred format first if specified
+    if let Some(format) = preferred_format {
+        if let Ok(value) = parse_content(content, format) {
+            return Ok(value);
+        }
+    }
+    
+    // Auto-detect format as fallback
+    if let Some(detected_format) = auto_detect_format(content) {
+        parse_content(content, detected_format)
+            .with_context(|| format!("Failed to parse content as auto-detected format: {:?}", detected_format))
+    } else {
+        bail!("Could not auto-detect format from content. Please specify --format.")
     }
 }
 
@@ -410,7 +483,7 @@ fn main() {
 fn run() -> Result<()> {
     let args = Args::parse();
 
-    let output_format = args.output.unwrap_or(OutputFormat::Cli);
+    let output_format = args.output.unwrap_or(OutputFormat::Diffx);
 
     let ignore_keys_regex = if let Some(regex_str) = &args.ignore_keys_regex {
         let regex = Regex::new(regex_str).context("Invalid regex for --ignore-keys-regex")?;
@@ -508,21 +581,30 @@ fn run() -> Result<()> {
         eprintln!("  Input 2 size: {size2} bytes");
     }
 
-    let input_format = if let Some(fmt) = args.format {
-        fmt
+    // Handle format detection for each file independently to support different formats
+    let input_format1 = if let Some(fmt) = args.format {
+        Some(fmt)
     } else {
         infer_format_from_path(&args.input1)
-            .or_else(|| infer_format_from_path(&args.input2))
-            .context("Could not infer format from file extensions. Please specify --format.")?
+    };
+    
+    let input_format2 = if let Some(fmt) = args.format {
+        Some(fmt)
+    } else {
+        infer_format_from_path(&args.input2)
     };
 
     let parse_start = Instant::now();
-    let v1: Value = parse_content(&content1, input_format)?;
-    let v2: Value = parse_content(&content2, input_format)?;
+    let v1: Value = parse_content_with_fallback(&content1, input_format1)
+        .with_context(|| format!("Failed to parse input1: {}", args.input1.display()))?;
+    let v2: Value = parse_content_with_fallback(&content2, input_format2)
+        .with_context(|| format!("Failed to parse input2: {}", args.input2.display()))?;
     let parse_time = parse_start.elapsed();
 
     if args.verbose {
         eprintln!("Parse time: {parse_time:?}");
+        eprintln!("Input 1 format: {:?}", input_format1.unwrap_or(Format::Json));
+        eprintln!("Input 2 format: {:?}", input_format2.unwrap_or(Format::Json));
     }
 
     let diff_start = Instant::now();
@@ -547,6 +629,33 @@ fn run() -> Result<()> {
     }
 
     let mut differences = differences;
+
+    // Apply XML path transformation if input format is XML
+    if input_format1 == Some(Format::Xml) || input_format2 == Some(Format::Xml) {
+        // Extract XML structure information from both inputs for accurate path transformation
+        let xml_structure1 = if input_format1 == Some(Format::Xml) {
+            Some(extract_xml_structure_info(&v1))
+        } else {
+            None
+        };
+        let xml_structure2 = if input_format2 == Some(Format::Xml) {
+            Some(extract_xml_structure_info(&v2))
+        } else {
+            None
+        };
+        
+        // Use the most appropriate structure info (prefer the first one if both are XML)
+        let xml_structure_info = xml_structure1.as_ref().or(xml_structure2.as_ref());
+        
+        if args.verbose {
+            eprintln!("Applying XML path transformation for consistent output");
+            if let Some(info) = xml_structure_info {
+                eprintln!("  Structure mappings: {:?}", info);
+            }
+        }
+        
+        differences = transform_xml_paths(differences, xml_structure_info);
+    }
 
     let filter_path = args.path.as_deref();
     let total_differences_before_filter = differences.len();
@@ -588,7 +697,7 @@ fn run() -> Result<()> {
     } else {
         // Normal output
         match output_format {
-            OutputFormat::Cli => print_cli_output(differences, &v1, &v2, &args),
+            OutputFormat::Diffx => print_cli_output(differences, &v1, &v2, &args),
             OutputFormat::Json => print_json_output(differences)?,
             OutputFormat::Yaml => print_yaml_output(differences)?,
             OutputFormat::Unified => {
@@ -746,19 +855,22 @@ fn compare_directories(
                 let content1 = read_input(path1)?;
                 let content2 = read_input(path2)?;
 
-                let input_format = if let Some(fmt) = format_option {
-                    fmt
+                let input_format1 = if let Some(fmt) = format_option {
+                    Some(fmt)
                 } else {
                     infer_format_from_path(path1)
-                        .or_else(|| infer_format_from_path(path2))
-                        .context(format!(
-                            "Could not infer format for {}. Please specify --format.",
-                            relative_path.display()
-                        ))?
+                };
+                
+                let input_format2 = if let Some(fmt) = format_option {
+                    Some(fmt)
+                } else {
+                    infer_format_from_path(path2)
                 };
 
-                let v1: Value = parse_content(&content1, input_format)?;
-                let v2: Value = parse_content(&content2, input_format)?;
+                let v1: Value = parse_content_with_fallback(&content1, input_format1)
+                    .with_context(|| format!("Failed to parse {}", path1.display()))?;
+                let v2: Value = parse_content_with_fallback(&content2, input_format2)
+                    .with_context(|| format!("Failed to parse {}", path2.display()))?;
 
                 let differences = if use_memory_optimization {
                     // Use optimized diff configuration
@@ -797,7 +909,7 @@ fn compare_directories(
                 }
 
                 match output {
-                    OutputFormat::Cli => {
+                    OutputFormat::Diffx => {
                         // For directory comparison, use basic output without new options
                         print_cli_output_basic(differences, &v1, &v2, no_color);
                     }

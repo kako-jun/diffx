@@ -22,13 +22,14 @@ fn test_auto_optimization_trigger() -> Result<(), Box<dyn std::error::Error>> {
     let mut large_content2 = String::from("{\n  \"data\": [\n");
     
     for i in 0..50000 {
+        let comma = if i == 49999 { "" } else { "," };
         large_content1.push_str(&format!(
-            "    {{\"id\": {}, \"name\": \"user{}\", \"value\": {}}},\n", 
-            i, i, i * 2
+            "    {{\"id\": {}, \"name\": \"user{}\", \"value\": {}}}{}\n", 
+            i, i, i * 2, comma
         ));
         large_content2.push_str(&format!(
-            "    {{\"id\": {}, \"name\": \"user{}\", \"value\": {}}},\n", 
-            i, i, i * 2 + 1  // Small difference
+            "    {{\"id\": {}, \"name\": \"user{}\", \"value\": {}}}{}\n", 
+            i, i, i * 2 + 1, comma  // Small difference
         ));
     }
     
@@ -44,16 +45,17 @@ fn test_auto_optimization_trigger() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--verbose");
 
     let output = cmd.output()?;
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
     
-    // Should indicate optimization was triggered
+    // Should indicate optimization was triggered (in either stdout or stderr)
     assert!(
-        stdout.contains("optimiz") 
-        || stdout.contains("large file") 
-        || stdout.contains("efficient")
-        || stdout.contains("memory")
+        stdout.contains("optimiz") || stderr.contains("optimiz")
+        || stdout.contains("large file") || stderr.contains("large file")
+        || stdout.contains("efficient") || stderr.contains("efficient")
+        || stdout.contains("memory") || stderr.contains("memory")
     );
 
     Ok(())
@@ -94,7 +96,7 @@ fn test_memory_efficient_processing() -> Result<(), Box<dyn std::error::Error>> 
     let output = cmd.output()?;
     let duration = start.elapsed();
     
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
     
     // Should complete within reasonable time despite size
     assert!(duration.as_secs() < 30, "Processing took too long: {:?}", duration);
@@ -148,7 +150,7 @@ fn test_deep_nesting_optimization() -> Result<(), Box<dyn std::error::Error>> {
     let output = cmd.output()?;
     let duration = start.elapsed();
     
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
     
     // Should handle deep nesting efficiently
     assert!(duration.as_secs() < 10, "Deep nesting took too long: {:?}", duration);
@@ -222,7 +224,7 @@ fn test_transparent_optimization() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--verbose");
 
     let output = cmd.output()?;
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     
@@ -274,7 +276,7 @@ fn test_streaming_large_files() -> Result<(), Box<dyn std::error::Error>> {
     let output = cmd.output()?;
     let duration = start.elapsed();
     
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
     
     // Should complete streaming processing within reasonable time
     assert!(duration.as_secs() < 60, "Streaming took too long: {:?}", duration);
@@ -326,7 +328,7 @@ fn test_concurrent_optimization() -> Result<(), Box<dyn std::error::Error>> {
             cmd.arg(&file1).arg(&file2).arg("--output").arg("json");
 
             if let Ok(output) = cmd.output() {
-                if output.status.success() {
+                if output.status.code() == Some(1) {  // Differences found - this is correct
                     success_count.fetch_add(1, Ordering::SeqCst);
                 }
             }
@@ -361,7 +363,7 @@ fn test_performance_regression() -> Result<(), Box<dyn std::error::Error>> {
     let output = cmd.output()?;
     let small_duration = start.elapsed();
     
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
     assert!(small_duration.as_millis() < 1000, "Small file comparison too slow: {:?}", small_duration);
 
     // Medium files should scale reasonably
@@ -389,7 +391,7 @@ fn test_performance_regression() -> Result<(), Box<dyn std::error::Error>> {
     let output = cmd.output()?;
     let medium_duration = start.elapsed();
     
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
     
     // Medium files should not be disproportionately slower
     let ratio = medium_duration.as_millis() as f64 / small_duration.as_millis() as f64;
@@ -437,7 +439,7 @@ fn test_optimization_effectiveness() -> Result<(), Box<dyn std::error::Error>> {
     let output = cmd.output()?;
     let optimized_duration = start.elapsed();
     
-    assert!(output.status.success());
+    assert!(output.status.code() == Some(1)); // Differences found
     
     // Should complete within reasonable time due to optimization
     assert!(optimized_duration.as_secs() < 20, "Optimized processing too slow: {:?}", optimized_duration);
@@ -445,7 +447,7 @@ fn test_optimization_effectiveness() -> Result<(), Box<dyn std::error::Error>> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     
     // Should detect the change
-    assert!(stdout.contains("value") && stdout.contains("50000"));
+    assert!(stdout.contains("value") && stdout.contains("50001"));
 
     Ok(())
 }

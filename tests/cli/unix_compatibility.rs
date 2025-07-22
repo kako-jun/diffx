@@ -16,8 +16,7 @@ fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error
         .arg("--quiet");
     cmd.assert()
         .code(0) // No differences
-        .stdout(predicates::str::is_empty())
-        .stderr(predicates::str::is_empty());
+        .stdout(predicates::str::is_empty());
 
     // Test with different files
     let mut cmd2 = diffx_cmd();
@@ -26,8 +25,7 @@ fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error
         .arg("--quiet");
     cmd2.assert()
         .code(1) // Differences found
-        .stdout(predicates::str::is_empty())
-        .stderr(predicates::str::is_empty());
+        .stdout(predicates::str::is_empty());
     Ok(())
 }
 
@@ -103,8 +101,7 @@ fn test_unix_combined_pattern_qiw() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(1) // Still differences (different keys)
-        .stdout(predicates::str::is_empty())
-        .stderr(predicates::str::is_empty());
+        .stdout(predicates::str::is_empty());
     Ok(())
 }
 

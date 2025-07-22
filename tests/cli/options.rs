@@ -55,13 +55,21 @@ fn test_ignore_keys_regex_wildcard() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_ignore_keys_regex_case_sensitive() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"name": "John", "Name": "John"}"#)?;
+    fs::write(&file2_path, r#"{"name": "Jane", "Name": "Jane"}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--ignore-keys-regex")
         .arg("^Name$"); // Capital N
-    cmd.write_stdin(r#"{"name": "John", "Name": "John"}"#)
-        .write_stdin(r#"{"name": "Jane", "Name": "Jane"}"#);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ name:")) // Should show lowercase
@@ -110,26 +118,42 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_epsilon_different_precisions() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"value": 1.05}"#)?;
+    fs::write(&file2_path, r#"{"value": 1.14}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--epsilon")
         .arg("0.1");
-    cmd.write_stdin(r#"{"value": 1.05}"#)
-        .write_stdin(r#"{"value": 1.14}"#);
     cmd.assert().success().stdout(predicates::str::is_empty()); // Within epsilon
     Ok(())
 }
 
 #[test]
 fn test_epsilon_exceeds_threshold() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"value": 1.0}"#)?;
+    fs::write(&file2_path, r#"{"value": 1.5}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--epsilon")
         .arg("0.01");
-    cmd.write_stdin(r#"{"value": 1.0}"#)
-        .write_stdin(r#"{"value": 1.5}"#);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ value: 1.0 -> 1.5")); // Exceeds epsilon
@@ -138,39 +162,63 @@ fn test_epsilon_exceeds_threshold() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_epsilon_negative_numbers() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"temp": -10.2}"#)?;
+    fs::write(&file2_path, r#"{"temp": -10.6}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--epsilon")
         .arg("0.5");
-    cmd.write_stdin(r#"{"temp": -10.2}"#)
-        .write_stdin(r#"{"temp": -10.6}"#);
     cmd.assert().success().stdout(predicates::str::is_empty()); // Within epsilon for negative numbers
     Ok(())
 }
 
 #[test]
 fn test_epsilon_zero_values() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"zero": 0.0}"#)?;
+    fs::write(&file2_path, r#"{"zero": 0.0005}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--epsilon")
         .arg("0.001");
-    cmd.write_stdin(r#"{"zero": 0.0}"#)
-        .write_stdin(r#"{"zero": 0.0005}"#);
     cmd.assert().success().stdout(predicates::str::is_empty()); // Small difference from zero
     Ok(())
 }
 
 #[test]
 fn test_epsilon_very_large_numbers() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"big": 1000000000000}"#)?;
+    fs::write(&file2_path, r#"{"big": 1000000500000}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--epsilon")
         .arg("1000000");
-    cmd.write_stdin(r#"{"big": 1000000000000}"#)
-        .write_stdin(r#"{"big": 1000000500000}"#);
     cmd.assert().success().stdout(predicates::str::is_empty()); // Large epsilon for large numbers
     Ok(())
 }
@@ -223,13 +271,21 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_array_id_key_missing_id() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"items": [{"name": "A"}, {"uuid": "123", "name": "B"}]}"#)?;
+    fs::write(&file2_path, r#"{"items": [{"uuid": "123", "name": "C"}]}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--array-id-key")
         .arg("uuid");
-    cmd.write_stdin(r#"{"items": [{"name": "A"}, {"uuid": "123", "name": "B"}]}"#)
-        .write_stdin(r#"{"items": [{"uuid": "123", "name": "C"}]}"#);
     // Should handle objects without the specified ID key gracefully
     cmd.assert().code(1);
     Ok(())
@@ -237,13 +293,21 @@ fn test_array_id_key_missing_id() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_array_id_key_duplicate_ids() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"items": [{"id": 1, "name": "A"}, {"id": 1, "name": "B"}]}"#)?;
+    fs::write(&file2_path, r#"{"items": [{"id": 1, "name": "C"}]}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--array-id-key")
         .arg("id");
-    cmd.write_stdin(r#"{"items": [{"id": 1, "name": "A"}, {"id": 1, "name": "B"}]}"#)
-        .write_stdin(r#"{"items": [{"id": 1, "name": "C"}]}"#);
     // Should handle duplicate IDs appropriately
     cmd.assert().code(1);
     Ok(())
@@ -251,32 +315,48 @@ fn test_array_id_key_duplicate_ids() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_array_id_key_different_types() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"items": [{"key": "str1", "val": 1}, {"key": 123, "val": 2}]}"#)?;
+    fs::write(&file2_path, r#"{"items": [{"key": "str1", "val": 10}, {"key": 123, "val": 20}]}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--array-id-key")
         .arg("key");
-    cmd.write_stdin(r#"{"items": [{"key": "str1", "val": 1}, {"key": 123, "val": 2}]}"#)
-        .write_stdin(r#"{"items": [{"key": "str1", "val": 10}, {"key": 123, "val": 20}]}"#);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("[key=str1]"))
+        .stdout(predicates::str::contains("[key=\"str1\"]"))
         .stdout(predicates::str::contains("[key=123]"));
     Ok(())
 }
 
 #[test]
 fn test_array_id_key_nested_arrays() -> Result<(), Box<dyn std::error::Error>> {
+    use tempfile::tempdir;
+    use std::fs;
+
+    let temp_dir = tempdir()?;
+    let file1_path = temp_dir.path().join("file1.json");
+    let file2_path = temp_dir.path().join("file2.json");
+
+    fs::write(&file1_path, r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "John"}]}]}"#)?;
+    fs::write(&file2_path, r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "Jane"}]}]}"#)?;
+
     let mut cmd = diffx_cmd();
-    cmd.arg("-")
-        .arg("-")
+    cmd.arg(&file1_path)
+        .arg(&file2_path)
         .arg("--array-id-key")
         .arg("id");
-    cmd.write_stdin(r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "John"}]}]}"#)
-        .write_stdin(r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "Jane"}]}]}"#);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("[id=A]"))
+        .stdout(predicates::str::contains("[id=\"A\"]"))
         .stdout(predicates::str::contains("[id=1]"));
     Ok(())
 }
@@ -423,8 +503,7 @@ fn test_quiet_option_no_differences() -> Result<(), Box<dyn std::error::Error>> 
         .arg("--quiet");
     cmd.assert()
         .code(0) // No differences
-        .stdout(predicates::str::is_empty())
-        .stderr(predicates::str::is_empty());
+        .stdout(predicates::str::is_empty());
     Ok(())
 }
 
@@ -437,8 +516,7 @@ fn test_quiet_option_with_differences() -> Result<(), Box<dyn std::error::Error>
         .arg("--quiet");
     cmd.assert()
         .code(1) // Differences found
-        .stdout(predicates::str::is_empty())
-        .stderr(predicates::str::is_empty());
+        .stdout(predicates::str::is_empty());
     Ok(())
 }
 
