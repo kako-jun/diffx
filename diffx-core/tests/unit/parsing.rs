@@ -52,10 +52,10 @@ fn test_parse_xml() {
 </root>
 "#;
     let expected = json!({
-        "item": {
-            "$text": "value2",
-            "@id": "2"
-        }
+        "item": [
+            {"id": "1", "text": "value1"},
+            {"id": "2", "text": "value2"}
+        ]
     });
     let parsed = parse_xml(xml_content).unwrap();
     assert_eq!(parsed, expected);
@@ -69,9 +69,7 @@ fn test_parse_xml_single_element() {
 </data>
 "#;
     let expected = json!({
-        "name": {
-            "$text": "test"
-        }
+        "name": "test"
     });
     let parsed = parse_xml(xml_content).unwrap();
     assert_eq!(parsed, expected);

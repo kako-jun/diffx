@@ -14,7 +14,7 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.xml");
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ item.$text: \"value2\" -> \"new_value2\""))
+        .stdout(predicates::str::contains("~ item.text: \"value2\" -> \"new_value2\""))
         .stdout(predicates::str::contains("+ item:"));
     Ok(())
 }
@@ -28,7 +28,7 @@ fn test_format_xml_explicit() -> Result<(), Box<dyn std::error::Error>> {
         .arg("xml");
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ item.$text: \"value2\" -> \"new_value2\""))
+        .stdout(predicates::str::contains("~ item.text: \"value2\" -> \"new_value2\""))
         .stdout(predicates::str::contains("+ item:"));
     Ok(())
 }
@@ -50,9 +50,9 @@ fn test_xml_attributes_and_text() -> Result<(), Box<dyn std::error::Error>> {
         .arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ person.@id:"))
-        .stdout(predicates::str::contains("~ person.@name:"))
-        .stdout(predicates::str::contains("~ person.$text:"));
+        .stdout(predicates::str::contains("~ person.id:"))
+        .stdout(predicates::str::contains("~ person.name:"))
+        .stdout(predicates::str::contains("~ person.text:"));
     Ok(())
 }
 
@@ -179,7 +179,7 @@ fn test_xml_empty_elements() -> Result<(), Box<dyn std::error::Error>> {
         .arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ self-closing.@attr:"));
+        .stdout(predicates::str::contains("~ self-closing.attr:"));
     Ok(())
 }
 
