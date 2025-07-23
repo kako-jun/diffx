@@ -1,5 +1,5 @@
 import pytest
-import diffx
+import diffx_python as diffx
 
 def test_performance_benchmarks_example_1():
     result = diffx.benchmark_diff("content1", "content2")

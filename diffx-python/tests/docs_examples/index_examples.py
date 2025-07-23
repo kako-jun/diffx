@@ -2,7 +2,7 @@ import unittest
 import tempfile
 import json
 import os
-from diffx_python import diffx
+from diffx_python import diffx_python as diffx
 
 class IndexExamplesTest(unittest.TestCase):
     

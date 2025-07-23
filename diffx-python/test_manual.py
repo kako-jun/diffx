@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 
 # Test both new and legacy APIs
-import diffx
+import diffx_python as diffx
 from diffx import run_diffx, DiffOptions
 
 def test_availability():

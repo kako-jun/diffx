@@ -13,7 +13,7 @@ The `diffx` binary is automatically included in the wheel - no additional downlo
 ## Usage
 
 ```python
-import diffx
+import diffx_python as diffx
 
 # Compare two JSON files
 result = diffx.diff('file1.json', 'file2.json')
@@ -82,7 +82,7 @@ pip install -e .[dev]
 Verify the installation:
 
 ```python
-import diffx
+import diffx_python as diffx
 print("diffx available:", diffx.is_diffx_available())
 print("Version:", diffx.__version__)
 ```

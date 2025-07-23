@@ -1,5 +1,5 @@
 import pytest
-import diffx
+import diffx_python as diffx
 
 def test_api_reference_example_1():
     result = diffx.diff("content1", "content2")

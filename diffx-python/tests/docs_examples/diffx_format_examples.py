@@ -1,5 +1,5 @@
 import pytest
-import diffx
+import diffx_python as diffx
 
 def test_diffx_format_example_1():
     result = diffx.diff("infrastructure_content", "infrastructure_new_content")

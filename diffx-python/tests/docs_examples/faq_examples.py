@@ -1,5 +1,5 @@
 import pytest
-import diffx
+import diffx_python as diffx
 
 def test_faq_example_1():
     result = diffx.diff("stdin_content", "other_data_content", format="json")

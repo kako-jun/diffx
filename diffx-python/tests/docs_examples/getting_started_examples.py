@@ -1,5 +1,5 @@
 import pytest
-import diffx
+import diffx_python as diffx
 import tempfile
 import os
 from pathlib import Path

@@ -1,5 +1,5 @@
 import pytest
-import diffx
+import diffx_python as diffx
 
 def test_comparison_example_1():
     result = diffx.diff("config_v1_content", "config_v2_content")

@@ -233,7 +233,7 @@ def test_package_metadata():
     print("Testing package metadata...")
     
     try:
-        import diffx
+        import diffx_python as diffx
         if hasattr(diffx, '__version__'):
             print(f"✓ Package version: {diffx.__version__}")
         else:
