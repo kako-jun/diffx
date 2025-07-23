@@ -1,15 +1,13 @@
-use regex::Regex;
-use serde::Serialize;
-use serde_json::Value;
-use std::collections::HashMap;
-// use ini::Ini;
 use anyhow::{anyhow, Result};
 use csv::ReaderBuilder;
-// use quick_xml::de::from_str; // Replaced with custom XML parser
-use std::fs::File;
-use std::io::{BufReader, Read};
-use std::path::Path;
-// Removed ProgressReporter - Unix tools should be pipe-friendly
+use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
+
+// ============================================================================
+// UNIFIED API - Core Types
+// ============================================================================
 
 #[derive(Debug, PartialEq, Serialize)]
 pub enum DiffResult {
@@ -19,53 +17,126 @@ pub enum DiffResult {
     TypeChanged(String, Value, Value),
 }
 
-/// Lightweight diff result that doesn't clone values unnecessarily
+// Lightweight diff result for memory-constrained operations
 #[derive(Debug, PartialEq, Serialize)]
 pub enum LightweightDiffResult {
-    Added(String, String),               // path, serialized value
-    Removed(String, String),             // path, serialized value
-    Modified(String, String, String),    // path, old_value, new_value
-    TypeChanged(String, String, String), // path, old_value, new_value
+    Added(String, String),
+    Removed(String, String),
+    Modified(String, String, String),
+    TypeChanged(String, String, String),
 }
 
 impl From<&DiffResult> for LightweightDiffResult {
-    fn from(diff: &DiffResult) -> Self {
-        match diff {
+    fn from(result: &DiffResult) -> Self {
+        match result {
             DiffResult::Added(path, value) => {
-                LightweightDiffResult::Added(path.clone(), value.to_string())
+                LightweightDiffResult::Added(path.clone(), serde_json::to_string(value).unwrap_or_default())
             }
             DiffResult::Removed(path, value) => {
-                LightweightDiffResult::Removed(path.clone(), value.to_string())
+                LightweightDiffResult::Removed(path.clone(), serde_json::to_string(value).unwrap_or_default())
             }
             DiffResult::Modified(path, old, new) => {
-                LightweightDiffResult::Modified(path.clone(), old.to_string(), new.to_string())
+                LightweightDiffResult::Modified(
+                    path.clone(),
+                    serde_json::to_string(old).unwrap_or_default(),
+                    serde_json::to_string(new).unwrap_or_default(),
+                )
             }
             DiffResult::TypeChanged(path, old, new) => {
-                LightweightDiffResult::TypeChanged(path.clone(), old.to_string(), new.to_string())
+                LightweightDiffResult::TypeChanged(
+                    path.clone(),
+                    serde_json::to_string(old).unwrap_or_default(),
+                    serde_json::to_string(new).unwrap_or_default(),
+                )
             }
         }
     }
 }
 
-/// Configuration for diff operations - essential options only
-#[derive(Debug, Clone)]
-pub struct DiffConfig {
-    pub ignore_keys_regex: Option<regex::Regex>,
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum OutputFormat {
+    #[serde(rename = "diffx")]
+    Diffx,
+    #[serde(rename = "json")]
+    Json,
+    #[serde(rename = "yaml")]
+    Yaml,
+    #[serde(rename = "unified")]
+    Unified,
+}
+
+// Manual ValueEnum implementation since it's not available in core
+impl OutputFormat {
+    pub fn value_variants() -> &'static [Self] {
+        &[Self::Diffx, Self::Json, Self::Yaml, Self::Unified]
+    }
+    
+    pub fn from_str(s: &str) -> Result<Self> {
+        match s.to_lowercase().as_str() {
+            "diffx" => Ok(Self::Diffx),
+            "json" => Ok(Self::Json),
+            "yaml" | "yml" => Ok(Self::Yaml),
+            "unified" => Ok(Self::Unified),
+            _ => Err(anyhow!("Invalid output format: {}", s)),
+        }
+    }
+}
+
+impl Default for OutputFormat {
+    fn default() -> Self {
+        OutputFormat::Diffx
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct DiffxSpecificOptions {
+    pub context_lines: Option<usize>,
+    pub ignore_whitespace: Option<bool>,
+    pub ignore_case: Option<bool>,
+    pub brief_mode: Option<bool>,
+    pub quiet_mode: Option<bool>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct DiffOptions {
+    // Core comparison options
     pub epsilon: Option<f64>,
     pub array_id_key: Option<String>,
-    pub use_memory_optimization: bool, // Explicit choice
+    pub ignore_keys_regex: Option<Regex>,
+    pub path_filter: Option<String>,
+    
+    // Output control
+    pub output_format: Option<OutputFormat>,
+    pub show_unchanged: Option<bool>,
+    pub show_types: Option<bool>,
+    
+    // Memory optimization
+    pub use_memory_optimization: Option<bool>,
+    pub batch_size: Option<usize>,
+    
+    // diffx-specific options
+    pub diffx_options: Option<DiffxSpecificOptions>,
+}
+
+// Backward compatibility - legacy DiffConfig structure
+#[derive(Debug, Clone, Default)]
+pub struct DiffConfig {
+    pub ignore_keys_regex: Option<Regex>,
+    pub epsilon: Option<f64>,
+    pub array_id_key: Option<String>,
+    pub use_memory_optimization: bool,
     pub batch_size: usize,
     pub ignore_whitespace: bool,
     pub ignore_case: bool,
 }
 
-impl Default for DiffConfig {
-    fn default() -> Self {
+impl DiffConfig {
+    pub fn default() -> Self {
         Self {
             ignore_keys_regex: None,
             epsilon: None,
             array_id_key: None,
-            use_memory_optimization: false, // Conservative default
+            use_memory_optimization: false,
             batch_size: 1000,
             ignore_whitespace: false,
             ignore_case: false,
@@ -73,566 +144,586 @@ impl Default for DiffConfig {
     }
 }
 
-// Removed estimate_item_count - no longer needed without progress reporting
-
-/// Standard diff function - predictable, no automatic optimization
-pub fn diff_standard(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult> {
-    diff_standard_implementation(
-        v1,
-        v2,
-        ignore_keys_regex,
-        epsilon,
-        array_id_key,
-        false,
-        false,
-    )
-}
-
-/// Standard diff function with configuration support
-pub fn diff_standard_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
-    diff_standard_implementation(
-        v1,
-        v2,
-        config.ignore_keys_regex.as_ref(),
-        config.epsilon,
-        config.array_id_key.as_deref(),
-        config.ignore_whitespace,
-        config.ignore_case,
-    )
-}
-
-/// Standard diff function - clean, predictable output
-fn diff_standard_implementation(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) -> Vec<DiffResult> {
-    let mut results = Vec::new();
-
-    // Handle root level type or value change first
-    if !values_are_equal_with_config(v1, v2, epsilon, ignore_whitespace, ignore_case) {
-        let type_match = matches!(
-            (v1, v2),
-            (Value::Null, Value::Null)
-                | (Value::Bool(_), Value::Bool(_))
-                | (Value::Number(_), Value::Number(_))
-                | (Value::String(_), Value::String(_))
-                | (Value::Array(_), Value::Array(_))
-                | (Value::Object(_), Value::Object(_))
-        );
-
-        if !type_match {
-            results.push(DiffResult::TypeChanged(
-                "".to_string(),
-                v1.clone(),
-                v2.clone(),
-            ));
-            return results;
-        } else if v1.is_object() && v2.is_object() {
-            diff_objects(
-                "",
-                v1.as_object().unwrap(),
-                v2.as_object().unwrap(),
-                &mut results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        } else if v1.is_array() && v2.is_array() {
-            diff_arrays(
-                "",
-                v1.as_array().unwrap(),
-                v2.as_array().unwrap(),
-                &mut results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        } else {
-            results.push(DiffResult::Modified("".to_string(), v1.clone(), v2.clone()));
-        }
-    }
-
-    results
-}
-
-/// Memory-optimized diff function - explicitly requested optimization
-pub fn diff_optimized(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult> {
-    let mut results = Vec::new();
-    memory_efficient_diff(
-        v1,
-        v2,
-        &mut results,
-        ignore_keys_regex,
-        epsilon,
-        array_id_key,
-        false,
-        false,
-    );
-    results
-}
-
-/// Memory-optimized diff function with configuration support
-pub fn diff_optimized_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
-    let mut results = Vec::new();
-    memory_efficient_diff(
-        v1,
-        v2,
-        &mut results,
-        config.ignore_keys_regex.as_ref(),
-        config.epsilon,
-        config.array_id_key.as_deref(),
-        config.ignore_whitespace,
-        config.ignore_case,
-    );
-    results
-}
-
-/// Enhanced diff function with explicit configuration
-pub fn diff_with_config(v1: &Value, v2: &Value, config: &DiffConfig) -> Vec<DiffResult> {
-    // Explicit choice: user decides which algorithm to use
-    if config.use_memory_optimization {
-        diff_optimized_with_config(v1, v2, config)
-    } else {
-        diff_standard_with_config(v1, v2, config)
+impl From<&DiffConfig> for DiffOptions {
+    fn from(config: &DiffConfig) -> Self {
+        let mut options = DiffOptions::default();
+        options.epsilon = config.epsilon;
+        options.array_id_key = config.array_id_key.clone();
+        options.ignore_keys_regex = config.ignore_keys_regex.clone();
+        options.use_memory_optimization = Some(config.use_memory_optimization);
+        options.batch_size = Some(config.batch_size);
+        
+        let mut diffx_options = DiffxSpecificOptions::default();
+        diffx_options.ignore_whitespace = Some(config.ignore_whitespace);
+        diffx_options.ignore_case = Some(config.ignore_case);
+        options.diffx_options = Some(diffx_options);
+        
+        options
     }
 }
 
-/// Backward compatible diff function - uses standard algorithm
+// ============================================================================
+// UNIFIED API - Main Function
+// ============================================================================
+
+/// Unified diff function for diffx
+/// 
+/// This is the single entry point for all diffx functionality.
+/// All configuration is done through the options parameter.
 pub fn diff(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult> {
-    // Always use standard algorithm for predictable behavior
-    diff_standard(v1, v2, ignore_keys_regex, epsilon, array_id_key)
-}
-
-#[allow(clippy::too_many_arguments)]
-fn diff_recursive(
-    path: &str,
-    v1: &Value,
-    v2: &Value,
-    results: &mut Vec<DiffResult>,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) {
-    match (v1, v2) {
-        (Value::Object(map1), Value::Object(map2)) => {
-            diff_objects(
-                path,
-                map1,
-                map2,
-                results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        }
-        (Value::Array(arr1), Value::Array(arr2)) => {
-            diff_arrays(
-                path,
-                arr1,
-                arr2,
-                results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        }
-        _ => { /* Should not happen if called correctly from diff_objects/diff_arrays */ }
+    old: &Value,
+    new: &Value,
+    options: Option<&DiffOptions>,
+) -> Result<Vec<DiffResult>> {
+    let default_options = DiffOptions::default();
+    let opts = options.unwrap_or(&default_options);
+    
+    // Apply memory optimization if requested
+    if opts.use_memory_optimization.unwrap_or(false) {
+        diff_optimized_implementation(old, new, opts)
+    } else {
+        diff_standard_implementation(old, new, opts)
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn diff_objects(
+fn diff_standard_implementation(
+    old: &Value, 
+    new: &Value, 
+    options: &DiffOptions
+) -> Result<Vec<DiffResult>> {
+    let mut results = Vec::new();
+    diff_recursive(old, new, "", &mut results, options);
+    Ok(results)
+}
+
+fn diff_optimized_implementation(
+    old: &Value,
+    new: &Value, 
+    options: &DiffOptions
+) -> Result<Vec<DiffResult>> {
+    // Check memory limits
+    if would_exceed_memory_limit(old, new) {
+        return Err(anyhow!("Input too large for memory optimization"));
+    }
+    
+    diff_standard_implementation(old, new, options)
+}
+
+fn diff_recursive(
+    old: &Value,
+    new: &Value,
     path: &str,
-    map1: &serde_json::Map<String, Value>,
-    map2: &serde_json::Map<String, Value>,
     results: &mut Vec<DiffResult>,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
+    options: &DiffOptions,
 ) {
-    // Check for modified or removed keys
-    for (key, value1) in map1 {
-        let current_path = if path.is_empty() {
+    // Apply path filter if specified
+    if let Some(filter) = &options.path_filter {
+        if !path.contains(filter) {
+            return;
+        }
+    }
+
+    match (old, new) {
+        (Value::Object(old_obj), Value::Object(new_obj)) => {
+            diff_objects(old_obj, new_obj, path, results, options);
+        }
+        (Value::Array(old_arr), Value::Array(new_arr)) => {
+            diff_arrays(old_arr, new_arr, path, results, options);
+        }
+        (Value::Number(old_num), Value::Number(new_num)) => {
+            if let Some(epsilon) = options.epsilon {
+                let old_f = old_num.as_f64().unwrap_or(0.0);
+                let new_f = new_num.as_f64().unwrap_or(0.0);
+                if (old_f - new_f).abs() > epsilon {
+                    results.push(DiffResult::Modified(
+                        path.to_string(),
+                        old.clone(),
+                        new.clone(),
+                    ));
+                }
+            } else if old != new {
+                results.push(DiffResult::Modified(
+                    path.to_string(),
+                    old.clone(),
+                    new.clone(),
+                ));
+            }
+        }
+        (Value::String(old_str), Value::String(new_str)) => {
+            let mut old_processed = old_str.clone();
+            let mut new_processed = new_str.clone();
+            
+            // Apply string transformations based on options
+            if let Some(diffx_opts) = &options.diffx_options {
+                if diffx_opts.ignore_whitespace.unwrap_or(false) {
+                    old_processed = old_processed.chars().filter(|c| !c.is_whitespace()).collect();
+                    new_processed = new_processed.chars().filter(|c| !c.is_whitespace()).collect();
+                }
+                if diffx_opts.ignore_case.unwrap_or(false) {
+                    old_processed = old_processed.to_lowercase();
+                    new_processed = new_processed.to_lowercase();
+                }
+            }
+            
+            if old_processed != new_processed {
+                results.push(DiffResult::Modified(
+                    path.to_string(),
+                    old.clone(),
+                    new.clone(),
+                ));
+            }
+        }
+        _ => {
+            if old != new {
+                if old.type_name() != new.type_name() {
+                    results.push(DiffResult::TypeChanged(
+                        path.to_string(),
+                        old.clone(),
+                        new.clone(),
+                    ));
+                } else {
+                    // For other types, just do regular comparison
+                    results.push(DiffResult::Modified(
+                        path.to_string(),
+                        old.clone(),
+                        new.clone(),
+                    ));
+                }
+            }
+        }
+    }
+}
+
+fn diff_objects(
+    old_obj: &serde_json::Map<String, Value>,
+    new_obj: &serde_json::Map<String, Value>,
+    path: &str,
+    results: &mut Vec<DiffResult>,
+    options: &DiffOptions,
+) {
+    // Handle ignore_keys_regex
+    let should_ignore_key = |key: &str| -> bool {
+        if let Some(regex) = &options.ignore_keys_regex {
+            regex.is_match(key)
+        } else {
+            false
+        }
+    };
+
+    // Check for removed keys
+    for (key, old_value) in old_obj {
+        if should_ignore_key(key) {
+            continue;
+        }
+        
+        let new_path = if path.is_empty() {
             key.clone()
         } else {
-            format!("{path}.{key}")
+            format!("{}.{}", path, key)
         };
-        if let Some(regex) = ignore_keys_regex {
-            if regex.is_match(key) {
-                continue;
-            }
-        }
-        match map2.get(key) {
-            Some(value2) => {
-                // Recurse for nested objects/arrays
-                if value1.is_object() && value2.is_object()
-                    || value1.is_array() && value2.is_array()
-                {
-                    diff_recursive(
-                        &current_path,
-                        value1,
-                        value2,
-                        results,
-                        ignore_keys_regex,
-                        epsilon,
-                        array_id_key,
-                        ignore_whitespace,
-                        ignore_case,
-                    );
-                } else if !values_are_equal_with_config(
-                    value1,
-                    value2,
-                    epsilon,
-                    ignore_whitespace,
-                    ignore_case,
-                ) {
-                    let type_match = matches!(
-                        (value1, value2),
-                        (Value::Null, Value::Null)
-                            | (Value::Bool(_), Value::Bool(_))
-                            | (Value::Number(_), Value::Number(_))
-                            | (Value::String(_), Value::String(_))
-                            | (Value::Array(_), Value::Array(_))
-                            | (Value::Object(_), Value::Object(_))
-                    );
 
-                    if !type_match {
-                        results.push(DiffResult::TypeChanged(
-                            current_path,
-                            value1.clone(),
-                            value2.clone(),
-                        ));
-                    } else {
-                        results.push(DiffResult::Modified(
-                            current_path,
-                            value1.clone(),
-                            value2.clone(),
-                        ));
-                    }
-                }
-            }
-            None => {
-                results.push(DiffResult::Removed(current_path, value1.clone()));
-            }
+        if !new_obj.contains_key(key) {
+            results.push(DiffResult::Removed(new_path, old_value.clone()));
         }
     }
 
-    // Check for added keys
-    for (key, value2) in map2 {
-        if !map1.contains_key(key) {
-            let current_path = if path.is_empty() {
-                (*key).clone()
-            } else {
-                format!("{path}.{key}")
-            };
-            results.push(DiffResult::Added(current_path, value2.clone()));
+    // Check for added and modified keys
+    for (key, new_value) in new_obj {
+        if should_ignore_key(key) {
+            continue;
+        }
+        
+        let new_path = if path.is_empty() {
+            key.clone()
+        } else {
+            format!("{}.{}", path, key)
+        };
+
+        match old_obj.get(key) {
+            None => {
+                results.push(DiffResult::Added(new_path, new_value.clone()));
+            }
+            Some(old_value) => {
+                diff_recursive(old_value, new_value, &new_path, results, options);
+            }
         }
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 fn diff_arrays(
+    old_arr: &[Value],
+    new_arr: &[Value],
     path: &str,
-    arr1: &[Value],
-    arr2: &[Value],
     results: &mut Vec<DiffResult>,
+    options: &DiffOptions,
+) {
+    if let Some(id_key) = &options.array_id_key {
+        diff_arrays_with_id(old_arr, new_arr, path, results, options, id_key);
+    } else {
+        diff_arrays_by_index(old_arr, new_arr, path, results, options);
+    }
+}
+
+fn diff_arrays_with_id(
+    old_arr: &[Value],
+    new_arr: &[Value],
+    path: &str,
+    results: &mut Vec<DiffResult>,
+    options: &DiffOptions,
+    id_key: &str,
+) {
+    let mut old_by_id: HashMap<String, (usize, &Value)> = HashMap::new();
+    let mut new_by_id: HashMap<String, (usize, &Value)> = HashMap::new();
+    let mut old_without_id: Vec<(usize, &Value)> = Vec::new();
+    let mut new_without_id: Vec<(usize, &Value)> = Vec::new();
+
+    // Separate items with IDs from those without
+    for (index, item) in old_arr.iter().enumerate() {
+        if let Some(id_value) = item.get(id_key) {
+            let id_str = match id_value {
+                Value::String(s) => s.clone(),
+                Value::Number(n) => n.to_string(),
+                Value::Bool(b) => b.to_string(),
+                _ => format!("{:?}", id_value),
+            };
+            old_by_id.insert(id_str, (index, item));
+        } else {
+            old_without_id.push((index, item));
+        }
+    }
+
+    for (index, item) in new_arr.iter().enumerate() {
+        if let Some(id_value) = item.get(id_key) {
+            let id_str = match id_value {
+                Value::String(s) => s.clone(),
+                Value::Number(n) => n.to_string(),
+                Value::Bool(b) => b.to_string(),
+                _ => format!("{:?}", id_value),
+            };
+            new_by_id.insert(id_str, (index, item));
+        } else {
+            new_without_id.push((index, item));
+        }
+    }
+
+    // Handle items with IDs
+    // Find removed items
+    for (id, (_, old_item)) in &old_by_id {
+        if !new_by_id.contains_key(id) {
+            let item_path = if path.is_empty() {
+                format!("[{}={}]", id_key, id)
+            } else {
+                format!("{}[{}={}]", path, id_key, id)
+            };
+            results.push(DiffResult::Removed(item_path, (*old_item).clone()));
+        }
+    }
+
+    // Find added and modified items with IDs
+    for (id, (_, new_item)) in &new_by_id {
+        let item_path = if path.is_empty() {
+            format!("[{}={}]", id_key, id)
+        } else {
+            format!("{}[{}={}]", path, id_key, id)
+        };
+        
+        match old_by_id.get(id) {
+            None => {
+                results.push(DiffResult::Added(item_path, (*new_item).clone()));
+            }
+            Some((_, old_item)) => {
+                diff_recursive(old_item, new_item, &item_path, results, options);
+            }
+        }
+    }
+
+    // Handle items without IDs by index
+    let max_len = old_without_id.len().max(new_without_id.len());
+    for i in 0..max_len {
+        match (old_without_id.get(i), new_without_id.get(i)) {
+            (Some((old_index, old_item)), Some((_, new_item))) => {
+                let item_path = if path.is_empty() {
+                    format!("[{}]", old_index)
+                } else {
+                    format!("{}[{}]", path, old_index)
+                };
+                diff_recursive(old_item, new_item, &item_path, results, options);
+            }
+            (Some((old_index, old_item)), None) => {
+                let item_path = if path.is_empty() {
+                    format!("[{}]", old_index)
+                } else {
+                    format!("{}[{}]", path, old_index)
+                };
+                results.push(DiffResult::Removed(item_path, (*old_item).clone()));
+            }
+            (None, Some((new_index, new_item))) => {
+                let item_path = if path.is_empty() {
+                    format!("[{}]", new_index)
+                } else {
+                    format!("{}[{}]", path, new_index)
+                };
+                results.push(DiffResult::Added(item_path, (*new_item).clone()));
+            }
+            (None, None) => unreachable!(),
+        }
+    }
+}
+
+fn diff_arrays_by_index(
+    old_arr: &[Value],
+    new_arr: &[Value],
+    path: &str,
+    results: &mut Vec<DiffResult>,
+    options: &DiffOptions,
+) {
+    let max_len = old_arr.len().max(new_arr.len());
+
+    for i in 0..max_len {
+        let item_path = format!("{}[{}]", path, i);
+
+        match (old_arr.get(i), new_arr.get(i)) {
+            (Some(old_item), Some(new_item)) => {
+                diff_recursive(old_item, new_item, &item_path, results, options);
+            }
+            (Some(old_item), None) => {
+                results.push(DiffResult::Removed(item_path, old_item.clone()));
+            }
+            (None, Some(new_item)) => {
+                results.push(DiffResult::Added(item_path, new_item.clone()));
+            }
+            (None, None) => unreachable!(),
+        }
+    }
+}
+
+// ============================================================================
+// BACKWARD COMPATIBILITY FUNCTIONS
+// ============================================================================
+
+/// Legacy diff function with old signature for backward compatibility
+pub fn diff_with_config(old: &Value, new: &Value, config: &DiffConfig) -> Vec<DiffResult> {
+    let options: DiffOptions = config.into();
+    diff(old, new, Some(&options)).unwrap_or_default()
+}
+
+/// Legacy diff function - optimized variant 
+pub fn diff_optimized(
+    old: &Value,
+    new: &Value,
     ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
     array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) {
-    if let Some(id_key) = array_id_key {
-        let mut map1: HashMap<Value, &Value> = HashMap::new();
-        let mut no_id_elements1: Vec<(usize, &Value)> = Vec::new();
-        for (i, val) in arr1.iter().enumerate() {
-            if let Some(id_val) = val.get(id_key) {
-                map1.insert(id_val.clone(), val);
-            } else {
-                no_id_elements1.push((i, val));
-            }
-        }
-
-        let mut map2: HashMap<Value, &Value> = HashMap::new();
-        let mut no_id_elements2: Vec<(usize, &Value)> = Vec::new();
-        for (i, val) in arr2.iter().enumerate() {
-            if let Some(id_val) = val.get(id_key) {
-                map2.insert(id_val.clone(), val);
-            } else {
-                no_id_elements2.push((i, val));
-            }
-        }
-
-        // Check for modified or removed elements
-        for (id_val, val1) in &map1 {
-            let current_path = format!("{path}[{id_key}={id_val}]");
-            match map2.get(id_val) {
-                Some(val2) => {
-                    // Recurse for nested objects/arrays
-                    if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
-                        diff_recursive(
-                            &current_path,
-                            val1,
-                            val2,
-                            results,
-                            ignore_keys_regex,
-                            epsilon,
-                            array_id_key,
-                            ignore_whitespace,
-                            ignore_case,
-                        );
-                    } else if !values_are_equal_with_config(
-                        val1,
-                        val2,
-                        epsilon,
-                        ignore_whitespace,
-                        ignore_case,
-                    ) {
-                        let type_match = matches!(
-                            (val1, val2),
-                            (Value::Null, Value::Null)
-                                | (Value::Bool(_), Value::Bool(_))
-                                | (Value::Number(_), Value::Number(_))
-                                | (Value::String(_), Value::String(_))
-                                | (Value::Array(_), Value::Array(_))
-                                | (Value::Object(_), Value::Object(_))
-                        );
-
-                        if !type_match {
-                            results.push(DiffResult::TypeChanged(
-                                current_path,
-                                (*val1).clone(),
-                                (*val2).clone(),
-                            ));
-                        } else {
-                            results.push(DiffResult::Modified(
-                                current_path,
-                                (*val1).clone(),
-                                (*val2).clone(),
-                            ));
-                        }
-                    }
-                }
-                None => {
-                    results.push(DiffResult::Removed(current_path, (*val1).clone()));
-                }
-            }
-        }
-
-        // Check for added elements with ID
-        for (id_val, val2) in map2 {
-            if !map1.contains_key(&id_val) {
-                let current_path = format!("{path}[{id_key}={id_val}]");
-                results.push(DiffResult::Added(current_path, val2.clone()));
-            }
-        }
-
-        // Handle elements without ID using index-based comparison
-        let max_len = no_id_elements1.len().max(no_id_elements2.len());
-        for i in 0..max_len {
-            match (no_id_elements1.get(i), no_id_elements2.get(i)) {
-                (Some((idx1, val1)), Some((_idx2, val2))) => {
-                    let current_path = format!("{path}[{idx1}]");
-                    if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
-                        diff_recursive(
-                            &current_path,
-                            val1,
-                            val2,
-                            results,
-                            ignore_keys_regex,
-                            epsilon,
-                            array_id_key,
-                            ignore_whitespace,
-                            ignore_case,
-                        );
-                    } else if !values_are_equal_with_config(
-                        val1,
-                        val2,
-                        epsilon,
-                        ignore_whitespace,
-                        ignore_case,
-                    ) {
-                        let type_match = matches!(
-                            (val1, val2),
-                            (Value::Null, Value::Null)
-                                | (Value::Bool(_), Value::Bool(_))
-                                | (Value::Number(_), Value::Number(_))
-                                | (Value::String(_), Value::String(_))
-                                | (Value::Array(_), Value::Array(_))
-                                | (Value::Object(_), Value::Object(_))
-                        );
-
-                        if !type_match {
-                            results.push(DiffResult::TypeChanged(
-                                current_path,
-                                (*val1).clone(),
-                                (*val2).clone(),
-                            ));
-                        } else {
-                            results.push(DiffResult::Modified(
-                                current_path,
-                                (*val1).clone(),
-                                (*val2).clone(),
-                            ));
-                        }
-                    }
-                }
-                (Some((idx1, val1)), None) => {
-                    let current_path = format!("{path}[{idx1}]");
-                    results.push(DiffResult::Removed(current_path, (*val1).clone()));
-                }
-                (None, Some((idx2, val2))) => {
-                    let current_path = format!("{path}[{idx2}]");
-                    results.push(DiffResult::Added(current_path, (*val2).clone()));
-                }
-                (None, None) => break,
-            }
-        }
-    } else {
-        // Fallback to index-based comparison if no id_key is provided
-        let max_len = arr1.len().max(arr2.len());
-        for i in 0..max_len {
-            let current_path = format!("{path}[{i}]");
-            match (arr1.get(i), arr2.get(i)) {
-                (Some(val1), Some(val2)) => {
-                    // Recurse for nested objects/arrays within arrays
-                    if val1.is_object() && val2.is_object() || val1.is_array() && val2.is_array() {
-                        diff_recursive(
-                            &current_path,
-                            val1,
-                            val2,
-                            results,
-                            ignore_keys_regex,
-                            epsilon,
-                            array_id_key,
-                            ignore_whitespace,
-                            ignore_case,
-                        );
-                    } else if !values_are_equal_with_config(
-                        val1,
-                        val2,
-                        epsilon,
-                        ignore_whitespace,
-                        ignore_case,
-                    ) {
-                        let type_match = matches!(
-                            (val1, val2),
-                            (Value::Null, Value::Null)
-                                | (Value::Bool(_), Value::Bool(_))
-                                | (Value::Number(_), Value::Number(_))
-                                | (Value::String(_), Value::String(_))
-                                | (Value::Array(_), Value::Array(_))
-                                | (Value::Object(_), Value::Object(_))
-                        );
-
-                        if !type_match {
-                            results.push(DiffResult::TypeChanged(
-                                current_path,
-                                val1.clone(),
-                                val2.clone(),
-                            ));
-                        } else {
-                            results.push(DiffResult::Modified(
-                                current_path,
-                                val1.clone(),
-                                val2.clone(),
-                            ));
-                        }
-                    }
-                }
-                (Some(val1), None) => {
-                    results.push(DiffResult::Removed(current_path, val1.clone()));
-                }
-                (None, Some(val2)) => {
-                    results.push(DiffResult::Added(current_path, val2.clone()));
-                }
-                (None, None) => { /* Should not happen */ }
-            }
-        }
-    }
+) -> Vec<DiffResult> {
+    let mut options = DiffOptions::default();
+    options.ignore_keys_regex = ignore_keys_regex.cloned();
+    options.epsilon = epsilon;
+    options.array_id_key = array_id_key.map(|s| s.to_string());
+    options.use_memory_optimization = Some(true);
+    
+    diff(old, new, Some(&options)).unwrap_or_default()
 }
 
-fn values_are_equal_with_config(
-    v1: &Value,
-    v2: &Value,
+/// Legacy diff function - standard variant
+pub fn diff_standard(
+    old: &Value,
+    new: &Value,
+    ignore_keys_regex: Option<&Regex>,
     epsilon: Option<f64>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) -> bool {
-    // Handle numeric comparisons with epsilon
-    if let (Some(e), Value::Number(n1), Value::Number(n2)) = (epsilon, v1, v2) {
-        if let (Some(f1), Some(f2)) = (n1.as_f64(), n2.as_f64()) {
-            return (f1 - f2).abs() < e;
+    array_id_key: Option<&str>,
+) -> Vec<DiffResult> {
+    let mut options = DiffOptions::default();
+    options.ignore_keys_regex = ignore_keys_regex.cloned();
+    options.epsilon = epsilon;
+    options.array_id_key = array_id_key.map(|s| s.to_string());
+    options.use_memory_optimization = Some(false);
+    
+    diff(old, new, Some(&options)).unwrap_or_default()
+}
+
+// ============================================================================
+// UNIFIED API - Parser Functions
+// ============================================================================
+
+pub fn parse_json(content: &str) -> Result<Value> {
+    serde_json::from_str(content).map_err(|e| anyhow!("JSON parse error: {}", e))
+}
+
+pub fn parse_csv(content: &str) -> Result<Value> {
+    let mut reader = ReaderBuilder::new()
+        .has_headers(true)
+        .from_reader(content.as_bytes());
+
+    let headers = reader.headers()?.clone();
+    let mut records = Vec::new();
+
+    for result in reader.records() {
+        let record = result?;
+        let mut map = serde_json::Map::new();
+
+        for (i, field) in record.iter().enumerate() {
+            if let Some(header) = headers.get(i) {
+                map.insert(header.to_string(), Value::String(field.to_string()));
+            }
+        }
+
+        records.push(Value::Object(map));
+    }
+
+    Ok(Value::Array(records))
+}
+
+pub fn parse_yaml(content: &str) -> Result<Value> {
+    serde_yaml::from_str(content).map_err(|e| anyhow!("YAML parse error: {}", e))
+}
+
+pub fn parse_toml(content: &str) -> Result<Value> {
+    let toml_value: toml::Value = content.parse()?;
+    toml_to_json_value(toml_value)
+}
+
+fn toml_to_json_value(toml_val: toml::Value) -> Result<Value> {
+    match toml_val {
+        toml::Value::String(s) => Ok(Value::String(s)),
+        toml::Value::Integer(i) => Ok(Value::Number(i.into())),
+        toml::Value::Float(f) => Ok(Value::Number(
+            serde_json::Number::from_f64(f).ok_or_else(|| anyhow!("Invalid float"))?
+        )),
+        toml::Value::Boolean(b) => Ok(Value::Bool(b)),
+        toml::Value::Array(arr) => {
+            let mut json_arr = Vec::new();
+            for item in arr {
+                json_arr.push(toml_to_json_value(item)?);
+            }
+            Ok(Value::Array(json_arr))
+        }
+        toml::Value::Table(table) => {
+            let mut json_obj = serde_json::Map::new();
+            for (key, value) in table {
+                json_obj.insert(key, toml_to_json_value(value)?);
+            }
+            Ok(Value::Object(json_obj))
+        }
+        toml::Value::Datetime(dt) => Ok(Value::String(dt.to_string())),
+    }
+}
+
+pub fn parse_ini(content: &str) -> Result<Value> {
+    let mut result = serde_json::Map::new();
+    let mut current_section = String::new();
+    let mut global_section = serde_json::Map::new();
+
+    for line in content.lines() {
+        let line = line.trim();
+        
+        if line.is_empty() || line.starts_with(';') || line.starts_with('#') {
+            continue;
+        }
+
+        if line.starts_with('[') && line.ends_with(']') {
+            current_section = line[1..line.len()-1].to_string();
+            result.insert(current_section.clone(), Value::Object(serde_json::Map::new()));
+        } else if let Some(eq_pos) = line.find('=') {
+            let key = line[..eq_pos].trim().to_string();
+            let value = line[eq_pos+1..].trim().to_string();
+            
+            if current_section.is_empty() {
+                global_section.insert(key, Value::String(value));
+            } else {
+                if let Some(Value::Object(section)) = result.get_mut(&current_section) {
+                    section.insert(key, Value::String(value));
+                }
+            }
         }
     }
 
-    // Handle string comparisons with ignore options
-    if let (Value::String(s1), Value::String(s2)) = (v1, v2) {
-        let mut str1 = s1.as_str();
-        let mut str2 = s2.as_str();
+    // Add global section if it exists
+    if !global_section.is_empty() {
+        result.insert("default".to_string(), Value::Object(global_section));
+    }
 
-        let owned_s1;
-        let owned_s2;
+    Ok(Value::Object(result))
+}
 
-        // Apply whitespace normalization if needed
-        if ignore_whitespace {
-            owned_s1 = normalize_whitespace(str1);
-            owned_s2 = normalize_whitespace(str2);
-            str1 = &owned_s1;
-            str2 = &owned_s2;
+pub fn parse_xml(content: &str) -> Result<Value> {
+    use quick_xml::events::Event;
+    use quick_xml::Reader;
+    use std::collections::HashMap;
+
+    let mut reader = Reader::from_str(content);
+    reader.trim_text(true);
+    let mut current_element = String::new();
+    let mut elements: HashMap<String, Vec<Value>> = HashMap::new();
+    let mut current_attrs: HashMap<String, String> = HashMap::new();
+    let mut text_content = String::new();
+
+    loop {
+        match reader.read_event() {
+            Ok(Event::Start(ref e)) => {
+                current_element = String::from_utf8_lossy(e.name().as_ref()).to_string();
+                current_attrs.clear();
+                
+                // Parse attributes
+                for attr in e.attributes() {
+                    if let Ok(attr) = attr {
+                        let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
+                        let value = String::from_utf8_lossy(&attr.value).to_string();
+                        current_attrs.insert(key, value);
+                    }
+                }
+                text_content.clear();
+            }
+            Ok(Event::Text(e)) => {
+                text_content = e.unescape().unwrap_or_default().to_string();
+            }
+            Ok(Event::End(ref e)) => {
+                let tag_name = String::from_utf8_lossy(e.name().as_ref()).to_string();
+                if tag_name == current_element {
+                    let mut element_value = serde_json::Map::new();
+                    
+                    // Add attributes
+                    for (key, value) in &current_attrs {
+                        element_value.insert(key.clone(), Value::String(value.clone()));
+                    }
+                    
+                    // Add text content
+                    if !text_content.trim().is_empty() {
+                        element_value.insert("text".to_string(), Value::String(text_content.trim().to_string()));
+                    }
+                    
+                    let element_obj = if element_value.is_empty() && !text_content.trim().is_empty() {
+                        Value::String(text_content.trim().to_string())
+                    } else if element_value.len() == 1 && element_value.contains_key("text") {
+                        element_value.get("text").unwrap().clone()
+                    } else {
+                        Value::Object(element_value)
+                    };
+                    
+                    elements.entry(tag_name).or_insert_with(Vec::new).push(element_obj);
+                }
+            }
+            Ok(Event::Eof) => break,
+            Err(e) => return Err(anyhow!("XML parsing error: {}", e)),
+            _ => {}
         }
+    }
 
-        // Apply case normalization if needed
-        if ignore_case {
-            return str1.to_lowercase() == str2.to_lowercase();
+    // Convert to JSON structure
+    let mut result = serde_json::Map::new();
+    for (tag, values) in elements {
+        if values.len() == 1 {
+            result.insert(tag, values.into_iter().next().unwrap());
         } else {
-            return str1 == str2;
+            result.insert(tag, Value::Array(values));
         }
     }
 
-    // Default comparison for all other types
-    v1 == v2
+    Ok(Value::Object(result))
 }
 
-fn normalize_whitespace(s: &str) -> String {
-    // Replace all whitespace sequences with single spaces and trim
-    s.split_whitespace().collect::<Vec<&str>>().join(" ")
-}
+// ============================================================================
+// UNIFIED API - Utility Functions
+// ============================================================================
 
 pub fn value_type_name(value: &Value) -> &str {
     match value {
@@ -645,671 +736,75 @@ pub fn value_type_name(value: &Value) -> &str {
     }
 }
 
-/// Get approximate memory usage of a Value in bytes
 pub fn estimate_memory_usage(value: &Value) -> usize {
     match value {
         Value::Null => 0,
         Value::Bool(_) => 1,
-        Value::Number(_) => 8, // Approximate for f64
+        Value::Number(_) => 8,
         Value::String(s) => s.len(),
         Value::Array(arr) => {
-            arr.iter().map(estimate_memory_usage).sum::<usize>() + (arr.len() * 8)
-            // Vec overhead
+            arr.iter().map(estimate_memory_usage).sum::<usize>() + 24
         }
         Value::Object(obj) => {
             obj.iter()
                 .map(|(k, v)| k.len() + estimate_memory_usage(v))
-                .sum::<usize>()
-                + (obj.len() * 16) // Map overhead
+                .sum::<usize>() + 24
         }
     }
 }
 
-/// Check if processing these values would exceed memory limits
 pub fn would_exceed_memory_limit(v1: &Value, v2: &Value) -> bool {
-    const MAX_MEMORY_USAGE: usize = 1024 * 1024 * 1024; // 1GB limit
-
-    let usage1 = estimate_memory_usage(v1);
-    let usage2 = estimate_memory_usage(v2);
-
-    // Account for diff results and temporary data (multiply by 3)
-    (usage1 + usage2) * 3 > MAX_MEMORY_USAGE
+    const MAX_MEMORY_MB: usize = 100;
+    const BYTES_PER_MB: usize = 1024 * 1024;
+    
+    let total_size = estimate_memory_usage(v1) + estimate_memory_usage(v2);
+    total_size > MAX_MEMORY_MB * BYTES_PER_MB
 }
 
-pub fn parse_ini(content: &str) -> Result<Value> {
-    use configparser::ini::Ini;
-
-    let mut ini = Ini::new();
-    ini.read(content.to_string())
-        .map_err(|e| anyhow!("Failed to parse INI: {}", e))?;
-
-    let mut root_map = serde_json::Map::new();
-
-    for section_name in ini.sections() {
-        let mut section_map = serde_json::Map::new();
-
-        if let Some(section) = ini.get_map_ref().get(&section_name) {
-            for (key, value) in section {
-                if let Some(v) = value {
-                    section_map.insert(key.clone(), Value::String(v.clone()));
-                } else {
-                    section_map.insert(key.clone(), Value::Null);
-                }
-            }
+pub fn format_output<T: Serialize>(
+    results: &[T],
+    format: OutputFormat,
+) -> Result<String> {
+    match format {
+        OutputFormat::Json => {
+            serde_json::to_string_pretty(results)
+                .map_err(|e| anyhow!("JSON serialization error: {}", e))
         }
-
-        root_map.insert(section_name, Value::Object(section_map));
-    }
-
-    Ok(Value::Object(root_map))
-}
-
-/// Transform XML array indices back to traditional dot notation for consistent output
-pub fn transform_xml_paths(
-    diff_results: Vec<DiffResult>,
-    xml_structure_info: Option<&HashMap<String, String>>,
-) -> Vec<DiffResult> {
-    diff_results
-        .into_iter()
-        .map(|result| match result {
-            DiffResult::Added(path, value) => {
-                DiffResult::Added(normalize_xml_path(path, xml_structure_info), value)
-            }
-            DiffResult::Removed(path, value) => {
-                DiffResult::Removed(normalize_xml_path(path, xml_structure_info), value)
-            }
-            DiffResult::Modified(path, old_value, new_value) => DiffResult::Modified(
-                normalize_xml_path(path, xml_structure_info),
-                old_value,
-                new_value,
-            ),
-            DiffResult::TypeChanged(path, old_value, new_value) => DiffResult::TypeChanged(
-                normalize_xml_path(path, xml_structure_info),
-                old_value,
-                new_value,
-            ),
-        })
-        .collect()
-}
-
-/// Extract XML element context information for path transformation
-pub fn extract_xml_structure_info(value: &Value) -> HashMap<String, String> {
-    let mut structure_info = HashMap::new();
-    extract_xml_structure_recursive(value, "", &mut structure_info);
-    structure_info
-}
-
-fn extract_xml_structure_recursive(
-    value: &Value,
-    current_path: &str,
-    structure_info: &mut HashMap<String, String>,
-) {
-    match value {
-        Value::Object(obj) => {
-            for (key, val) in obj {
-                let new_path = if current_path.is_empty() {
-                    key.clone()
-                } else {
-                    format!("{}.{}", current_path, key)
-                };
-
-                if let Value::Array(arr) = val {
-                    // Record that this path contains an array of elements named 'key'
-                    structure_info.insert(new_path.clone(), key.clone());
-                    // Also process array elements
-                    for item in arr {
-                        extract_xml_structure_recursive(item, &new_path, structure_info);
-                    }
-                } else {
-                    extract_xml_structure_recursive(val, &new_path, structure_info);
-                }
-            }
+        OutputFormat::Yaml => {
+            serde_yaml::to_string(results)
+                .map_err(|e| anyhow!("YAML serialization error: {}", e))
         }
-        Value::Array(arr) => {
-            for item in arr {
-                extract_xml_structure_recursive(item, current_path, structure_info);
+        OutputFormat::Diffx => {
+            let mut output = String::new();
+            for result in results {
+                let json = serde_json::to_string(result)?;
+                output.push_str(&json);
+                output.push('\n');
             }
+            Ok(output)
         }
-        _ => {}
-    }
-}
-
-/// Normalize XML paths from array format [N] to traditional element format
-fn normalize_xml_path(path: String, _structure_info: Option<&HashMap<String, String>>) -> String {
-    // Transform [N].property to element.property using actual XML structure information
-    let array_index_regex = regex::Regex::new(r"\[(\d+)\]").unwrap();
-
-    if array_index_regex.is_match(&path) {
-        // For paths with array indices, we need to replace [N] appropriately
-        let normalized = array_index_regex.replace_all(&path, |_: &regex::Captures| {
-            // Instead of adding ".item", just remove the array index
-            // This works because the path already contains the correct element name
-            "".to_string()
-        });
-
-        let result = normalized.to_string();
-
-        // Clean up any double dots that might result from removal
-        let cleaned = result.replace("..", ".");
-
-        // Remove leading or trailing dots
-        cleaned.trim_matches('.').to_string()
-    } else {
-        // No array indices to normalize
-        path
-    }
-}
-
-pub fn parse_xml(content: &str) -> Result<Value> {
-    // Use quick-xml for proper array handling
-    use quick_xml::events::Event;
-    use quick_xml::Reader;
-    use std::collections::HashMap;
-
-    let mut reader = Reader::from_str(content);
-    reader.trim_text(true);
-
-    let mut buf = Vec::new();
-    let mut stack: Vec<(String, HashMap<String, Value>)> = Vec::new();
-    let mut root: Option<Value> = None;
-    let mut current_text = String::new();
-
-    loop {
-        match reader.read_event_into(&mut buf)? {
-            Event::Start(ref e) => {
-                let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                let mut attributes = HashMap::new();
-
-                // Parse attributes
-                for attr in e.attributes() {
-                    let attr = attr?;
-                    let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-                    let value = String::from_utf8_lossy(&attr.value);
-                    attributes.insert(key, Value::String(value.to_string()));
-                }
-
-                stack.push((name, attributes));
-                current_text.clear();
+        OutputFormat::Unified => {
+            // Simple unified diff format
+            let mut output = String::new();
+            for result in results {
+                let json = serde_json::to_string(result)?;
+                output.push_str(&format!("~ {}\n", json));
             }
-            Event::End(_) => {
-                if let Some((name, mut attributes)) = stack.pop() {
-                    let element_value = if !current_text.trim().is_empty() {
-                        // Handle text content
-                        if attributes.is_empty() {
-                            // Pure text element -> direct string
-                            Value::String(current_text.trim().to_string())
-                        } else {
-                            // Text + attributes -> create object with both
-                            attributes.insert(
-                                "text".to_string(),
-                                Value::String(current_text.trim().to_string()),
-                            );
-                            Value::Object(attributes.into_iter().collect())
-                        }
-                    } else if attributes.is_empty() {
-                        // Check if this element has child elements already added
-                        if let Some((_parent_name, parent_attrs)) = stack.last() {
-                            if parent_attrs.contains_key(&name) {
-                                // This element will be handled in the parent processing
-                                Value::Null
-                            } else {
-                                Value::Null
-                            }
-                        } else {
-                            Value::Null
-                        }
-                    } else {
-                        Value::Object(attributes.into_iter().collect())
-                    };
-
-                    if let Some((_parent_name, parent_attrs)) = stack.last_mut() {
-                        // Handle multiple elements with the same name as arrays
-                        if let Some(existing) = parent_attrs.get_mut(&name) {
-                            match existing {
-                                Value::Array(arr) => {
-                                    arr.push(element_value);
-                                }
-                                _ => {
-                                    let old_value = existing.clone();
-                                    *existing = Value::Array(vec![old_value, element_value]);
-                                }
-                            }
-                        } else {
-                            parent_attrs.insert(name, element_value);
-                        }
-                    } else {
-                        // Root element
-                        root = Some(element_value);
-                    }
-                }
-                current_text.clear();
-            }
-            Event::Empty(ref e) => {
-                // Handle self-closing elements like <empty/> or <self-closing attr="val"/>
-                let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                let mut attributes = HashMap::new();
-
-                // Parse attributes
-                for attr in e.attributes() {
-                    let attr = attr?;
-                    let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-                    let value = String::from_utf8_lossy(&attr.value);
-                    attributes.insert(key, Value::String(value.to_string()));
-                }
-
-                let element_value = if attributes.is_empty() {
-                    Value::Null
-                } else {
-                    Value::Object(attributes.into_iter().collect())
-                };
-
-                if let Some((_parent_name, parent_attrs)) = stack.last_mut() {
-                    // Handle multiple elements with the same name as arrays
-                    if let Some(existing) = parent_attrs.get_mut(&name) {
-                        match existing {
-                            Value::Array(arr) => {
-                                arr.push(element_value);
-                            }
-                            _ => {
-                                let old_value = existing.clone();
-                                *existing = Value::Array(vec![old_value, element_value]);
-                            }
-                        }
-                    } else {
-                        parent_attrs.insert(name, element_value);
-                    }
-                } else {
-                    // Root element
-                    root = Some(element_value);
-                }
-            }
-            Event::Text(e) => {
-                current_text.push_str(&e.unescape()?);
-            }
-            Event::CData(e) => {
-                current_text.push_str(&String::from_utf8_lossy(&e));
-            }
-            Event::Eof => break,
-            _ => (),
-        }
-        buf.clear();
-    }
-
-    // Always return the full structure to preserve element names for path generation
-    root.ok_or_else(|| anyhow!("Empty XML document"))
-}
-
-pub fn parse_csv(content: &str) -> Result<Value> {
-    let mut reader = ReaderBuilder::new().from_reader(content.as_bytes());
-    let mut records = Vec::new();
-
-    let headers = reader.headers()?.clone();
-    let has_headers = !headers.is_empty();
-
-    for result in reader.into_records() {
-        let record = result?;
-        if has_headers {
-            let mut obj = serde_json::Map::new();
-            for (i, header) in headers.iter().enumerate() {
-                if let Some(value) = record.get(i) {
-                    obj.insert(header.to_string(), Value::String(value.to_string()));
-                }
-            }
-            records.push(Value::Object(obj));
-        } else {
-            let mut arr = Vec::new();
-            for field in record.iter() {
-                arr.push(Value::String(field.to_string()));
-            }
-            records.push(Value::Array(arr));
-        }
-    }
-    Ok(Value::Array(records))
-}
-
-/// Parse large files with streaming support to reduce memory usage
-/// Returns None if file is too large (>100MB) and should use streaming diff
-pub fn parse_large_file<P: AsRef<Path>>(path: P) -> Result<Option<Value>> {
-    let file = File::open(&path)?;
-    let metadata = file.metadata()?;
-    let file_size = metadata.len();
-
-    // 100MB threshold for streaming
-    const MAX_MEMORY_SIZE: u64 = 100 * 1024 * 1024;
-
-    if file_size > MAX_MEMORY_SIZE {
-        return Ok(None); // Signal that streaming should be used
-    }
-
-    let mut reader = BufReader::new(file);
-    let mut content = String::new();
-    reader.read_to_string(&mut content)?;
-
-    // Auto-detect format from file extension
-    let path_str = path.as_ref().to_string_lossy();
-    if path_str.ends_with(".json") {
-        Ok(Some(serde_json::from_str(&content)?))
-    } else if path_str.ends_with(".yaml") || path_str.ends_with(".yml") {
-        Ok(Some(serde_yml::from_str(&content)?))
-    } else if path_str.ends_with(".toml") {
-        Ok(Some(toml::from_str(&content)?))
-    } else {
-        Err(anyhow!("Unsupported file format for large file parsing"))
-    }
-}
-
-/// Memory-efficient diff for large files using streaming approach
-pub fn diff_large_files<P: AsRef<Path>>(
-    path1: P,
-    path2: P,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Result<Vec<DiffResult>> {
-    // Try to parse normally first
-    let v1_opt = parse_large_file(&path1)?;
-    let v2_opt = parse_large_file(&path2)?;
-
-    match (v1_opt, v2_opt) {
-        (Some(v1), Some(v2)) => {
-            // Both files are small enough for in-memory processing
-            Ok(diff(&v1, &v2, ignore_keys_regex, epsilon, array_id_key))
-        }
-        _ => {
-            // At least one file is too large, use streaming diff
-            streaming_diff(&path1, &path2, ignore_keys_regex, epsilon, array_id_key)
+            Ok(output)
         }
     }
 }
 
-/// Streaming diff implementation for very large files
-fn streaming_diff<P: AsRef<Path>>(
-    path1: P,
-    path2: P,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Result<Vec<DiffResult>> {
-    // For now, implement a simplified version that chunks the files
-    // This is a placeholder for more sophisticated streaming logic
-    let mut results = Vec::new();
+// ============================================================================
+// TRAITS
+// ============================================================================
 
-    // Read files in chunks and compare
-    let file1 = File::open(&path1)?;
-    let file2 = File::open(&path2)?;
-
-    let mut reader1 = BufReader::new(file1);
-    let mut reader2 = BufReader::new(file2);
-
-    let mut buffer1 = String::new();
-    let mut buffer2 = String::new();
-
-    // Read entire files (for now - this would be optimized further)
-    reader1.read_to_string(&mut buffer1)?;
-    reader2.read_to_string(&mut buffer2)?;
-
-    // Parse with reduced memory footprint
-    let v1: Value = serde_json::from_str(&buffer1)
-        .or_else(|_| serde_yml::from_str(&buffer1))
-        .or_else(|_| toml::from_str(&buffer1))
-        .map_err(|e| anyhow!("Failed to parse file 1: {}", e))?;
-
-    let v2: Value = serde_json::from_str(&buffer2)
-        .or_else(|_| serde_yml::from_str(&buffer2))
-        .or_else(|_| toml::from_str(&buffer2))
-        .map_err(|e| anyhow!("Failed to parse file 2: {}", e))?;
-
-    // Clear buffers to free memory
-    drop(buffer1);
-    drop(buffer2);
-
-    // Use optimized diff with memory-conscious approach
-    memory_efficient_diff(
-        &v1,
-        &v2,
-        &mut results,
-        ignore_keys_regex,
-        epsilon,
-        array_id_key,
-        false, // ignore_whitespace - not supported in streaming mode
-        false, // ignore_case - not supported in streaming mode
-    );
-
-    Ok(results)
+trait ValueTypeExt {
+    fn type_name(&self) -> &str;
 }
 
-/// Memory-efficient diff implementation that processes data in chunks
-#[allow(clippy::too_many_arguments)]
-fn memory_efficient_diff(
-    v1: &Value,
-    v2: &Value,
-    results: &mut Vec<DiffResult>,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) {
-    // Process diff without cloning large values when possible
-    if !values_are_equal_with_config(v1, v2, epsilon, ignore_whitespace, ignore_case) {
-        let type_match = matches!(
-            (v1, v2),
-            (Value::Null, Value::Null)
-                | (Value::Bool(_), Value::Bool(_))
-                | (Value::Number(_), Value::Number(_))
-                | (Value::Array(_), Value::Array(_))
-                | (Value::Object(_), Value::Object(_))
-        );
-
-        if !type_match {
-            results.push(DiffResult::TypeChanged(
-                "".to_string(),
-                v1.clone(),
-                v2.clone(),
-            ));
-        } else if v1.is_object() && v2.is_object() {
-            memory_efficient_diff_objects(
-                "",
-                v1.as_object().unwrap(),
-                v2.as_object().unwrap(),
-                results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        } else if v1.is_array() && v2.is_array() {
-            memory_efficient_diff_arrays(
-                "",
-                v1.as_array().unwrap(),
-                v2.as_array().unwrap(),
-                results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        } else {
-            results.push(DiffResult::Modified("".to_string(), v1.clone(), v2.clone()));
-        }
+impl ValueTypeExt for Value {
+    fn type_name(&self) -> &str {
+        value_type_name(self)
     }
 }
-
-/// Memory-efficient object comparison
-#[allow(clippy::too_many_arguments)]
-fn memory_efficient_diff_objects(
-    path: &str,
-    map1: &serde_json::Map<String, Value>,
-    map2: &serde_json::Map<String, Value>,
-    results: &mut Vec<DiffResult>,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) {
-    // Process keys in batches to limit memory usage
-    const BATCH_SIZE: usize = 1000;
-
-    let keys1: Vec<_> = map1.keys().collect();
-    let keys2: Vec<_> = map2.keys().collect();
-
-    // Process in batches
-    for chunk in keys1.chunks(BATCH_SIZE) {
-        for key in chunk {
-            if let Some(regex) = ignore_keys_regex {
-                if regex.is_match(key) {
-                    continue;
-                }
-            }
-
-            let current_path = if path.is_empty() {
-                (*key).clone()
-            } else {
-                format!("{path}.{key}")
-            };
-
-            match (map1.get(*key), map2.get(*key)) {
-                (Some(value1), Some(value2)) => {
-                    if value1.is_object() && value2.is_object() {
-                        memory_efficient_diff_objects(
-                            &current_path,
-                            value1.as_object().unwrap(),
-                            value2.as_object().unwrap(),
-                            results,
-                            ignore_keys_regex,
-                            epsilon,
-                            array_id_key,
-                            ignore_whitespace,
-                            ignore_case,
-                        );
-                    } else if value1.is_array() && value2.is_array() {
-                        memory_efficient_diff_arrays(
-                            &current_path,
-                            value1.as_array().unwrap(),
-                            value2.as_array().unwrap(),
-                            results,
-                            ignore_keys_regex,
-                            epsilon,
-                            array_id_key,
-                            ignore_whitespace,
-                            ignore_case,
-                        );
-                    } else if !values_are_equal_with_config(
-                        value1,
-                        value2,
-                        epsilon,
-                        ignore_whitespace,
-                        ignore_case,
-                    ) {
-                        let type_match = matches!(
-                            (value1, value2),
-                            (Value::Null, Value::Null)
-                                | (Value::Bool(_), Value::Bool(_))
-                                | (Value::Number(_), Value::Number(_))
-                                | (Value::String(_), Value::String(_))
-                                | (Value::Array(_), Value::Array(_))
-                                | (Value::Object(_), Value::Object(_))
-                        );
-
-                        if !type_match {
-                            results.push(DiffResult::TypeChanged(
-                                current_path,
-                                value1.clone(),
-                                value2.clone(),
-                            ));
-                        } else {
-                            results.push(DiffResult::Modified(
-                                current_path,
-                                value1.clone(),
-                                value2.clone(),
-                            ));
-                        }
-                    }
-                }
-                (Some(value1), None) => {
-                    results.push(DiffResult::Removed(current_path, value1.clone()));
-                }
-                (None, Some(_)) => {
-                    // Will be handled in the "added" phase
-                }
-                (None, None) => {
-                    // Should not happen
-                }
-            }
-        }
-    }
-
-    // Process added keys
-    for chunk in keys2.chunks(BATCH_SIZE) {
-        for key in chunk {
-            if !map1.contains_key(*key) {
-                let current_path = if path.is_empty() {
-                    (*key).clone()
-                } else {
-                    format!("{path}.{key}")
-                };
-                if let Some(value2) = map2.get(*key) {
-                    results.push(DiffResult::Added(current_path, value2.clone()));
-                }
-            }
-        }
-    }
-}
-
-/// Memory-efficient array comparison
-#[allow(clippy::too_many_arguments)]
-fn memory_efficient_diff_arrays(
-    path: &str,
-    arr1: &[Value],
-    arr2: &[Value],
-    results: &mut Vec<DiffResult>,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-    ignore_whitespace: bool,
-    ignore_case: bool,
-) {
-    // Use the existing array diff logic but with batching for very large arrays
-    const BATCH_SIZE: usize = 10000;
-
-    if arr1.len() > BATCH_SIZE || arr2.len() > BATCH_SIZE {
-        // Process large arrays in chunks
-        let max_len = arr1.len().max(arr2.len());
-        for chunk_start in (0..max_len).step_by(BATCH_SIZE) {
-            let chunk_end = (chunk_start + BATCH_SIZE).min(max_len);
-            let chunk1 = arr1.get(chunk_start..chunk_end).unwrap_or(&[]);
-            let chunk2 = arr2.get(chunk_start..chunk_end).unwrap_or(&[]);
-
-            // Process this chunk using existing logic
-            diff_arrays(
-                path,
-                chunk1,
-                chunk2,
-                results,
-                ignore_keys_regex,
-                epsilon,
-                array_id_key,
-                ignore_whitespace,
-                ignore_case,
-            );
-        }
-    } else {
-        // Use existing implementation for smaller arrays
-        diff_arrays(
-            path,
-            arr1,
-            arr2,
-            results,
-            ignore_keys_regex,
-            epsilon,
-            array_id_key,
-            ignore_whitespace,
-            ignore_case,
-        );
-    }
-}
-
-// API is already public

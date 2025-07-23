@@ -8,7 +8,7 @@ fn test_version_check() {
     // Version check is handled by CLI, core library test focuses on functionality
     let v1 = json!({"test": "core"});
     let v2 = json!({"test": "core"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert_eq!(diffs.len(), 0);
 }
 
@@ -67,7 +67,7 @@ fn test_terraform_diff() {
 fn test_quiet_baseline_check() {
     let v1 = json!({"version": "1.0"});
     let v2 = json!({"version": "1.1"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert!(!diffs.is_empty()); // Files differ
 }
 
@@ -76,7 +76,7 @@ fn test_quiet_baseline_check() {
 fn test_recursive_brief_diff() {
     let v1 = json!({"config": "old"});
     let v2 = json!({"config": "new"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert_eq!(diffs.len(), 1);
 }
 
@@ -134,7 +134,7 @@ fn test_config_drift_unified_output() {
 fn test_baseline_config_check() {
     let v1 = json!({"setting": "production"});
     let v2 = json!({"setting": "development"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert!(!diffs.is_empty());
 }
 
@@ -158,7 +158,7 @@ fn test_baseline_file_unified() {
 fn test_installation_verification() {
     let v1 = json!({"status": "installed"});
     let v2 = json!({"status": "installed"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert_eq!(diffs.len(), 0);
 }
 
@@ -200,7 +200,7 @@ fn test_ansible_config_diff() {
 fn test_git_alias_diff() {
     let v1 = json!({"git": "version1"});
     let v2 = json!({"git": "version2"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert_eq!(diffs.len(), 1);
 }
 
@@ -220,7 +220,7 @@ fn test_docker_config_diff() {
 fn test_runtime_config_check() {
     let v1 = json!({"memory": "512MB", "cpu": "1"});
     let v2 = json!({"memory": "1GB", "cpu": "2"});
-    let diffs = diff(&v1, &v2, None, None, None);
+    let diffs = diff(&v1, &v2, None).unwrap();
     assert_eq!(diffs.len(), 2);
 }
 

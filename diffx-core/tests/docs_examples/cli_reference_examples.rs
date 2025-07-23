@@ -1,4 +1,4 @@
-use diffx_core::{Algorithm, DiffConfig, DiffEngine};
+use diffx_core::{Algorithm, DiffEngine};
 
 #[test]
 fn cli_reference_example_1() {

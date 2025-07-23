@@ -63,10 +63,8 @@ dev = [
 ]
 
 [tool.maturin]
-# This package includes both Python code and a binary (diffx CLI) in the wheel
-python-source = "src"
-module-name = "diffx_python"
-bindings = "bin"
+# This package includes Python bindings built with PyO3
+bindings = "pyo3"
 # Find Python interpreters automatically
 find-interpreter = true
 # Use manylinux for PyPI compatibility
@@ -85,3 +83,8 @@ python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "maturin>=1.9.1",
+]

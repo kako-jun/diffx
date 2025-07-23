@@ -131,7 +131,7 @@ fn debug_xml_parsing() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\nAre they equal? {}", value1 == value2);
 
-    let diff_results = diff(&value1, &value2, None, None, None);
+    let diff_results = diff(&value1, &value2, None).unwrap();
     println!("\nDiff results: {} differences", diff_results.len());
     for diff in &diff_results {
         println!("  {:?}", diff);

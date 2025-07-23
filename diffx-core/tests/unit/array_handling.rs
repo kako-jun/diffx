@@ -5,7 +5,7 @@ use serde_json::json;
 fn test_diff_array_element_added() {
     let v1 = json!([1, 2]);
     let v2 = json!([1, 2, 3]);
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -17,7 +17,7 @@ fn test_diff_array_element_added() {
 fn test_diff_array_element_removed() {
     let v1 = json!([1, 2, 3]);
     let v2 = json!([1, 2]);
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -29,7 +29,7 @@ fn test_diff_array_element_removed() {
 fn test_diff_array_element_modified() {
     let v1 = json!([1, 2, 3]);
     let v2 = json!([1, 2, 4]);
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -41,7 +41,7 @@ fn test_diff_array_element_modified() {
 fn test_diff_nested_array_element_modified() {
     let v1 = json!({ "a": [1, 2, 3] });
     let v2 = json!({ "a": [1, 2, 4] });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -60,7 +60,7 @@ fn test_diff_root_array_changes() {
         {"id": 3},
         {"id": 4}
     ]);
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 2);
     assert!(differences.contains(&DiffResult::Modified(
         "[1].id".to_string(),
@@ -80,7 +80,11 @@ fn test_diff_array_id_key_modified() {
         {"id": 2, "value": "c"},
         {"id": 1, "value": "a"}
     ]);
-    let differences = diff(&v1, &v2, None, None, Some("id"));
+    let options = DiffOptions {
+        array_id_key: Some("id".to_string()),
+        ..Default::default()
+    };
+    let differences = diff(&v1, &v2, Some(&options)).unwrap();
     assert_eq!(differences.len(), 1);
     assert!(differences.contains(&DiffResult::Modified(
         "[id=2].value".to_string(),
@@ -99,7 +103,11 @@ fn test_diff_array_id_key_added_removed() {
         {"id": 1, "value": "a"},
         {"id": 3, "value": "c"}
     ]);
-    let differences = diff(&v1, &v2, None, None, Some("id"));
+    let options = DiffOptions {
+        array_id_key: Some("id".to_string()),
+        ..Default::default()
+    };
+    let differences = diff(&v1, &v2, Some(&options)).unwrap();
     assert_eq!(differences.len(), 2);
     assert!(differences.contains(&DiffResult::Removed(
         "[id=2]".to_string(),
@@ -121,7 +129,11 @@ fn test_diff_array_id_key_nested_change() {
         {"id": 2, "data": {"name": "C"}},
         {"id": 1, "data": {"name": "A"}}
     ]);
-    let differences = diff(&v1, &v2, None, None, Some("id"));
+    let options = DiffOptions {
+        array_id_key: Some("id".to_string()),
+        ..Default::default()
+    };
+    let differences = diff(&v1, &v2, Some(&options)).unwrap();
     assert_eq!(differences.len(), 1);
     assert!(differences.contains(&DiffResult::Modified(
         "[id=2].data.name".to_string(),
@@ -141,7 +153,11 @@ fn test_diff_array_id_key_no_id_in_element() {
         {"value": "c"}
     ]);
     // Elements without the id_key should be compared by index
-    let differences = diff(&v1, &v2, None, None, Some("id"));
+    let options = DiffOptions {
+        array_id_key: Some("id".to_string()),
+        ..Default::default()
+    };
+    let differences = diff(&v1, &v2, Some(&options)).unwrap();
     assert_eq!(differences.len(), 1);
     assert!(differences.contains(&DiffResult::Modified(
         "[1].value".to_string(),

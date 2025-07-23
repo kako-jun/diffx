@@ -5,7 +5,7 @@ use serde_json::json;
 fn test_diff_no_changes() {
     let v1 = json!({ "a": 1, "b": 2 });
     let v2 = json!({ "a": 1, "b": 2 });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert!(differences.is_empty());
 }
 
@@ -13,7 +13,7 @@ fn test_diff_no_changes() {
 fn test_diff_value_modified() {
     let v1 = json!({ "a": 1, "b": 2 });
     let v2 = json!({ "a": 1, "b": 3 });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -25,7 +25,7 @@ fn test_diff_value_modified() {
 fn test_diff_key_added() {
     let v1 = json!({ "a": 1 });
     let v2 = json!({ "a": 1, "b": 2 });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(differences[0], DiffResult::Added("b".to_string(), json!(2)));
 }
@@ -34,7 +34,7 @@ fn test_diff_key_added() {
 fn test_diff_key_removed() {
     let v1 = json!({ "a": 1, "b": 2 });
     let v2 = json!({ "a": 1 });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -46,7 +46,7 @@ fn test_diff_key_removed() {
 fn test_diff_type_changed() {
     let v1 = json!({ "a": 1 });
     let v2 = json!({ "a": "1" });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -58,7 +58,7 @@ fn test_diff_type_changed() {
 fn test_diff_nested_object_modified() {
     let v1 = json!({ "a": { "b": 1 } });
     let v2 = json!({ "a": { "b": 2 } });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -70,7 +70,7 @@ fn test_diff_nested_object_modified() {
 fn test_diff_root_type_changed() {
     let v1 = json!(1);
     let v2 = json!("1");
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
@@ -90,7 +90,7 @@ fn test_diff_empty_objects_and_arrays() {
         "empty_arr": [],
         "data": "new_value"
     });
-    let differences = diff(&v1, &v2, None, None, None);
+    let differences = diff(&v1, &v2, None).unwrap();
     assert_eq!(differences.len(), 1);
     assert_eq!(
         differences[0],
