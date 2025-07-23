@@ -1,4 +1,4 @@
-use diffx_core::{DiffConfig, DiffEngine};
+use diffx_core::{DiffEngine};
 
 #[test]
 fn getting_started_example_1() {

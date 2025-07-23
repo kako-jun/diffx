@@ -2,9 +2,10 @@
 // Test individual functions and modules in isolation
 
 use diffx_core::{
-    diff, diff_optimized, diff_standard, diff_with_config, estimate_memory_usage, parse_csv,
-    parse_ini, parse_xml, value_type_name, would_exceed_memory_limit, DiffConfig, DiffResult,
-    LightweightDiffResult,
+    diff, estimate_memory_usage, parse_csv,
+    parse_ini, parse_xml, value_type_name, would_exceed_memory_limit, DiffResult,
+    LightweightDiffResult, DiffConfig, DiffOptions, diff_with_config,
+    diff_standard, diff_optimized,
 };
 use regex::Regex;
 use serde_json::Value;
@@ -106,7 +107,7 @@ fn test_diff_identical_values() {
     let value1 = serde_json::json!({"name": "Alice", "age": 30});
     let value2 = serde_json::json!({"name": "Alice", "age": 30});
 
-    let results = diff(&value1, &value2, None, None, None);
+    let results = diff(&value1, &value2, None).unwrap();
     assert!(results.is_empty());
 }
 
@@ -115,7 +116,7 @@ fn test_diff_simple_modification() {
     let value1 = serde_json::json!({"name": "Alice", "age": 30});
     let value2 = serde_json::json!({"name": "Alice", "age": 31});
 
-    let results = diff(&value1, &value2, None, None, None);
+    let results = diff(&value1, &value2, None).unwrap();
     assert_eq!(results.len(), 1);
 
     match &results[0] {
@@ -134,11 +135,13 @@ fn test_diff_with_epsilon() {
     let value2 = serde_json::json!({"value": 1.0002});
 
     // Without epsilon - should detect difference
-    let results_strict = diff(&value1, &value2, None, None, None);
+    let results_strict = diff(&value1, &value2, None).unwrap();
     assert_eq!(results_strict.len(), 1);
 
     // With epsilon - should ignore small difference
-    let results_loose = diff(&value1, &value2, None, Some(0.001), None);
+    let mut options = DiffOptions::default();
+    options.epsilon = Some(0.001);
+    let results_loose = diff(&value1, &value2, Some(&options)).unwrap();
     assert_eq!(results_loose.len(), 0);
 }
 
@@ -277,7 +280,7 @@ fn test_diff_array_modification() {
     let value1 = serde_json::json!([1, 2, 3]);
     let value2 = serde_json::json!([1, 2, 4]);
 
-    let results = diff(&value1, &value2, None, None, None);
+    let results = diff(&value1, &value2, None).unwrap();
     assert_eq!(results.len(), 1);
 
     match &results[0] {
@@ -297,7 +300,7 @@ fn test_diff_with_config_ignore_whitespace() {
 
     let config = DiffConfig {
         ignore_whitespace: true,
-        ..Default::default()
+        ..DiffConfig::default()
     };
 
     let results = diff_with_config(&value1, &value2, &config);
@@ -311,7 +314,7 @@ fn test_diff_with_config_ignore_case() {
 
     let config = DiffConfig {
         ignore_case: true,
-        ..Default::default()
+        ..DiffConfig::default()
     };
 
     let results = diff_with_config(&value1, &value2, &config);

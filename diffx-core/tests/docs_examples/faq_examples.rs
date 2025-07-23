@@ -1,4 +1,4 @@
-use diffx_core::{DiffConfig, DiffEngine};
+use diffx_core::{DiffEngine};
 
 #[test]
 fn faq_example_1() {
