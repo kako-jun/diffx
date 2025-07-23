@@ -9,7 +9,7 @@
 [![Docs.rs Core](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
 [![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
-[![Documentation](https://img.shields.io/badge/📚%20ユーザーガイド-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index.md)
+[![Documentation](https://img.shields.io/badge/📚%20ユーザーガイド-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
 [![API Reference](https://img.shields.io/badge/🔧%20API%20リファレンス-docs.rs-blue)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -200,15 +200,15 @@ pip install diffx-python
 # またはGitHub Releasesから事前ビルド済みバイナリをダウンロード
 ```
 
-詳細な使い方とサンプルは [ドキュメント](docs/index.md) をご確認ください。
+詳細な使い方とサンプルは [ドキュメント](docs/index_ja.md) をご確認ください。
 
 ### クイックドキュメントリンク
 
-- **[はじめに](docs/user-guide/getting-started.md)** - 基本を学ぶ
-- **[インストールガイド](docs/user-guide/installation.md)** - プラットフォーム別セットアップ
-- **[CLIリファレンス](docs/reference/cli-reference.md)** - 完全なコマンドリファレンス
-- **[実用例](docs/user-guide/examples.md)** - 業界別使用例
-- **[統合ガイド](docs/guides/integrations.md)** - CI/CD と自動化
+- **[はじめに](docs/user-guide/getting-started_ja.md)** - 基本を学ぶ
+- **[インストールガイド](docs/user-guide/installation_ja.md)** - プラットフォーム別セットアップ
+- **[CLIリファレンス](docs/reference/cli-reference_ja.md)** - 完全なコマンドリファレンス
+- **[実用例](docs/user-guide/examples_ja.md)** - 業界別使用例
+- **[統合ガイド](docs/guides/integrations_ja.md)** - CI/CD と自動化
 
 ### 基本的な使い方
 

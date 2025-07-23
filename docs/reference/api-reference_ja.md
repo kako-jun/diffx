@@ -632,6 +632,6 @@ mod tests {
 
 ## 関連項目
 
-- [CLIリファレンス](cli-reference.md) コマンドライン使用法について
-- [スタートガイド](../user-guide/getting-started.md) 基本概念について
-- [例](../user-guide/examples.md) 実用的な使用例について
+- [CLIリファレンス](cli-reference_ja.md) コマンドライン使用法について
+- [スタートガイド](../user-guide/getting-started_ja.md) 基本概念について
+- [例](../user-guide/examples_ja.md) 実用的な使用例について

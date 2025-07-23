@@ -42,7 +42,7 @@
 - 小JSON文件 (~200字节): **1.3µs**
 - 大JSON文件 (~25KB): **281µs**
 
-详细分析请参见[详细基准测试](performance_benchmarks.md)。
+详细分析请参见[详细基准测试](performance_benchmarks_zh.md)。
 
 ### 文件大小性能
 

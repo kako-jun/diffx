@@ -9,7 +9,7 @@
 [![Docs.rs Core](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
 [![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
-[![Documentation](https://img.shields.io/badge/📚%20User%20Guide-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index.md)
+[![Documentation](https://img.shields.io/badge/📚%20用户指南-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index_zh.md)
 [![API Reference](https://img.shields.io/badge/🔧%20API%20Reference-docs.rs-blue)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -203,15 +203,15 @@ pip install diffx-python
 # Or download pre-built binaries from GitHub Releases
 ```
 
-For detailed usage and examples, see the [documentation](docs/index.md).
+有关详细用法和示例，请参见[文档](docs/index_zh.md)。
 
 ### Quick Documentation Links
 
-- **[Getting Started](docs/user-guide/getting-started.md)** - Learn the basics
-- **[Installation Guide](docs/user-guide/installation.md)** - Platform-specific setup
-- **[CLI Reference](docs/reference/cli-reference.md)** - Complete command reference
-- **[Real-World Examples](docs/user-guide/examples.md)** - Industry use cases
-- **[Integration Guide](docs/guides/integrations.md)** - CI/CD and automation
+- **[入门指南](docs/user-guide/getting-started_zh.md)** - 学习基础知识
+- **[安装指南](docs/user-guide/installation_zh.md)** - 平台特定设置
+- **[CLI参考](docs/reference/cli-reference_zh.md)** - 完整命令参考
+- **[实际示例](docs/user-guide/examples_zh.md)** - 行业用例
+- **[集成指南](docs/guides/integrations_zh.md)** - CI/CD和自动化
 
 ### Basic Usage
 
