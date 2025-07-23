@@ -3,7 +3,8 @@ resolver = "2"
 members = [
     "diffx-core",
     "diffx-cli",
-    "diffx-python"
+    "diffx-python",
+    "diffx-js"
 ]
 
 [workspace.package]
@@ -53,6 +54,9 @@ assert_cmd = "2.0"
 predicates = "3.1"
 criterion = { version = "0.5", features = ["html_reports"] }
 pyo3 = { version = "0.22", features = ["extension-module"] }
+napi = { version = "2.2", default-features = false, features = ["napi8", "serde-json"] }
+napi-derive = "2.2"
+napi-build = "2.2"
 
 [profile.release]
 lto = true
