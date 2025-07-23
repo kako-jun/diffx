@@ -705,23 +705,31 @@ pub fn parse_ini(content: &str) -> Result<Value> {
 }
 
 /// Transform XML array indices back to traditional dot notation for consistent output
-pub fn transform_xml_paths(diff_results: Vec<DiffResult>, xml_structure_info: Option<&HashMap<String, String>>) -> Vec<DiffResult> {
-    diff_results.into_iter().map(|result| {
-        match result {
+pub fn transform_xml_paths(
+    diff_results: Vec<DiffResult>,
+    xml_structure_info: Option<&HashMap<String, String>>,
+) -> Vec<DiffResult> {
+    diff_results
+        .into_iter()
+        .map(|result| match result {
             DiffResult::Added(path, value) => {
                 DiffResult::Added(normalize_xml_path(path, xml_structure_info), value)
-            },
+            }
             DiffResult::Removed(path, value) => {
                 DiffResult::Removed(normalize_xml_path(path, xml_structure_info), value)
-            },
-            DiffResult::Modified(path, old_value, new_value) => {
-                DiffResult::Modified(normalize_xml_path(path, xml_structure_info), old_value, new_value)
-            },
-            DiffResult::TypeChanged(path, old_value, new_value) => {
-                DiffResult::TypeChanged(normalize_xml_path(path, xml_structure_info), old_value, new_value)
             }
-        }
-    }).collect()
+            DiffResult::Modified(path, old_value, new_value) => DiffResult::Modified(
+                normalize_xml_path(path, xml_structure_info),
+                old_value,
+                new_value,
+            ),
+            DiffResult::TypeChanged(path, old_value, new_value) => DiffResult::TypeChanged(
+                normalize_xml_path(path, xml_structure_info),
+                old_value,
+                new_value,
+            ),
+        })
+        .collect()
 }
 
 /// Extract XML element context information for path transformation
@@ -731,7 +739,11 @@ pub fn extract_xml_structure_info(value: &Value) -> HashMap<String, String> {
     structure_info
 }
 
-fn extract_xml_structure_recursive(value: &Value, current_path: &str, structure_info: &mut HashMap<String, String>) {
+fn extract_xml_structure_recursive(
+    value: &Value,
+    current_path: &str,
+    structure_info: &mut HashMap<String, String>,
+) {
     match value {
         Value::Object(obj) => {
             for (key, val) in obj {
@@ -740,7 +752,7 @@ fn extract_xml_structure_recursive(value: &Value, current_path: &str, structure_
                 } else {
                     format!("{}.{}", current_path, key)
                 };
-                
+
                 if let Value::Array(arr) = val {
                     // Record that this path contains an array of elements named 'key'
                     structure_info.insert(new_path.clone(), key.clone());
@@ -752,21 +764,21 @@ fn extract_xml_structure_recursive(value: &Value, current_path: &str, structure_
                     extract_xml_structure_recursive(val, &new_path, structure_info);
                 }
             }
-        },
+        }
         Value::Array(arr) => {
             for item in arr {
                 extract_xml_structure_recursive(item, current_path, structure_info);
             }
-        },
+        }
         _ => {}
     }
 }
 
 /// Normalize XML paths from array format [N] to traditional element format
-fn normalize_xml_path(path: String, structure_info: Option<&HashMap<String, String>>) -> String {
+fn normalize_xml_path(path: String, _structure_info: Option<&HashMap<String, String>>) -> String {
     // Transform [N].property to element.property using actual XML structure information
     let array_index_regex = regex::Regex::new(r"\[(\d+)\]").unwrap();
-    
+
     if array_index_regex.is_match(&path) {
         // For paths with array indices, we need to replace [N] appropriately
         let normalized = array_index_regex.replace_all(&path, |_: &regex::Captures| {
@@ -774,12 +786,12 @@ fn normalize_xml_path(path: String, structure_info: Option<&HashMap<String, Stri
             // This works because the path already contains the correct element name
             "".to_string()
         });
-        
+
         let result = normalized.to_string();
-        
+
         // Clean up any double dots that might result from removal
         let cleaned = result.replace("..", ".");
-        
+
         // Remove leading or trailing dots
         cleaned.trim_matches('.').to_string()
     } else {
@@ -793,21 +805,21 @@ pub fn parse_xml(content: &str) -> Result<Value> {
     use quick_xml::events::Event;
     use quick_xml::Reader;
     use std::collections::HashMap;
-    
+
     let mut reader = Reader::from_str(content);
     reader.trim_text(true);
-    
+
     let mut buf = Vec::new();
     let mut stack: Vec<(String, HashMap<String, Value>)> = Vec::new();
     let mut root: Option<Value> = None;
     let mut current_text = String::new();
-    
+
     loop {
         match reader.read_event_into(&mut buf)? {
             Event::Start(ref e) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 let mut attributes = HashMap::new();
-                
+
                 // Parse attributes
                 for attr in e.attributes() {
                     let attr = attr?;
@@ -815,10 +827,10 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                     let value = String::from_utf8_lossy(&attr.value);
                     attributes.insert(key, Value::String(value.to_string()));
                 }
-                
+
                 stack.push((name, attributes));
                 current_text.clear();
-            },
+            }
             Event::End(_) => {
                 if let Some((name, mut attributes)) = stack.pop() {
                     let element_value = if !current_text.trim().is_empty() {
@@ -828,7 +840,10 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                             Value::String(current_text.trim().to_string())
                         } else {
                             // Text + attributes -> create object with both
-                            attributes.insert("text".to_string(), Value::String(current_text.trim().to_string()));
+                            attributes.insert(
+                                "text".to_string(),
+                                Value::String(current_text.trim().to_string()),
+                            );
                             Value::Object(attributes.into_iter().collect())
                         }
                     } else if attributes.is_empty() {
@@ -846,14 +861,14 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                     } else {
                         Value::Object(attributes.into_iter().collect())
                     };
-                    
+
                     if let Some((_parent_name, parent_attrs)) = stack.last_mut() {
                         // Handle multiple elements with the same name as arrays
                         if let Some(existing) = parent_attrs.get_mut(&name) {
                             match existing {
                                 Value::Array(arr) => {
                                     arr.push(element_value);
-                                },
+                                }
                                 _ => {
                                     let old_value = existing.clone();
                                     *existing = Value::Array(vec![old_value, element_value]);
@@ -868,12 +883,12 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                     }
                 }
                 current_text.clear();
-            },
+            }
             Event::Empty(ref e) => {
                 // Handle self-closing elements like <empty/> or <self-closing attr="val"/>
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 let mut attributes = HashMap::new();
-                
+
                 // Parse attributes
                 for attr in e.attributes() {
                     let attr = attr?;
@@ -881,20 +896,20 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                     let value = String::from_utf8_lossy(&attr.value);
                     attributes.insert(key, Value::String(value.to_string()));
                 }
-                
+
                 let element_value = if attributes.is_empty() {
                     Value::Null
                 } else {
                     Value::Object(attributes.into_iter().collect())
                 };
-                
+
                 if let Some((_parent_name, parent_attrs)) = stack.last_mut() {
                     // Handle multiple elements with the same name as arrays
                     if let Some(existing) = parent_attrs.get_mut(&name) {
                         match existing {
                             Value::Array(arr) => {
                                 arr.push(element_value);
-                            },
+                            }
                             _ => {
                                 let old_value = existing.clone();
                                 *existing = Value::Array(vec![old_value, element_value]);
@@ -907,19 +922,19 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                     // Root element
                     root = Some(element_value);
                 }
-            },
+            }
             Event::Text(e) => {
                 current_text.push_str(&e.unescape()?);
-            },
+            }
             Event::CData(e) => {
                 current_text.push_str(&String::from_utf8_lossy(&e));
-            },
+            }
             Event::Eof => break,
             _ => (),
         }
         buf.clear();
     }
-    
+
     // Always return the full structure to preserve element names for path generation
     root.ok_or_else(|| anyhow!("Empty XML document"))
 }

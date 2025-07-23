@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
 use predicates::prelude::predicate;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command

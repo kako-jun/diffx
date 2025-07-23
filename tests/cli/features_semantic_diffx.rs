@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
-use std::process::Command;
 use std::fs;
+use std::process::Command;
 use tempfile::tempdir;
 
 // Helper function to get the diffx command
@@ -22,13 +22,13 @@ fn test_diffx_format_output() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // diffx format should include semantic indicators
     assert!(
-        stdout.contains("semantic") 
-        || stdout.contains("change_type")
-        || stdout.contains("diffx")
-        || !stdout.trim().is_empty()
+        stdout.contains("semantic")
+            || stdout.contains("change_type")
+            || stdout.contains("diffx")
+            || !stdout.trim().is_empty()
     );
 
     Ok(())
@@ -41,7 +41,7 @@ fn test_semantic_equivalence() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("semantic1.json");
     let file2 = temp_dir.path().join("semantic2.json");
-    
+
     // Create semantically equivalent JSON with different formatting
     let json1 = r#"{"users":[{"id":1,"name":"Alice"},{"id":2,"name":"Bob"}],"version":"1.0"}"#;
     let json2 = r#"{
@@ -57,7 +57,7 @@ fn test_semantic_equivalence() -> Result<(), Box<dyn std::error::Error>> {
     }
   ]
 }"#;
-    
+
     fs::write(&file1, json1)?;
     fs::write(&file2, json2)?;
 
@@ -68,12 +68,12 @@ fn test_semantic_equivalence() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(0)); // No differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should detect no semantic differences
     assert!(
-        stdout.contains("no differences") 
-        || stdout.contains("identical")
-        || stdout.trim().is_empty()
+        stdout.contains("no differences")
+            || stdout.contains("identical")
+            || stdout.trim().is_empty()
     );
 
     Ok(())
@@ -86,7 +86,7 @@ fn test_deep_semantic_changes() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("deep1.yaml");
     let file2 = temp_dir.path().join("deep2.yaml");
-    
+
     // Create YAML files with semantic changes but same structure
     let yaml1 = r#"
 database:
@@ -99,7 +99,7 @@ features:
   authentication: enabled
   logging: debug
 "#;
-    
+
     let yaml2 = r#"
 # Comments added (should be ignored)
 database:
@@ -112,7 +112,7 @@ features:
   logging: debug
   authentication: enabled  # Different order but same content
 "#;
-    
+
     fs::write(&file1, yaml1)?;
     fs::write(&file2, yaml2)?;
 
@@ -123,7 +123,7 @@ features:
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should detect the password change but ignore order and comments
     assert!(stdout.contains("password") || stdout.contains("newsecret456"));
     // Should not be confused by order changes
@@ -139,7 +139,7 @@ fn test_format_agnostic_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let json_file = temp_dir.path().join("config.json");
     let yaml_file = temp_dir.path().join("config.yaml");
-    
+
     // Same semantic content in different formats
     let json_content = r#"{
   "server": {
@@ -151,7 +151,7 @@ fn test_format_agnostic_comparison() -> Result<(), Box<dyn std::error::Error>> {
     "url": "postgres://localhost:5432/db"
   }
 }"#;
-    
+
     let yaml_content = r#"
 server:
   host: example.com
@@ -160,7 +160,7 @@ server:
 database:
   url: postgres://localhost:5432/db
 "#;
-    
+
     fs::write(&json_file, json_content)?;
     fs::write(&yaml_file, yaml_content)?;
 
@@ -172,11 +172,9 @@ database:
     assert!(output.status.success()); // Exit code 0
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should show no differences for semantically identical content
-    assert!(
-        stdout.trim().is_empty() // No output when no differences
-    );
+    assert!(stdout.trim().is_empty()); // No output when no differences
 
     Ok(())
 }
@@ -188,7 +186,7 @@ fn test_complex_nested_semantic_comparison() -> Result<(), Box<dyn std::error::E
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("complex1.json");
     let file2 = temp_dir.path().join("complex2.json");
-    
+
     // Complex nested structures with subtle semantic differences
     let json1 = r#"{
   "microservices": {
@@ -204,7 +202,7 @@ fn test_complex_nested_semantic_comparison() -> Result<(), Box<dyn std::error::E
     }
   }
 }"#;
-    
+
     let json2 = r#"{
   "microservices": {
     "auth": {
@@ -219,7 +217,7 @@ fn test_complex_nested_semantic_comparison() -> Result<(), Box<dyn std::error::E
     }
   }
 }"#;
-    
+
     fs::write(&file1, json1)?;
     fs::write(&file2, json2)?;
 
@@ -230,7 +228,7 @@ fn test_complex_nested_semantic_comparison() -> Result<(), Box<dyn std::error::E
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should detect the rate_limit change (50 -> 60) but ignore order changes
     assert!(stdout.contains("rate_limit") && (stdout.contains("50") || stdout.contains("60")));
 
@@ -239,12 +237,12 @@ fn test_complex_nested_semantic_comparison() -> Result<(), Box<dyn std::error::E
 
 /// Test array semantic tracking with ID keys
 /// Verifies advanced array element tracking using ID-based comparison
-#[test] 
+#[test]
 fn test_array_semantic_tracking() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("array1.json");
     let file2 = temp_dir.path().join("array2.json");
-    
+
     // Arrays with ID-based tracking
     let json1 = r#"{
   "users": [
@@ -253,7 +251,7 @@ fn test_array_semantic_tracking() -> Result<(), Box<dyn std::error::Error>> {
     {"id": "u3", "name": "Charlie", "role": "user", "active": false}
   ]
 }"#;
-    
+
     let json2 = r#"{
   "users": [
     {"id": "u3", "name": "Charlie", "role": "moderator", "active": true},
@@ -261,7 +259,7 @@ fn test_array_semantic_tracking() -> Result<(), Box<dyn std::error::Error>> {
     {"id": "u4", "name": "David", "role": "user", "active": true}
   ]
 }"#;
-    
+
     fs::write(&file1, json1)?;
     fs::write(&file2, json2)?;
 
@@ -277,7 +275,7 @@ fn test_array_semantic_tracking() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should track: u2 removed, u3 changed role/status, u4 added
     assert!(
         stdout.contains("u2") ||  // removed user
@@ -296,7 +294,7 @@ fn test_semantic_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("path1.json");
     let file2 = temp_dir.path().join("path2.json");
-    
+
     // Complex structure with changes in multiple paths
     let json1 = r#"{
   "config": {
@@ -309,7 +307,7 @@ fn test_semantic_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
     "monitoring": {"enabled": false, "endpoint": "https://monitor.example.com"}
   }
 }"#;
-    
+
     let json2 = r#"{
   "config": {
     "database": {"host": "db2.example.com", "port": 5432},
@@ -321,7 +319,7 @@ fn test_semantic_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
     "monitoring": {"enabled": true, "endpoint": "https://monitor.example.com"}
   }
 }"#;
-    
+
     fs::write(&file1, json1)?;
     fs::write(&file2, json2)?;
 
@@ -338,11 +336,13 @@ fn test_semantic_path_filtering() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should only show auth provider change (oauth2 -> saml)
     assert!(stdout.contains("provider") && (stdout.contains("oauth2") || stdout.contains("saml")));
     // Should NOT show database, cache, logging, or monitoring changes
-    assert!(!stdout.contains("database") && !stdout.contains("cache") && !stdout.contains("logging"));
+    assert!(
+        !stdout.contains("database") && !stdout.contains("cache") && !stdout.contains("logging")
+    );
 
     Ok(())
 }
@@ -354,7 +354,7 @@ fn test_semantic_regex_filtering() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("regex1.json");
     let file2 = temp_dir.path().join("regex2.json");
-    
+
     // Structure with timestamp and metadata that should be filtered out
     let json1 = r#"{
   "data": {
@@ -372,7 +372,7 @@ fn test_semantic_regex_filtering() -> Result<(), Box<dyn std::error::Error>> {
     "debug_timestamp": "2024-01-01T10:00:00Z"
   }
 }"#;
-    
+
     let json2 = r#"{
   "data": {
     "user_id": 123,
@@ -389,7 +389,7 @@ fn test_semantic_regex_filtering() -> Result<(), Box<dyn std::error::Error>> {
     "debug_timestamp": "2024-01-02T15:30:00Z"
   }
 }"#;
-    
+
     fs::write(&file1, json1)?;
     fs::write(&file2, json2)?;
 
@@ -406,13 +406,15 @@ fn test_semantic_regex_filtering() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should show meaningful changes (username, email, setting1)
-    assert!(
-        stdout.contains("username") || stdout.contains("email") || stdout.contains("setting1")
-    );
+    assert!(stdout.contains("username") || stdout.contains("email") || stdout.contains("setting1"));
     // Should NOT show filtered fields
-    assert!(!stdout.contains("timestamp") && !stdout.contains("_internal") && !stdout.contains("_metadata"));
+    assert!(
+        !stdout.contains("timestamp")
+            && !stdout.contains("_internal")
+            && !stdout.contains("_metadata")
+    );
 
     Ok(())
 }
@@ -424,7 +426,7 @@ fn test_semantic_type_coercion() -> Result<(), Box<dyn std::error::Error>> {
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("type1.json");
     let file2 = temp_dir.path().join("type2.json");
-    
+
     // Same semantic values with different JSON types
     let json1 = r#"{
   "config": {
@@ -434,7 +436,7 @@ fn test_semantic_type_coercion() -> Result<(), Box<dyn std::error::Error>> {
     "retries": "3"
   }
 }"#;
-    
+
     let json2 = r#"{
   "config": {
     "port": "8080",
@@ -443,7 +445,7 @@ fn test_semantic_type_coercion() -> Result<(), Box<dyn std::error::Error>> {
     "retries": 3
   }
 }"#;
-    
+
     fs::write(&file1, json1)?;
     fs::write(&file2, json2)?;
 
@@ -454,11 +456,11 @@ fn test_semantic_type_coercion() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should detect type differences
     assert!(
         stdout.contains("! config.enabled: true (Boolean) -> \"true\" (String)")
-        || stdout.contains("! config.enabled:")
+            || stdout.contains("! config.enabled:")
     );
 
     Ok(())
@@ -471,7 +473,7 @@ fn test_comprehensive_semantic_integration() -> Result<(), Box<dyn std::error::E
     let temp_dir = tempdir()?;
     let file1 = temp_dir.path().join("comprehensive1.toml");
     let file2 = temp_dir.path().join("comprehensive2.toml");
-    
+
     // Complex TOML with multiple semantic features
     let toml1 = r#"
 [server]
@@ -496,7 +498,7 @@ url = "postgres://localhost:5432/db"
 connection_pool = { min = 5, max = 20 }
 timeout_seconds = 30.0
 "#;
-    
+
     let toml2 = r#"
 [database]
 timeout_seconds = 30
@@ -520,7 +522,7 @@ name = "Bob"
 metadata = { created = "2024-01-02", source = "import" }  # timestamp change  
 id = 2
 "#;
-    
+
     fs::write(&file1, toml1)?;
     fs::write(&file2, toml2)?;
 
@@ -538,7 +540,7 @@ id = 2
     assert!(output.status.code() == Some(1)); // Differences found
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should detect Bob's role change (user -> user,moderator)
     assert!(stdout.contains("moderator") || stdout.contains("roles"));
     // Should not contain created field changes due to ignore-keys-regex

@@ -2,8 +2,8 @@ use anyhow::{bail, Context, Result};
 use clap::{Parser, ValueEnum};
 use colored::*;
 use diffx_core::{
-    diff, diff_with_config, parse_csv, parse_ini, parse_xml, value_type_name, DiffConfig,
-    DiffResult, transform_xml_paths, extract_xml_structure_info,
+    diff, diff_with_config, extract_xml_structure_info, parse_csv, parse_ini, parse_xml,
+    transform_xml_paths, value_type_name, DiffConfig, DiffResult,
 };
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -18,29 +18,53 @@ use walkdir::WalkDir;
 /// Color helper functions to support --no-color option
 mod color_utils {
     use colored::*;
-    
+
     pub fn blue(text: &str, no_color: bool) -> ColoredString {
-        if no_color { text.normal() } else { text.blue() }
+        if no_color {
+            text.normal()
+        } else {
+            text.blue()
+        }
     }
-    
+
     pub fn yellow(text: &str, no_color: bool) -> ColoredString {
-        if no_color { text.normal() } else { text.yellow() }
+        if no_color {
+            text.normal()
+        } else {
+            text.yellow()
+        }
     }
-    
+
     pub fn cyan(text: &str, no_color: bool) -> ColoredString {
-        if no_color { text.normal() } else { text.cyan() }
+        if no_color {
+            text.normal()
+        } else {
+            text.cyan()
+        }
     }
-    
+
     pub fn magenta(text: &str, no_color: bool) -> ColoredString {
-        if no_color { text.normal() } else { text.magenta() }
+        if no_color {
+            text.normal()
+        } else {
+            text.magenta()
+        }
     }
-    
+
     pub fn green(text: &str, no_color: bool) -> ColoredString {
-        if no_color { text.normal() } else { text.green() }
+        if no_color {
+            text.normal()
+        } else {
+            text.green()
+        }
     }
-    
+
     pub fn red(text: &str, no_color: bool) -> ColoredString {
-        if no_color { text.normal() } else { text.red() }
+        if no_color {
+            text.normal()
+        } else {
+            text.red()
+        }
     }
 }
 
@@ -159,20 +183,21 @@ fn auto_detect_format(content: &str) -> Option<Format> {
     if let Ok(_) = serde_json::from_str::<serde_json::Value>(content) {
         return Some(Format::Json);
     }
-    
+
     // Try YAML (more permissive, can parse simple JSON)
     if let Ok(_) = serde_yml::from_str::<serde_json::Value>(content) {
         // Check if it looks like YAML (contains newlines and colons without braces)
-        if content.contains('\n') && content.contains(':') && !content.trim_start().starts_with('{') {
+        if content.contains('\n') && content.contains(':') && !content.trim_start().starts_with('{')
+        {
             return Some(Format::Yaml);
         }
     }
-    
+
     // Try TOML
     if let Ok(_) = toml::from_str::<serde_json::Value>(content) {
         return Some(Format::Toml);
     }
-    
+
     None
 }
 
@@ -220,7 +245,7 @@ fn clean_toml_internal_fields(value: &mut Value) {
                     return;
                 }
             }
-            
+
             // Recursively clean all values in the object
             for (_, v) in map.iter_mut() {
                 clean_toml_internal_fields(v);
@@ -244,7 +269,7 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
             let mut value: Value = toml::from_str(content).context("Failed to parse TOML")?;
             clean_toml_internal_fields(&mut value);
             Ok(value)
-        },
+        }
         Format::Ini => parse_ini(content).context("Failed to parse INI"),
         Format::Xml => parse_xml(content).context("Failed to parse XML"),
         Format::Csv => parse_csv(content).context("Failed to parse CSV"),
@@ -259,17 +284,26 @@ fn parse_content_with_fallback(content: &str, preferred_format: Option<Format>) 
             return Ok(value);
         }
     }
-    
+
     // Auto-detect format as fallback
     if let Some(detected_format) = auto_detect_format(content) {
-        parse_content(content, detected_format)
-            .with_context(|| format!("Failed to parse content as auto-detected format: {:?}", detected_format))
+        parse_content(content, detected_format).with_context(|| {
+            format!(
+                "Failed to parse content as auto-detected format: {:?}",
+                detected_format
+            )
+        })
     } else {
         bail!("Could not auto-detect format from content. Please specify --format.")
     }
 }
 
-fn print_cli_output_basic(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value, no_color: bool) {
+fn print_cli_output_basic(
+    mut differences: Vec<DiffResult>,
+    _v1: &Value,
+    _v2: &Value,
+    no_color: bool,
+) {
     if differences.is_empty() {
         // Follow diff convention: output nothing when no differences
         return;
@@ -294,13 +328,20 @@ fn print_cli_output_basic(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &V
 
         let diff_str = match diff {
             DiffResult::Added(k, value) => color_utils::blue(&format!("+ {k}: {value}"), no_color),
-            DiffResult::Removed(k, value) => color_utils::yellow(&format!("- {k}: {value}"), no_color),
-            DiffResult::Modified(k, v1, v2) => color_utils::cyan(&format!("~ {k}: {v1} -> {v2}"), no_color),
-            DiffResult::TypeChanged(k, v1, v2) => color_utils::magenta(&format!(
-                "! {k}: {v1} ({}) -> {v2} ({})",
-                value_type_name(v1),
-                value_type_name(v2)
-            ), no_color),
+            DiffResult::Removed(k, value) => {
+                color_utils::yellow(&format!("- {k}: {value}"), no_color)
+            }
+            DiffResult::Modified(k, v1, v2) => {
+                color_utils::cyan(&format!("~ {k}: {v1} -> {v2}"), no_color)
+            }
+            DiffResult::TypeChanged(k, v1, v2) => color_utils::magenta(
+                &format!(
+                    "! {k}: {v1} ({}) -> {v2} ({})",
+                    value_type_name(v1),
+                    value_type_name(v2)
+                ),
+                no_color,
+            ),
         };
 
         println!("{indent}{diff_str}");
@@ -331,14 +372,23 @@ fn print_cli_output(mut differences: Vec<DiffResult>, _v1: &Value, _v2: &Value, 
         let indent = "  ".repeat(depth);
 
         let diff_str = match diff {
-            DiffResult::Added(k, value) => color_utils::blue(&format!("+ {k}: {value}"), _args.no_color),
-            DiffResult::Removed(k, value) => color_utils::yellow(&format!("- {k}: {value}"), _args.no_color),
-            DiffResult::Modified(k, v1, v2) => color_utils::cyan(&format!("~ {k}: {v1} -> {v2}"), _args.no_color),
-            DiffResult::TypeChanged(k, v1, v2) => color_utils::magenta(&format!(
-                "! {k}: {v1} ({}) -> {v2} ({})",
-                value_type_name(v1),
-                value_type_name(v2)
-            ), _args.no_color),
+            DiffResult::Added(k, value) => {
+                color_utils::blue(&format!("+ {k}: {value}"), _args.no_color)
+            }
+            DiffResult::Removed(k, value) => {
+                color_utils::yellow(&format!("- {k}: {value}"), _args.no_color)
+            }
+            DiffResult::Modified(k, v1, v2) => {
+                color_utils::cyan(&format!("~ {k}: {v1} -> {v2}"), _args.no_color)
+            }
+            DiffResult::TypeChanged(k, v1, v2) => color_utils::magenta(
+                &format!(
+                    "! {k}: {v1} ({}) -> {v2} ({})",
+                    value_type_name(v1),
+                    value_type_name(v2)
+                ),
+                _args.no_color,
+            ),
         };
 
         println!("{indent}{diff_str}");
@@ -587,7 +637,7 @@ fn run() -> Result<()> {
     } else {
         infer_format_from_path(&args.input1)
     };
-    
+
     let input_format2 = if let Some(fmt) = args.format {
         Some(fmt)
     } else {
@@ -603,8 +653,14 @@ fn run() -> Result<()> {
 
     if args.verbose {
         eprintln!("Parse time: {parse_time:?}");
-        eprintln!("Input 1 format: {:?}", input_format1.unwrap_or(Format::Json));
-        eprintln!("Input 2 format: {:?}", input_format2.unwrap_or(Format::Json));
+        eprintln!(
+            "Input 1 format: {:?}",
+            input_format1.unwrap_or(Format::Json)
+        );
+        eprintln!(
+            "Input 2 format: {:?}",
+            input_format2.unwrap_or(Format::Json)
+        );
     }
 
     let diff_start = Instant::now();
@@ -643,17 +699,17 @@ fn run() -> Result<()> {
         } else {
             None
         };
-        
+
         // Use the most appropriate structure info (prefer the first one if both are XML)
         let xml_structure_info = xml_structure1.as_ref().or(xml_structure2.as_ref());
-        
+
         if args.verbose {
             eprintln!("Applying XML path transformation for consistent output");
             if let Some(info) = xml_structure_info {
                 eprintln!("  Structure mappings: {:?}", info);
             }
         }
-        
+
         differences = transform_xml_paths(differences, xml_structure_info);
     }
 
@@ -860,7 +916,7 @@ fn compare_directories(
                 } else {
                     infer_format_from_path(path1)
                 };
-                
+
                 let input_format2 = if let Some(fmt) = format_option {
                     Some(fmt)
                 } else {

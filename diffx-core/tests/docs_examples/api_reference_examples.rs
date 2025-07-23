@@ -1,9 +1,10 @@
-use diffx_core::{DiffEngine, DiffResult, ParseConfig};
+use diffx_core::{diff, DiffResult, DiffConfig};
 
 #[test]
 fn api_reference_example_1() {
-    let engine = DiffEngine::new();
-    let _result = engine.diff("content1", "content2");
+    let v1 = serde_json::json!({"key": "content1"});
+    let v2 = serde_json::json!({"key": "content2"});
+    let _result = diff(&v1, &v2);
 }
 
 #[test]
@@ -101,24 +102,26 @@ fn api_reference_example_16() {
 
 #[test]
 fn api_reference_example_17() {
-    let diff_result = DiffResult::Added { value: "new_value".to_string() };
+    let diff_result = DiffResult::Added {
+        value: "new_value".to_string(),
+    };
     assert!(matches!(diff_result, DiffResult::Added { .. }));
 }
 
 #[test]
 fn api_reference_example_18() {
-    let diff_result = DiffResult::Modified { 
-        old_value: "old".to_string(), 
-        new_value: "new".to_string() 
+    let diff_result = DiffResult::Modified {
+        old_value: "old".to_string(),
+        new_value: "new".to_string(),
     };
     assert!(matches!(diff_result, DiffResult::Modified { .. }));
 }
 
 #[test]
 fn api_reference_example_19() {
-    let diff_result = DiffResult::TypeChanged { 
-        old_type: "String".to_string(), 
-        new_type: "Number".to_string() 
+    let diff_result = DiffResult::TypeChanged {
+        old_type: "String".to_string(),
+        new_type: "Number".to_string(),
     };
     assert!(matches!(diff_result, DiffResult::TypeChanged { .. }));
 }

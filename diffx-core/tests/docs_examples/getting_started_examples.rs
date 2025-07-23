@@ -1,4 +1,4 @@
-use diffx_core::{DiffEngine, DiffConfig};
+use diffx_core::{DiffConfig, DiffEngine};
 
 #[test]
 fn getting_started_example_1() {
@@ -160,7 +160,8 @@ fn getting_started_example_23() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.epsilon = Some(0.01);
-    let _result = engine.diff_with_config("measurements_content", "measurements_new_content", &config);
+    let _result =
+        engine.diff_with_config("measurements_content", "measurements_new_content", &config);
 }
 
 #[test]
@@ -220,7 +221,10 @@ fn getting_started_example_30() {
 #[test]
 fn getting_started_example_31() {
     let engine = DiffEngine::new();
-    let _result = engine.diff("application_properties_content", "application_prod_properties_content");
+    let _result = engine.diff(
+        "application_properties_content",
+        "application_prod_properties_content",
+    );
 }
 
 #[test]
@@ -236,7 +240,8 @@ fn getting_started_example_33() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.output_format = "json".to_string();
-    let _result = engine.diff_with_config("expected_output_content", "actual_output_content", &config);
+    let _result =
+        engine.diff_with_config("expected_output_content", "actual_output_content", &config);
 }
 
 #[test]
@@ -266,7 +271,10 @@ fn getting_started_example_36() {
 #[test]
 fn getting_started_example_37() {
     let engine = DiffEngine::new();
-    let _result = engine.diff("terraform_tfstate_content", "terraform_tfstate_backup_content");
+    let _result = engine.diff(
+        "terraform_tfstate_content",
+        "terraform_tfstate_backup_content",
+    );
 }
 
 #[test]
@@ -282,7 +290,11 @@ fn getting_started_example_39() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.epsilon = Some(0.05);
-    let _result = engine.diff_with_config("benchmark_baseline_content", "benchmark_current_content", &config);
+    let _result = engine.diff_with_config(
+        "benchmark_baseline_content",
+        "benchmark_current_content",
+        &config,
+    );
 }
 
 #[test]
@@ -299,7 +311,11 @@ fn getting_started_example_41() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.ignore_keys_regex = Some("^(timestamp|requestId)".to_string());
-    let _result = engine.diff_with_config("api_response_expected_content", "api_response_actual_content", &config);
+    let _result = engine.diff_with_config(
+        "api_response_expected_content",
+        "api_response_actual_content",
+        &config,
+    );
 }
 
 #[test]
@@ -307,7 +323,11 @@ fn getting_started_example_42() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.path_filter = Some("spec.template.spec.containers".to_string());
-    let _result = engine.diff_with_config("k8s_deployment_content", "k8s_deployment_new_content", &config);
+    let _result = engine.diff_with_config(
+        "k8s_deployment_content",
+        "k8s_deployment_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -315,7 +335,11 @@ fn getting_started_example_43() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.array_id_key = Some("alert".to_string());
-    let _result = engine.diff_with_config("prometheus_rules_content", "prometheus_rules_new_content", &config);
+    let _result = engine.diff_with_config(
+        "prometheus_rules_content",
+        "prometheus_rules_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -323,7 +347,11 @@ fn getting_started_example_44() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.path_filter = Some("rules".to_string());
-    let _result = engine.diff_with_config("eslint_config_content", "eslint_config_new_content", &config);
+    let _result = engine.diff_with_config(
+        "eslint_config_content",
+        "eslint_config_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -331,7 +359,11 @@ fn getting_started_example_45() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.epsilon = Some(0.0001);
-    let _result = engine.diff_with_config("ml_model_params_v1_content", "ml_model_params_v2_content", &config);
+    let _result = engine.diff_with_config(
+        "ml_model_params_v1_content",
+        "ml_model_params_v2_content",
+        &config,
+    );
 }
 
 #[test]
@@ -349,7 +381,11 @@ fn getting_started_example_47() {
     let mut config = DiffConfig::default();
     config.path_filter = Some("data.__schema.types".to_string());
     config.array_id_key = Some("name".to_string());
-    let _result = engine.diff_with_config("graphql_schema_content", "graphql_schema_new_content", &config);
+    let _result = engine.diff_with_config(
+        "graphql_schema_content",
+        "graphql_schema_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -365,7 +401,11 @@ fn getting_started_example_49() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.format = "ini".to_string();
-    let _result = engine.diff_with_config("ansible_inventory_content", "ansible_inventory_new_content", &config);
+    let _result = engine.diff_with_config(
+        "ansible_inventory_content",
+        "ansible_inventory_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -373,7 +413,8 @@ fn getting_started_example_50() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.ignore_keys = vec!["image.tag".to_string(), "replicas".to_string()];
-    let _result = engine.diff_with_config("helm_values_content", "helm_values_prod_content", &config);
+    let _result =
+        engine.diff_with_config("helm_values_content", "helm_values_prod_content", &config);
 }
 
 #[test]
@@ -382,7 +423,11 @@ fn getting_started_example_51() {
     let mut config = DiffConfig::default();
     config.path_filter = Some("rules".to_string());
     config.array_id_key = Some("ruleId".to_string());
-    let _result = engine.diff_with_config("security_policy_content", "security_policy_new_content", &config);
+    let _result = engine.diff_with_config(
+        "security_policy_content",
+        "security_policy_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -391,7 +436,8 @@ fn getting_started_example_52() {
     let mut config = DiffConfig::default();
     config.format = "xml".to_string();
     config.path_filter = Some("testsuites.testsuite".to_string());
-    let _result = engine.diff_with_config("test_results_content", "test_results_new_content", &config);
+    let _result =
+        engine.diff_with_config("test_results_content", "test_results_new_content", &config);
 }
 
 #[test]
@@ -399,7 +445,11 @@ fn getting_started_example_53() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.format = "toml".to_string();
-    let _result = engine.diff_with_config("monitoring_config_content", "monitoring_config_new_content", &config);
+    let _result = engine.diff_with_config(
+        "monitoring_config_content",
+        "monitoring_config_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -408,7 +458,11 @@ fn getting_started_example_54() {
     let mut config = DiffConfig::default();
     config.path_filter = Some("flags".to_string());
     config.show_unchanged = true;
-    let _result = engine.diff_with_config("feature_flags_content", "feature_flags_new_content", &config);
+    let _result = engine.diff_with_config(
+        "feature_flags_content",
+        "feature_flags_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -417,7 +471,11 @@ fn getting_started_example_55() {
     let mut config = DiffConfig::default();
     config.epsilon = Some(0.1);
     config.path_filter = Some("metrics".to_string());
-    let _result = engine.diff_with_config("load_test_results_content", "load_test_results_new_content", &config);
+    let _result = engine.diff_with_config(
+        "load_test_results_content",
+        "load_test_results_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -426,7 +484,11 @@ fn getting_started_example_56() {
     let mut config = DiffConfig::default();
     config.output_format = "json".to_string();
     config.show_types = true;
-    let _result = engine.diff_with_config("translation_en_content", "translation_en_new_content", &config);
+    let _result = engine.diff_with_config(
+        "translation_en_content",
+        "translation_en_new_content",
+        &config,
+    );
 }
 
 #[test]
@@ -435,7 +497,8 @@ fn getting_started_example_57() {
     let mut config = DiffConfig::default();
     config.path_filter = Some("jobs".to_string());
     config.array_id_key = Some("name".to_string());
-    let _result = engine.diff_with_config("ci_pipeline_content", "ci_pipeline_new_content", &config);
+    let _result =
+        engine.diff_with_config("ci_pipeline_content", "ci_pipeline_new_content", &config);
 }
 
 #[test]

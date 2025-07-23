@@ -1,4 +1,4 @@
-use diffx_core::{DiffEngine, DiffConfig, Algorithm};
+use diffx_core::{Algorithm, DiffConfig, DiffEngine};
 
 #[test]
 fn cli_reference_example_1() {
@@ -411,7 +411,8 @@ fn cli_reference_example_53() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.format = "xml".to_string();
-    let _result = engine.diff_with_config("test_results_content", "test_results_new_content", &config);
+    let _result =
+        engine.diff_with_config("test_results_content", "test_results_new_content", &config);
 }
 
 #[test]

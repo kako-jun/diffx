@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
 use assert_cmd::Command;
+use predicates::prelude::*;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -85,8 +85,8 @@ fn test_format_json_invalid_file() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_json_empty_objects() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -96,8 +96,7 @@ fn test_json_empty_objects() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(&file2_path, "{\"new\": \"value\"}")?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("+ new: \"value\""));
@@ -111,27 +110,27 @@ fn test_json_deeply_nested() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/config_v3.json")
         .arg("--format")
         .arg("json");
-    cmd.assert()
-        .code(1)
-        .stdout(predicates::str::contains("~"));
+    cmd.assert().code(1).stdout(predicates::str::contains("~"));
     Ok(())
 }
 
 #[test]
 fn test_json_with_special_characters() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
     let file2_path = temp_dir.path().join("file2.json");
 
-    fs::write(&file1_path, r#"{"key": "value with \"quotes\" and \n newlines"}"#)?;
+    fs::write(
+        &file1_path,
+        r#"{"key": "value with \"quotes\" and \n newlines"}"#,
+    )?;
     fs::write(&file2_path, r#"{"key": "different value"}"#)?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ key:"));
@@ -140,19 +139,24 @@ fn test_json_with_special_characters() -> Result<(), Box<dyn std::error::Error>>
 
 #[test]
 fn test_json_large_numbers() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
     let file2_path = temp_dir.path().join("file2.json");
 
-    fs::write(&file1_path, r#"{"big": 9223372036854775807, "precision": 3.14159265359}"#)?;
-    fs::write(&file2_path, r#"{"big": 9223372036854775806, "precision": 3.14159265358}"#)?;
+    fs::write(
+        &file1_path,
+        r#"{"big": 9223372036854775807, "precision": 3.14159265359}"#,
+    )?;
+    fs::write(
+        &file2_path,
+        r#"{"big": 9223372036854775806, "precision": 3.14159265358}"#,
+    )?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ big:"))

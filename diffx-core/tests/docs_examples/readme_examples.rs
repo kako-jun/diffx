@@ -1,13 +1,13 @@
 use diffx_core::*;
-use serde_json::{json, Value};
 use regex::Regex;
+use serde_json::{json, Value};
 
 /// Test case 1: diffx config_v1.json config_v2.json
 #[test]
 fn test_basic_config_diff() {
     let v1 = json!({"name": "myapp", "version": "1.0"});
     let v2 = json!({"version": "1.1", "name": "myapp"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
@@ -25,15 +25,18 @@ fn test_basic_config_diff() {
 fn test_large_file_performance() {
     let v1 = json!({"config": {"database": {"host": "localhost", "port": 5432}, "cache": {"enabled": true}}});
     let v2 = json!({"config": {"database": {"host": "prod-db", "port": 5432}, "cache": {"enabled": false}}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 2);
-    
-    let paths: Vec<String> = diffs.iter().map(|d| match d {
-        DiffResult::Modified(path, _, _) => path.clone(),
-        _ => panic!("Expected Modified results"),
-    }).collect();
-    
+
+    let paths: Vec<String> = diffs
+        .iter()
+        .map(|d| match d {
+            DiffResult::Modified(path, _, _) => path.clone(),
+            _ => panic!("Expected Modified results"),
+        })
+        .collect();
+
     assert!(paths.contains(&"config.database.host".to_string()));
     assert!(paths.contains(&"config.cache.enabled".to_string()));
 }
@@ -43,10 +46,10 @@ fn test_large_file_performance() {
 fn test_json_output_to_file() {
     let v1 = json!({"version": "1.0"});
     let v2 = json!({"version": "1.1"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
-    
+
     // Test JSON serialization
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("Modified"));
@@ -58,10 +61,10 @@ fn test_json_output_to_file() {
 fn test_second_json_output() {
     let v1 = json!({"version": "1.1"});
     let v2 = json!({"version": "1.2"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
-    
+
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("1.1"));
     assert!(json_output.contains("1.2"));
@@ -72,7 +75,7 @@ fn test_second_json_output() {
 fn test_meta_chaining_diff_reports() {
     let report1 = json!([{"Modified": ["version", "1.0", "1.1"]}]);
     let report2 = json!([{"Modified": ["version", "1.1", "1.2"]}]);
-    
+
     let diffs = diff(&report1, &report2, None, None, None);
     assert!(!diffs.is_empty());
 }
@@ -82,7 +85,7 @@ fn test_meta_chaining_diff_reports() {
 fn test_basic_file_comparison() {
     let v1 = json!({"data": "value1"});
     let v2 = json!({"data": "value2"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
@@ -98,7 +101,7 @@ fn test_basic_file_comparison() {
 fn test_yaml_with_json_output() {
     let v1 = json!({"config": {"debug": true}});
     let v2 = json!({"config": {"debug": false}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("config.debug"));
@@ -109,7 +112,7 @@ fn test_yaml_with_json_output() {
 fn test_toml_with_yaml_output() {
     let v1 = json!({"app": {"name": "test"}});
     let v2 = json!({"app": {"name": "updated"}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
@@ -127,10 +130,10 @@ fn test_toml_with_yaml_output() {
 fn test_ignore_keys_regex() {
     let v1 = json!({"timestamp": "2024-01-01", "_internal": "meta", "data": "value1"});
     let v2 = json!({"timestamp": "2024-01-02", "_internal": "meta2", "data": "value2"});
-    
+
     let regex = Regex::new(r"^timestamp$|^_.*").unwrap();
     let diffs = diff(&v1, &v2, Some(&regex), None, None);
-    
+
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
         DiffResult::Modified(path, _, _) => {
@@ -145,7 +148,7 @@ fn test_ignore_keys_regex() {
 fn test_array_id_key() {
     let v1 = json!({"users": [{"id": 1, "name": "John"}, {"id": 2, "name": "Jane"}]});
     let v2 = json!({"users": [{"id": 2, "name": "Jane"}, {"id": 1, "name": "Johnny"}]});
-    
+
     let diffs = diff(&v1, &v2, None, None, Some("id"));
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
@@ -163,7 +166,7 @@ fn test_array_id_key() {
 fn test_epsilon_tolerance() {
     let v1 = json!({"value": 1.0001});
     let v2 = json!({"value": 1.0002});
-    
+
     let diffs = diff(&v1, &v2, None, Some(0.001), None);
     assert_eq!(diffs.len(), 0);
 }
@@ -173,12 +176,12 @@ fn test_epsilon_tolerance() {
 fn test_ignore_case() {
     let v1 = json!({"status": "ACTIVE"});
     let v2 = json!({"status": "active"});
-    
+
     let config = DiffConfig {
         ignore_case: true,
         ..Default::default()
     };
-    
+
     let diffs = diff_with_config(&v1, &v2, &config);
     assert_eq!(diffs.len(), 0);
 }
@@ -188,12 +191,12 @@ fn test_ignore_case() {
 fn test_ignore_whitespace() {
     let v1 = json!({"text": "hello world"});
     let v2 = json!({"text": "hello    world"});
-    
+
     let config = DiffConfig {
         ignore_whitespace: true,
         ..Default::default()
     };
-    
+
     let diffs = diff_with_config(&v1, &v2, &config);
     assert_eq!(diffs.len(), 0);
 }
@@ -203,7 +206,7 @@ fn test_ignore_whitespace() {
 fn test_unified_output_with_context() {
     let v1 = json!({"a": 1, "b": 2, "c": 3, "d": 4});
     let v2 = json!({"a": 1, "b": 20, "c": 3, "d": 4});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
@@ -221,7 +224,7 @@ fn test_unified_output_with_context() {
 fn test_quiet_mode() {
     let v1 = json!({"test": "value1"});
     let v2 = json!({"test": "value2"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert!(!diffs.is_empty());
 }
@@ -231,7 +234,7 @@ fn test_quiet_mode() {
 fn test_recursive_brief() {
     let v1 = json!({"test": "value1"});
     let v2 = json!({"test": "value2"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
 }
@@ -241,7 +244,7 @@ fn test_recursive_brief() {
 fn test_huge_dataset_performance() {
     let v1 = json!({"dataset": {"size": 1000000, "type": "production"}});
     let v2 = json!({"dataset": {"size": 1000001, "type": "production"}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
     match &diffs[0] {
@@ -257,7 +260,7 @@ fn test_huge_dataset_performance() {
 fn test_directory_recursive() {
     let v1 = json!({"config": "dir1"});
     let v2 = json!({"config": "dir2"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert_eq!(diffs.len(), 1);
 }
@@ -267,7 +270,7 @@ fn test_directory_recursive() {
 fn test_diff1_json_output() {
     let v1 = json!({"config": {"version": "1.0"}});
     let v2 = json!({"config": {"version": "1.1"}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("config.version"));
@@ -278,7 +281,7 @@ fn test_diff1_json_output() {
 fn test_diff2_json_output() {
     let v1 = json!({"config": {"version": "1.1"}});
     let v2 = json!({"config": {"version": "1.2"}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("1.1"));
@@ -290,7 +293,7 @@ fn test_diff2_json_output() {
 fn test_meta_diff_comparison() {
     let diff1 = json!([{"Modified": ["config.version", "1.0", "1.1"]}]);
     let diff2 = json!([{"Modified": ["config.version", "1.1", "1.2"]}]);
-    
+
     let diffs = diff(&diff1, &diff2, None, None, None);
     assert!(!diffs.is_empty());
 }
@@ -300,7 +303,7 @@ fn test_meta_diff_comparison() {
 fn test_cicd_config_changes() {
     let v1 = json!({"env": "prod", "debug": false});
     let v2 = json!({"env": "staging", "debug": true});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("env"));
@@ -312,7 +315,7 @@ fn test_cicd_config_changes() {
 fn test_cicd_change_detection() {
     let v1 = json!({"current": "config"});
     let v2 = json!({"current": "new_config"});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     assert!(!diffs.is_empty());
 }
@@ -322,13 +325,13 @@ fn test_cicd_change_detection() {
 fn test_api_ignore_options_json() {
     let v1 = json!({"API": "old version"});
     let v2 = json!({"api": "new   version"});
-    
+
     let config = DiffConfig {
         ignore_case: true,
         ignore_whitespace: true,
         ..Default::default()
     };
-    
+
     let diffs = diff_with_config(&v1, &v2, &config);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(!json_output.is_empty());
@@ -339,7 +342,7 @@ fn test_api_ignore_options_json() {
 fn test_large_data_comparison() {
     let v1 = json!({"dataset": {"env": "prod", "size": 10000}});
     let v2 = json!({"dataset": {"env": "staging", "size": 5000}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("env"));
@@ -351,7 +354,7 @@ fn test_large_data_comparison() {
 fn test_git_dependency_detection() {
     let v1 = json!({"dependencies": {"express": "^4.18.0"}});
     let v2 = json!({"dependencies": {"express": "^4.18.0", "lodash": "^4.17.21"}});
-    
+
     let diffs = diff(&v1, &v2, None, None, None);
     let json_output = serde_json::to_string(&diffs).unwrap();
     assert!(json_output.contains("lodash"));
