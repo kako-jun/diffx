@@ -25,10 +25,13 @@
     "diffx": "index.js"
   },
   "scripts": {
-    "test": "node test.js",
-    "examples": "node examples.js",
-    "verify": "node index.js --help",
-    "prepublish": "npm run verify"
+    "build": "napi build --platform --release",
+    "build:debug": "napi build --platform",
+    "test": "npm run build && node test.js",
+    "examples": "npm run build && node examples.js",
+    "verify": "npm run build && node -e \"console.log(require('./index.js'))\"",
+    "prepublish": "npm run build",
+    "artifacts": "napi artifacts"
   },
   "engines": {
     "node": ">=12.0.0"
@@ -64,5 +67,21 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/kako-jun"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0"
+  },
+  "napi": {
+    "name": "diffx-js",
+    "triples": {
+      "defaults": false,
+      "additional": [
+        "x86_64-pc-windows-msvc",
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu"
+      ]
+    }
   }
 }
