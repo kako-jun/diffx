@@ -27,7 +27,7 @@ except ImportError:
         __version__ = "unknown"
 
 class Format(Enum):
-    """Supported input formats for diffx."""
+    """Supported input formats for diffx_python."""
     JSON = "json"
     YAML = "yaml"
     TOML = "toml"
@@ -167,7 +167,7 @@ def diff(
     **kwargs
 ) -> DiffResult:
     """
-    Compare two files using diffx.
+    Compare two files using diffx_python.
     
     Args:
         input1: Path to first input file

@@ -170,12 +170,12 @@ const result = diffx.diff('file1.json', 'file2.json');
 pip install diffx-python
 
 # 在 Python 项目中使用
-import diffx_python as diffx
+import diffx_python
 result = diffx.diff('file1.json', 'file2.json')
 print(result)
 
 # 验证安装
-import diffx_python as diffx
+import diffx_python
 print("diffx 可用:", diffx.is_diffx_available())
 print("版本:", diffx.__version__)
 ```

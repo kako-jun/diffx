@@ -219,12 +219,12 @@ const result = diffx.diff('file1.json', 'file2.json');
 pip install diffx-python
 
 # Pythonプロジェクトで使用
-import diffx_python as diffx
+import diffx_python
 result = diffx.diff('file1.json', 'file2.json')
 print(result)
 
 # インストール確認
-import diffx_python as diffx
+import diffx_python
 print("diffx 利用可能:", diffx.is_diffx_available())
 print("バージョン:", diffx.__version__)
 ```

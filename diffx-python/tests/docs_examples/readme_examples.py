@@ -11,11 +11,11 @@ import sys
 
 # Import the diffx Python library
 try:
-    import diffx_python as diffx
+    import diffx_python
 except ImportError:
     # Fallback for development
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
-    import diffx_python as diffx
+    import diffx_python
 
 
 class READMEExamplesTest(unittest.TestCase):
@@ -43,7 +43,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"name": "myapp", "version": "1.0"})
         file2 = self.create_temp_json({"version": "1.1", "name": "myapp"})
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should detect only semantic changes (version), ignore key order
         self.assertIn('version', result)
@@ -55,7 +55,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"debug": True})
         file2 = self.create_temp_json({"debug": False})
         
-        result = diffx.diff(file1, file2, output='json')
+        result = diffx_python.diff(file1, file2, output='json')
         
         # Should return valid JSON string
         parsed = json.loads(result)
@@ -67,7 +67,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"test": 1})
         file2 = self.create_temp_json({"test": 2})
         
-        result = diffx.diff(file1, file2, output='yaml')
+        result = diffx_python.diff(file1, file2, output='yaml')
         
         # Should return YAML format string
         self.assertIsInstance(result, str)
@@ -78,7 +78,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"timestamp": "2024-01-01", "data": "value1"})
         file2 = self.create_temp_json({"timestamp": "2024-01-02", "data": "value2"})
         
-        result = diffx.diff(file1, file2, ignore_keys_regex="^timestamp$")
+        result = diffx_python.diff(file1, file2, ignore_keys_regex="^timestamp$")
         
         # Should ignore timestamp changes, only show data changes
         self.assertNotIn('timestamp', result)
@@ -101,7 +101,7 @@ class READMEExamplesTest(unittest.TestCase):
             ]
         })
         
-        result = diffx.diff(file1, file2, array_id_key="id")
+        result = diffx_python.diff(file1, file2, array_id_key="id")
         
         # Should track changes by ID, not by position
         self.assertIn('name', result)
@@ -113,7 +113,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"value": 1.0001})
         file2 = self.create_temp_json({"value": 1.0002})
         
-        result = diffx.diff(file1, file2, epsilon=0.001)
+        result = diffx_python.diff(file1, file2, epsilon=0.001)
         
         # Should consider values equal within epsilon tolerance (empty result)
         self.assertEqual(result.strip(), '')
@@ -123,7 +123,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"status": "ACTIVE"})
         file2 = self.create_temp_json({"status": "active"})
         
-        result = diffx.diff(file1, file2, ignore_case=True)
+        result = diffx_python.diff(file1, file2, ignore_case=True)
         
         # Should be considered identical when ignoring case
         self.assertEqual(result.strip(), '')
@@ -133,7 +133,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"text": "hello world"})
         file2 = self.create_temp_json({"text": "hello    world"})
         
-        result = diffx.diff(file1, file2, ignore_whitespace=True)
+        result = diffx_python.diff(file1, file2, ignore_whitespace=True)
         
         # Should ignore whitespace differences
         self.assertEqual(result.strip(), '')
@@ -143,7 +143,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"a": 1, "b": 2, "c": 3, "d": 4})
         file2 = self.create_temp_json({"a": 1, "b": 20, "c": 3, "d": 4})
         
-        result = diffx.diff(file1, file2, output='unified', context=3)
+        result = diffx_python.diff(file1, file2, output='unified', context=3)
         
         # Should return unified diff format with context
         self.assertIn('-', result)
@@ -154,7 +154,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"test": "value"})
         file2 = self.create_temp_json({"test": "value"})
         
-        result = diffx.diff(file1, file2, quiet=True)
+        result = diffx_python.diff(file1, file2, quiet=True)
         
         # Should return empty result for identical files
         self.assertEqual(result.strip(), '')
@@ -164,7 +164,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json({"test": "value1"})
         file2 = self.create_temp_json({"test": "value2"})
         
-        result = diffx.diff(file1, file2, brief=True)
+        result = diffx_python.diff(file1, file2, brief=True)
         
         # Should return brief output format
         self.assertGreater(len(result), 0)
@@ -175,20 +175,20 @@ class READMEExamplesTest(unittest.TestCase):
         file1a = self.create_temp_json({"version": "1.0"})
         file1b = self.create_temp_json({"version": "1.1"})
         
-        report1 = diffx.diff(file1a, file1b, output='json')
+        report1 = diffx_python.diff(file1a, file1b, output='json')
         
         # Create second diff report 
         file2a = self.create_temp_json({"version": "1.1"})
         file2b = self.create_temp_json({"version": "1.2"})
         
-        report2 = diffx.diff(file2a, file2b, output='json')
+        report2 = diffx_python.diff(file2a, file2b, output='json')
         
         # Save reports to temp files
         report1_file = self.create_temp_json(json.loads(report1))
         report2_file = self.create_temp_json(json.loads(report2))
         
         # Compare the reports (meta-chaining)
-        meta_diff = diffx.diff(report1_file, report2_file)
+        meta_diff = diffx_python.diff(report1_file, report2_file)
         
         # Should be able to compare diff reports
         self.assertIsInstance(meta_diff, str)
@@ -214,7 +214,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(large_data1)
         file2 = self.create_temp_json(large_data2)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should detect all semantic changes
         self.assertIn('host', result)
@@ -229,7 +229,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(prod_config)
         file2 = self.create_temp_json(staging_config)
         
-        result = diffx.diff(file1, file2, output='json')
+        result = diffx_python.diff(file1, file2, output='json')
         
         # Should return valid JSON for CI/CD processing
         parsed = json.loads(result)
@@ -254,7 +254,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(yaml_style)
         file2 = self.create_temp_json(json_style)
         
-        result = diffx.diff(file1, file2, output='yaml')
+        result = diffx_python.diff(file1, file2, output='yaml')
         
         # Should handle cross-format comparison
         self.assertIn('image', result)
@@ -278,7 +278,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(complex1)
         file2 = self.create_temp_json(complex2)
         
-        result = diffx.diff(file1, file2, 
+        result = diffx_python.diff(file1, file2, 
                            ignore_keys_regex="^(timestamp|_.*)",
                            array_id_key="id")
         
@@ -305,7 +305,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(rust_config)
         file2 = self.create_temp_json(node_config)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should detect differences between package configs
         self.assertIn('name', result)
@@ -330,7 +330,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(expected_response)
         file2 = self.create_temp_json(actual_response)
         
-        result = diffx.diff(file1, file2, ignore_keys_regex="^(created_at|updated_at)$")
+        result = diffx_python.diff(file1, file2, ignore_keys_regex="^(created_at|updated_at)$")
         
         # Should ignore timestamp fields in API validation
         self.assertEqual(result.strip(), '')
@@ -350,7 +350,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(before_migration)
         file2 = self.create_temp_json(after_migration)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should detect column additions
         self.assertIn('created_at', result)
@@ -369,7 +369,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(security_policy1)
         file2 = self.create_temp_json(security_policy2)
         
-        result = diffx.diff(file1, file2, output='json')
+        result = diffx_python.diff(file1, file2, output='json')
         
         # Should detect permission changes in security audit
         parsed = json.loads(result)
@@ -391,7 +391,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(large_dataset1)
         file2 = self.create_temp_json(large_dataset2)
         
-        result = diffx.diff(file1, file2, output='json')
+        result = diffx_python.diff(file1, file2, output='json')
         
         # Should handle large datasets efficiently
         parsed = json.loads(result)
@@ -410,7 +410,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(old_package)
         file2 = self.create_temp_json(new_package)
         
-        result = diffx.diff(file1, file2, output='json')
+        result = diffx_python.diff(file1, file2, output='json')
         
         # Should detect new dependency addition
         parsed = json.loads(result)
@@ -432,7 +432,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(expected_config)
         file2 = self.create_temp_json(current_config)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should detect configuration drift
         self.assertIn('replicas', result)
@@ -447,7 +447,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(config_v1)
         file2 = self.create_temp_json(config_v2)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should handle batch processing scenarios
         self.assertIn('version', result)
@@ -461,7 +461,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(dev_config)
         file2 = self.create_temp_json(prod_config)
         
-        result = diffx.diff(file1, file2, ignore_keys_regex="host")
+        result = diffx_python.diff(file1, file2, ignore_keys_regex="host")
         
         # Should compare environments while ignoring host
         self.assertNotIn('host', result)
@@ -476,7 +476,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(original_data)
         file2 = self.create_temp_json(backup_data)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should verify backup integrity (no differences)
         self.assertEqual(result.strip(), '')
@@ -496,7 +496,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(schema_v1)
         file2 = self.create_temp_json(schema_v2)
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         
         # Should detect schema evolution
         self.assertIn('avatar_url', result)
@@ -519,7 +519,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(tenant_a_config)
         file2 = self.create_temp_json(tenant_b_config)
         
-        result = diffx.diff(file1, file2, ignore_keys_regex="tenant")
+        result = diffx_python.diff(file1, file2, ignore_keys_regex="tenant")
         
         # Should compare tenant configs while ignoring tenant name
         self.assertNotIn('tenant', result)
@@ -543,7 +543,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(staging_deploy)
         file2 = self.create_temp_json(prod_deploy)
         
-        result = diffx.diff(file1, file2, ignore_keys_regex="environment")
+        result = diffx_python.diff(file1, file2, ignore_keys_regex="environment")
         
         # Should validate deployment differences while ignoring environment
         self.assertNotIn('environment', result)
@@ -585,7 +585,7 @@ class READMEExamplesTest(unittest.TestCase):
         file1 = self.create_temp_json(production_config)
         file2 = self.create_temp_json(staging_config)
         
-        result = diffx.diff(file1, file2,
+        result = diffx_python.diff(file1, file2,
                            ignore_keys_regex="^(timestamp|_metadata.deployment)$",
                            array_id_key="id")
         

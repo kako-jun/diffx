@@ -2,7 +2,7 @@ import unittest
 import tempfile
 import json
 import os
-from diffx_python import diffx_python as diffx
+import diffx_python
 
 class IndexExamplesTest(unittest.TestCase):
     
@@ -26,7 +26,7 @@ class IndexExamplesTest(unittest.TestCase):
         
         self._temp_files = [file1, file2]
         
-        result = diffx.diff(file1, file2)
+        result = diffx_python.diff(file1, file2)
         self.assertIn('version', result)
         self.assertIn('1.0', result)
         self.assertIn('1.1', result)

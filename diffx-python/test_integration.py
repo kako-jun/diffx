@@ -233,9 +233,9 @@ def test_package_metadata():
     print("Testing package metadata...")
     
     try:
-        import diffx_python as diffx
+        import diffx_python
         if hasattr(diffx, '__version__'):
-            print(f"✓ Package version: {diffx.__version__}")
+            print(f"✓ Package version: {diffx_python.__version__}")
         else:
             print("✓ Package imported successfully (no version info)")
     except ImportError as e:

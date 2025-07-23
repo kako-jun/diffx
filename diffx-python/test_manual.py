@@ -6,13 +6,13 @@ import tempfile
 from pathlib import Path
 
 # Test both new and legacy APIs
-import diffx_python as diffx
+import diffx_python
 from diffx import run_diffx, DiffOptions
 
 def test_availability():
     """Test if diffx is available."""
     print("🧪 Testing diffx availability...")
-    available = diffx.is_diffx_available()
+    available = diffx_python.is_diffx_available()
     print(f"OK: diffx available: {available}")
     assert available, "diffx should be available"
 
@@ -24,7 +24,7 @@ def test_string_comparison():
     json2 = json.dumps({"name": "Alice", "age": 31, "city": "Tokyo", "country": "Japan"}, indent=2)
     
     # Test JSON output
-    result = diffx.diff_string(json1, json2, 'json', DiffOptions(output='json'))
+    result = diffx_python.diff_string(json1, json2, 'json', DiffOptions(output='json'))
     print(f"OK: JSON diff result: {len(result)} differences")
     
     for diff_item in result:
@@ -34,7 +34,7 @@ def test_string_comparison():
             print(f"  Modified: {diff_item.modified}")
     
     # Test CLI output
-    cli_result = diffx.diff_string(json1, json2, 'json')
+    cli_result = diffx_python.diff_string(json1, json2, 'json')
     print(f"OK: CLI output:\n{cli_result}")
 
 def test_legacy_api():
@@ -77,7 +77,7 @@ def test_file_comparison():
         file2.write_text(json.dumps(config2, indent=2))
         
         # Test with path filtering
-        result = diffx.diff(
+        result = diffx_python.diff(
             str(file1), str(file2),
             DiffOptions(output='json', path='database')
         )
@@ -107,7 +107,7 @@ hobbies:
   - coding
 """
     
-    result = diffx.diff_string(yaml1, yaml2, 'yaml')
+    result = diffx_python.diff_string(yaml1, yaml2, 'yaml')
     print(f"OK: YAML diff:\n{result}")
 
 def test_error_handling():
@@ -115,10 +115,10 @@ def test_error_handling():
     print("\n🧪 Testing error handling...")
     
     try:
-        diffx.diff('nonexistent1.json', 'nonexistent2.json')
+        diffx_python.diff('nonexistent1.json', 'nonexistent2.json')
         print("ERROR: Should have raised an error")
         assert False, "Should have raised DiffError"
-    except diffx.DiffError as e:
+    except diffx_python.DiffError as e:
         print(f"OK: Error handling works: {e}")
 
 def main():
