@@ -1,5 +1,5 @@
 /**
- * docs/guides/integrations.md examples tests for diffx-npm package  
+ * docs/guides/integrations.md examples tests for diffx-js package  
  * Tests docs/guides/integrations.md usage examples as JavaScript library functions
  * Each test corresponds 1:1 with diffx commands from docs/guides/integrations.md
  */

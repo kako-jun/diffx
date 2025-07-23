@@ -1,5 +1,5 @@
 /**
- * docs/index.md examples tests for diffx-npm package  
+ * docs/index.md examples tests for diffx-js package  
  * Tests docs/index.md usage examples as JavaScript library functions
  * Each test corresponds 1:1 with diffx commands from docs/index.md
  */

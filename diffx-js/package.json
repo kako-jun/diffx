@@ -56,7 +56,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kako-jun/diffx.git",
-    "directory": "diffx-npm"
+    "directory": "diffx-js"
   },
   "bugs": {
     "url": "https://github.com/kako-jun/diffx/issues"

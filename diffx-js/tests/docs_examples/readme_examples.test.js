@@ -1,5 +1,5 @@
 /**
- * README examples tests for diffx-npm package  
+ * README examples tests for diffx-js package  
  * Tests README.md usage examples as JavaScript library functions
  * Each test corresponds 1:1 with diffx commands from README.md
  */

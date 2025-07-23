@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Unified test runner for diffx-npm package
+ * Unified test runner for diffx-js package
  * Runs all test suites in organized fashion
  */
 
@@ -106,7 +106,7 @@ async function runTestSuite(name, testFunction, description) {
 async function runAllTests() {
     const startTime = Date.now();
     
-    log(`${colors.bold}${colors.magenta}diffx-npm Test Suite${colors.reset}`);
+    log(`${colors.bold}${colors.magenta}diffx-js Test Suite${colors.reset}`);
     log(`Running comprehensive tests for diffx npm package\n`);
     
     // Check prerequisites first
