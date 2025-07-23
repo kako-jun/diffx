@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
 use assert_cmd::Command;
+use predicates::prelude::*;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -55,8 +55,8 @@ fn test_ignore_keys_regex_wildcard() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_ignore_keys_regex_case_sensitive() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -118,8 +118,8 @@ fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_epsilon_different_precisions() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -139,8 +139,8 @@ fn test_epsilon_different_precisions() -> Result<(), Box<dyn std::error::Error>>
 
 #[test]
 fn test_epsilon_exceeds_threshold() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -162,8 +162,8 @@ fn test_epsilon_exceeds_threshold() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_epsilon_negative_numbers() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -183,8 +183,8 @@ fn test_epsilon_negative_numbers() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_epsilon_zero_values() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -204,8 +204,8 @@ fn test_epsilon_zero_values() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_epsilon_very_large_numbers() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
@@ -271,14 +271,17 @@ fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_array_id_key_missing_id() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
     let file2_path = temp_dir.path().join("file2.json");
 
-    fs::write(&file1_path, r#"{"items": [{"name": "A"}, {"uuid": "123", "name": "B"}]}"#)?;
+    fs::write(
+        &file1_path,
+        r#"{"items": [{"name": "A"}, {"uuid": "123", "name": "B"}]}"#,
+    )?;
     fs::write(&file2_path, r#"{"items": [{"uuid": "123", "name": "C"}]}"#)?;
 
     let mut cmd = diffx_cmd();
@@ -293,14 +296,17 @@ fn test_array_id_key_missing_id() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_array_id_key_duplicate_ids() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
     let file2_path = temp_dir.path().join("file2.json");
 
-    fs::write(&file1_path, r#"{"items": [{"id": 1, "name": "A"}, {"id": 1, "name": "B"}]}"#)?;
+    fs::write(
+        &file1_path,
+        r#"{"items": [{"id": 1, "name": "A"}, {"id": 1, "name": "B"}]}"#,
+    )?;
     fs::write(&file2_path, r#"{"items": [{"id": 1, "name": "C"}]}"#)?;
 
     let mut cmd = diffx_cmd();
@@ -315,15 +321,21 @@ fn test_array_id_key_duplicate_ids() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_array_id_key_different_types() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
     let file2_path = temp_dir.path().join("file2.json");
 
-    fs::write(&file1_path, r#"{"items": [{"key": "str1", "val": 1}, {"key": 123, "val": 2}]}"#)?;
-    fs::write(&file2_path, r#"{"items": [{"key": "str1", "val": 10}, {"key": 123, "val": 20}]}"#)?;
+    fs::write(
+        &file1_path,
+        r#"{"items": [{"key": "str1", "val": 1}, {"key": 123, "val": 2}]}"#,
+    )?;
+    fs::write(
+        &file2_path,
+        r#"{"items": [{"key": "str1", "val": 10}, {"key": 123, "val": 20}]}"#,
+    )?;
 
     let mut cmd = diffx_cmd();
     cmd.arg(&file1_path)
@@ -339,15 +351,21 @@ fn test_array_id_key_different_types() -> Result<(), Box<dyn std::error::Error>>
 
 #[test]
 fn test_array_id_key_nested_arrays() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.json");
     let file2_path = temp_dir.path().join("file2.json");
 
-    fs::write(&file1_path, r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "John"}]}]}"#)?;
-    fs::write(&file2_path, r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "Jane"}]}]}"#)?;
+    fs::write(
+        &file1_path,
+        r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "John"}]}]}"#,
+    )?;
+    fs::write(
+        &file2_path,
+        r#"{"groups": [{"id": "A", "users": [{"id": 1, "name": "Jane"}]}]}"#,
+    )?;
 
     let mut cmd = diffx_cmd();
     cmd.arg(&file1_path)
@@ -578,13 +596,16 @@ fn test_format_option() -> Result<(), Box<dyn std::error::Error>> {
             .arg("../tests/fixtures/file2.json")
             .arg("--format")
             .arg(format);
-        
+
         let output = cmd.output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             // Should recognize format option
-            assert!(!stderr.contains("unrecognized"), 
-                    "Format {} should be recognized", format);
+            assert!(
+                !stderr.contains("unrecognized"),
+                "Format {} should be recognized",
+                format
+            );
         }
     }
     Ok(())
@@ -599,12 +620,15 @@ fn test_output_format_option() -> Result<(), Box<dyn std::error::Error>> {
             .arg("../tests/fixtures/file2.json")
             .arg("--output")
             .arg(output_format);
-        
+
         let output = cmd.output()?;
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            assert!(!stderr.contains("unrecognized"), 
-                    "Output format {} should be recognized", output_format);
+            assert!(
+                !stderr.contains("unrecognized"),
+                "Output format {} should be recognized",
+                output_format
+            );
         }
     }
     Ok(())
@@ -618,12 +642,14 @@ fn test_context_option() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--context")
         .arg("3");
-    
+
     let output = cmd.output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(!stderr.contains("unrecognized"), 
-                "Context option should be recognized");
+        assert!(
+            !stderr.contains("unrecognized"),
+            "Context option should be recognized"
+        );
     }
     Ok(())
 }
@@ -635,7 +661,7 @@ fn test_context_zero_lines() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--context")
         .arg("0");
-    
+
     cmd.assert().code(1); // Should show differences without context
     Ok(())
 }
@@ -647,7 +673,7 @@ fn test_context_large_number() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--context")
         .arg("100");
-    
+
     cmd.assert().code(1); // Should handle large context gracefully
     Ok(())
 }
@@ -659,7 +685,7 @@ fn test_context_invalid_value() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--context")
         .arg("invalid");
-    
+
     let result = cmd.output()?;
     // Should handle invalid context value gracefully
     assert!(!result.status.success());
@@ -673,7 +699,7 @@ fn test_context_negative_value() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--context")
         .arg("-5");
-    
+
     let result = cmd.output()?;
     // Should handle negative context value appropriately
     // (either error or treat as zero/absolute value)
@@ -687,9 +713,8 @@ fn test_recursive_option() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures")
         .arg("../tests/fixtures") // Same directory
         .arg("--recursive");
-    
-    cmd.assert()
-        .code(0); // No differences in same directory
+
+    cmd.assert().code(0); // No differences in same directory
     Ok(())
 }
 
@@ -699,9 +724,8 @@ fn test_recursive_short_flag() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures")
         .arg("../tests/fixtures")
         .arg("-r");
-    
-    cmd.assert()
-        .code(0);
+
+    cmd.assert().code(0);
     Ok(())
 }
 
@@ -712,9 +736,8 @@ fn test_recursive_with_files() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg("../tests/fixtures/file1.json")
         .arg("../tests/fixtures/file2.json")
         .arg("--recursive");
-    
-    cmd.assert()
-        .code(1); // Should show differences
+
+    cmd.assert().code(1); // Should show differences
     Ok(())
 }
 
@@ -724,7 +747,7 @@ fn test_recursive_nonexistent_directory() -> Result<(), Box<dyn std::error::Erro
     cmd.arg("../tests/nonexistent")
         .arg("../tests/fixtures")
         .arg("--recursive");
-    
+
     let result = cmd.output()?;
     // Should handle missing directory gracefully
     assert!(!result.status.success());
@@ -735,11 +758,10 @@ fn test_recursive_nonexistent_directory() -> Result<(), Box<dyn std::error::Erro
 fn test_version_option() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("--version");
-    
+
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("0.3.2")
-                .or(predicate::str::contains("diffx")));
+        .stdout(predicate::str::contains("0.3.2").or(predicate::str::contains("diffx")));
     Ok(())
 }
 
@@ -747,11 +769,10 @@ fn test_version_option() -> Result<(), Box<dyn std::error::Error>> {
 fn test_version_short_flag() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("-V");
-    
+
     cmd.assert()
         .success()
-        .stdout(predicate::str::contains("0.3.2")
-                .or(predicate::str::contains("diffx")));
+        .stdout(predicate::str::contains("0.3.2").or(predicate::str::contains("diffx")));
     Ok(())
 }
 
@@ -759,10 +780,8 @@ fn test_version_short_flag() -> Result<(), Box<dyn std::error::Error>> {
 fn test_version_with_other_args() -> Result<(), Box<dyn std::error::Error>> {
     // Test that version option takes precedence
     let mut cmd = diffx_cmd();
-    cmd.arg("--version")
-        .arg("file1.json")
-        .arg("file2.json");
-    
+    cmd.arg("--version").arg("file1.json").arg("file2.json");
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("diffx"));
@@ -773,7 +792,7 @@ fn test_version_with_other_args() -> Result<(), Box<dyn std::error::Error>> {
 fn test_help_option() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("--help");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("diffx"))
@@ -787,7 +806,7 @@ fn test_help_option() -> Result<(), Box<dyn std::error::Error>> {
 fn test_help_short_flag() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("-h");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("diffx"))
@@ -799,7 +818,7 @@ fn test_help_short_flag() -> Result<(), Box<dyn std::error::Error>> {
 fn test_help_comprehensive_content() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("--help");
-    
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("--format"))
@@ -815,10 +834,8 @@ fn test_help_comprehensive_content() -> Result<(), Box<dyn std::error::Error>> {
 fn test_help_with_other_args() -> Result<(), Box<dyn std::error::Error>> {
     // Test that help option takes precedence
     let mut cmd = diffx_cmd();
-    cmd.arg("--help")
-        .arg("file1.json")
-        .arg("file2.json");
-    
+    cmd.arg("--help").arg("file1.json").arg("file2.json");
+
     cmd.assert()
         .success()
         .stdout(predicate::str::contains("Usage:"));

@@ -1,4 +1,4 @@
-use diffx_core::{DiffEngine, DiffConfig};
+use diffx_core::{DiffConfig, DiffEngine};
 
 #[test]
 fn comparison_example_1() {

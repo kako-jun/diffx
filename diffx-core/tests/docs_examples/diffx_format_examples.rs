@@ -1,4 +1,4 @@
-use diffx_core::{DiffEngine, DiffConfig};
+use diffx_core::{DiffConfig, DiffEngine};
 
 #[test]
 fn diffx_format_example_1() {
@@ -19,7 +19,8 @@ fn diffx_format_example_3() {
     let engine = DiffEngine::new();
     let mut config = DiffConfig::default();
     config.array_id_key = Some("id".to_string());
-    let _result = engine.diff_with_config("expected_output_content", "actual_output_content", &config);
+    let _result =
+        engine.diff_with_config("expected_output_content", "actual_output_content", &config);
 }
 
 #[test]

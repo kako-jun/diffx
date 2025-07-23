@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
 use assert_cmd::Command;
+use predicates::prelude::*;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -40,19 +40,24 @@ fn test_format_csv_explicit() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_csv_with_quotes_and_commas() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
     let file2_path = temp_dir.path().join("file2.csv");
 
-    fs::write(&file1_path, "name,description\nProduct A,\"High quality, reliable\"\n")?;
-    fs::write(&file2_path, "name,description\nProduct A,\"Premium quality, durable\"\n")?;
+    fs::write(
+        &file1_path,
+        "name,description\nProduct A,\"High quality, reliable\"\n",
+    )?;
+    fs::write(
+        &file2_path,
+        "name,description\nProduct A,\"Premium quality, durable\"\n",
+    )?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ [0].description:"));
@@ -61,8 +66,8 @@ fn test_csv_with_quotes_and_commas() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_csv_with_headers() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
@@ -72,8 +77,7 @@ fn test_csv_with_headers() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(&file2_path, "id,name,age\n1,John,31\n2,Jane,25\n3,Bob,28\n")?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ [0].age: \"30\" -> \"31\""))
@@ -83,8 +87,8 @@ fn test_csv_with_headers() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_csv_missing_columns() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
@@ -94,8 +98,7 @@ fn test_csv_missing_columns() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(&file2_path, "name,age,city\nAlice,30,NYC\nBob,25,LA\n")?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("+ [0].city:"))
@@ -105,29 +108,31 @@ fn test_csv_missing_columns() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_csv_empty_fields() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
     let file2_path = temp_dir.path().join("file2.csv");
 
     fs::write(&file1_path, "name,email,phone\nJohn,,555-0123\n")?;
-    fs::write(&file2_path, "name,email,phone\nJohn,john@email.com,555-0123\n")?;
+    fs::write(
+        &file2_path,
+        "name,email,phone\nJohn,john@email.com,555-0123\n",
+    )?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
-    cmd.assert()
-        .code(1)
-        .stdout(predicates::str::contains("~ [0].email: \"\" -> \"john@email.com\""));
+    cmd.arg(&file1_path).arg(&file2_path);
+    cmd.assert().code(1).stdout(predicates::str::contains(
+        "~ [0].email: \"\" -> \"john@email.com\"",
+    ));
     Ok(())
 }
 
 #[test]
 fn test_csv_different_row_count() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
@@ -137,8 +142,7 @@ fn test_csv_different_row_count() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(&file2_path, "id,name\n1,Alice\n2,Bob\n")?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("- [2]:"));
@@ -147,8 +151,8 @@ fn test_csv_different_row_count() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_csv_special_characters() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
@@ -158,8 +162,7 @@ fn test_csv_special_characters() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(&file2_path, "name,notes\n\"O'Neil\",\"Line1\nLine3\"\n")?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ [0].notes:"));
@@ -168,22 +171,31 @@ fn test_csv_special_characters() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_csv_numeric_values() -> Result<(), Box<dyn std::error::Error>> {
-    use tempfile::tempdir;
     use std::fs;
+    use tempfile::tempdir;
 
     let temp_dir = tempdir()?;
     let file1_path = temp_dir.path().join("file1.csv");
     let file2_path = temp_dir.path().join("file2.csv");
 
-    fs::write(&file1_path, "item,price,quantity\nApple,1.25,10\nBanana,0.85,15\n")?;
-    fs::write(&file2_path, "item,price,quantity\nApple,1.30,10\nBanana,0.85,20\n")?;
+    fs::write(
+        &file1_path,
+        "item,price,quantity\nApple,1.25,10\nBanana,0.85,15\n",
+    )?;
+    fs::write(
+        &file2_path,
+        "item,price,quantity\nApple,1.30,10\nBanana,0.85,20\n",
+    )?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&file1_path)
-        .arg(&file2_path);
+    cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ [0].price: \"1.25\" -> \"1.30\""))
-        .stdout(predicates::str::contains("~ [1].quantity: \"15\" -> \"20\""));
+        .stdout(predicates::str::contains(
+            "~ [0].price: \"1.25\" -> \"1.30\"",
+        ))
+        .stdout(predicates::str::contains(
+            "~ [1].quantity: \"15\" -> \"20\"",
+        ));
     Ok(())
 }

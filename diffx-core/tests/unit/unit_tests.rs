@@ -25,8 +25,7 @@ fn test_diff_result_serialization() {
 fn test_diff_result_modified() {
     let old_value = Value::Number(42.into());
     let new_value = Value::Number(84.into());
-    let result =
-        DiffResult::Modified("score".to_string(), old_value.clone(), new_value.clone());
+    let result = DiffResult::Modified("score".to_string(), old_value.clone(), new_value.clone());
 
     match result {
         DiffResult::Modified(path, old, new) => {
@@ -42,8 +41,7 @@ fn test_diff_result_modified() {
 fn test_diff_result_type_changed() {
     let old_value = Value::String("42".to_string());
     let new_value = Value::Number(42.into());
-    let result =
-        DiffResult::TypeChanged("value".to_string(), old_value.clone(), new_value.clone());
+    let result = DiffResult::TypeChanged("value".to_string(), old_value.clone(), new_value.clone());
 
     match result {
         DiffResult::TypeChanged(path, old, new) => {

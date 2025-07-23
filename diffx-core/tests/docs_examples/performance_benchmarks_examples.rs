@@ -1,4 +1,4 @@
-use diffx_core::{DiffEngine, BenchmarkConfig};
+use diffx_core::{BenchmarkConfig, DiffEngine};
 
 #[test]
 fn performance_benchmarks_example_1() {
