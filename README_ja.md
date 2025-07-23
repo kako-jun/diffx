@@ -9,8 +9,8 @@
 [![Docs.rs Core](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
 [![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
-[![Documentation](https://img.shields.io/badge/📚%20ユーザーガイド-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
-[![API Reference](https://img.shields.io/badge/🔧%20API%20リファレンス-docs.rs-blue)](https://docs.rs/diffx-core)
+[![Documentation](https://img.shields.io/badge/📚%20User%20Guide-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
+[![API Reference](https://img.shields.io/badge/🔧%20API%20Reference-docs.rs-blue)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 データの**構造**と**意味**を理解する次世代diffツール。テキストの変更ではなく、本質的な差分を抽出。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
