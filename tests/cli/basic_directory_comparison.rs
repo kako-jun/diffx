@@ -45,7 +45,8 @@ fn test_directory_with_common_subdirectories() -> Result<(), Box<dyn std::error:
         .arg("../tests/fixtures/dir2");
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("Common subdirectories:"))
-        .stdout(predicates::str::contains("subdir")); // Should show common subdir but not compare files inside
+        .stdout(predicates::str::contains("b.json"))
+        .stdout(predicates::str::contains("config.json"))
+        .stdout(predicates::str::contains("subdir/nested.json")); // Shows files in subdirectories
     Ok(())
 }

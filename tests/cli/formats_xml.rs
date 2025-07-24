@@ -15,9 +15,9 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
-            "~ item.text: \"value2\" -> \"new_value2\"",
+            "~ item[1].text: \"value2\" -> \"new_value2\"",
         ))
-        .stdout(predicates::str::contains("+ item:"));
+        .stdout(predicates::str::contains("+ item[2]:"));
     Ok(())
 }
 
@@ -31,9 +31,9 @@ fn test_format_xml_explicit() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
-            "~ item.text: \"value2\" -> \"new_value2\"",
+            "~ item[1].text: \"value2\" -> \"new_value2\"",
         ))
-        .stdout(predicates::str::contains("+ item:"));
+        .stdout(predicates::str::contains("+ item[2]:"));
     Ok(())
 }
 
@@ -114,7 +114,7 @@ fn test_xml_arrays_and_lists() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ item: \"B\" -> \"X\""));
+        .stdout(predicates::str::contains("~ item[1]: \"B\" -> \"X\""));
     Ok(())
 }
 
