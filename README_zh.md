@@ -233,12 +233,12 @@ diffx config.yaml config_new.yaml --ignore-case          # Ignore case differenc
 diffx api.json api_formatted.json --ignore-whitespace    # Ignore whitespace changes
 diffx large.json large_v2.json --context 3 --output unified  # Show 3 lines of context
 diffx file1.json file2.json --quiet && echo "Files identical"  # Script automation
-diffx dir1/ dir2/ --recursive --brief                    # Quick file change check
+diffx dir1/ dir2/ --brief                              # 快速目录变更检查（自动递归处理）
 
 # Performance optimization for large files
 diffx huge_dataset.json huge_dataset_v2.json
-# Directory comparison
-diffx config_dir1/ config_dir2/ --recursive
+# 目录比较（自动递归检测）
+diffx config_dir1/ config_dir2/
 
 # Meta-chaining for change tracking
 diffx config_v1.json config_v2.json --output json > diff1.json

@@ -32,7 +32,7 @@ diffx config.json config.new.json
 # 与标准输入比较
 cat config.json | diffx - config.new.json
 
-# 目录比较（Unix diff 兼容 - 默认非递归）
+# 目录比较（自动递归检测）
 diffx config_dir1/ config_dir2/
 ```
 
@@ -356,8 +356,8 @@ diffx large.json large.new.json --quiet --ignore-whitespace
 diffx config.json config.new.json --brief
 # 输出: Files config.json and config.new.json differ
 
-# 与目录比较一起使用
-diffx configs/ configs.backup/ --recursive --brief
+# 与目录比较一起使用（自动递归）
+diffx configs/ configs.backup/ --brief
 # 输出: Files configs/app.json and configs.backup/app.json differ
 
 # 与过滤结合
@@ -398,8 +398,8 @@ diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilo
 # Numerical tolerance configuration:
 #   Epsilon value: 0.1
 
-# 详细目录比较
-diffx configs/ configs.backup/ --recursive --verbose
+# 详细目录比较（自动递归）
+diffx configs/ configs.backup/ --verbose
 # 额外输出:
 # Directory scan results:
 #   Files in configs/: 12
@@ -459,8 +459,8 @@ diffx deploy.yaml deploy.new.yaml --no-color --output json > diff_report.json
 # 与其他输出选项结合
 diffx large.json large.new.json --no-color --brief --quiet
 
-# 无颜色的目录比较
-diffx configs/ configs.backup/ --recursive --no-color
+# 无颜色的目录比较（自动递归）
+diffx configs/ configs.backup/ --no-color
 ```
 
 **使用场景:**
@@ -473,53 +473,49 @@ diffx configs/ configs.backup/ --recursive --no-color
 
 ### 目录选项
 
-#### `-r, --recursive`
-- **类型**: 布尔标志
-- **默认**: False
-- **描述**: 递归比较目录中的子目录（Unix diff 兼容）
+#### **自动目录检测**
+- **类型**: 自动功能（无需选项）
+- **默认**: 提供目录路径时启用
+- **描述**: 当提供目录路径时，diffx 自动递归比较子目录中的所有文件
 
 **示例:**
 ```bash
-# 无 --recursive 的目录比较（Unix diff 兼容）
-# 直接比较目录中的文件，为子目录显示 "Common subdirectories"
+# 目录比较（自动递归处理）
 diffx config_dir1/ config_dir2/
-# 输出:
-# Common subdirectories: config_dir1/subdir and config_dir2/subdir
-# --- Comparing config.json ---
-# ~ version: "1.0" -> "1.1"
-
-# 递归比较 - 比较包括子目录在内的所有文件
-diffx config_dir1/ config_dir2/ --recursive
+# 自动检测目录并递归比较所有文件
 # 输出:
 # --- Comparing config.json ---
 # ~ version: "1.0" -> "1.1"
 # --- Comparing subdir/nested.json ---
 # ~ data: "old" -> "new"
 
-# 带输出格式的递归比较
-diffx environments/dev/ environments/prod/ -r --output json
+# 带输出格式的目录比较（自动递归）
+diffx environments/dev/ environments/prod/ --output json
 
-# 带过滤的递归
-diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
+# 带过滤的目录比较（自动递归）
+diffx configs/ configs.backup/ --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**Unix diff 兼容行为:**
+**现代目录行为:**
 
-**无 `--recursive` 标志（默认）:**
-- 仅直接比较指定目录中的文件
-- 为两个位置都存在的子目录显示 "Common subdirectories" 消息
-- 不比较子目录内的文件
-- 保持与标准 Unix `diff` 命令的兼容性
-
-**有 `--recursive` 标志:**
-- 递归比较子目录中的所有文件
+**提供目录路径时:**
+- 自动检测输入是目录
+- 递归比较两个目录树中的所有文件
 - 在输出中保持目录结构
-- 等同于 `diff -r` 行为
+- 无需手动标志 - 智能路径基础检测
 
-**共同行为:**
+**提供文件路径时:**
+- 正常文件比较行为
+- 无目录处理
+
+**混合文件/目录路径:**
+- 返回清晰错误: "Cannot compare file with directory"
+
+**目录比较功能:**
 - 跳过在两个目录中都不存在的文件
 - 尊重每个文件的格式自动检测
 - 报告仅存在于一个目录中的文件
+- 默认完全递归遍历
 
 ### 性能选项
 

@@ -1,12 +1,9 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use diffx_core::{
-    diff, parse_csv, parse_ini, parse_json, parse_toml, parse_xml, parse_yaml, 
-    DiffOptions, DiffxSpecificOptions, OutputFormat, format_output
+    diff_paths, DiffOptions, DiffxSpecificOptions, OutputFormat, format_output
 };
 use regex::Regex;
-use serde_json::Value;
-use std::fs;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -29,10 +26,6 @@ struct Args {
     /// Output format
     #[arg(short, long)]
     output: Option<String>,
-
-    /// Compare directories recursively
-    #[arg(short, long)]
-    recursive: bool,
 
     /// Filter by path (only show differences in paths containing this string)
     #[arg(long)]
@@ -108,21 +101,15 @@ enum Format {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Read and parse input files
-    let content1 = fs::read_to_string(&args.input1)?;
-    let content2 = fs::read_to_string(&args.input2)?;
-
-    let format1 = args.format.unwrap_or_else(|| detect_format(&args.input1));
-    let format2 = args.format.unwrap_or_else(|| detect_format(&args.input2));
-
-    let value1 = parse_content(&content1, format1)?;
-    let value2 = parse_content(&content2, format2)?;
-
     // Build options from CLI arguments
     let options = build_diff_options(&args)?;
 
-    // Perform diff
-    let results = diff(&value1, &value2, Some(&options))?;
+    // Perform diff using paths (automatic file/directory detection)
+    let results = diff_paths(
+        &args.input1.to_string_lossy(),
+        &args.input2.to_string_lossy(),
+        Some(&options)
+    )?;
 
     // Handle quiet mode
     if args.quiet {
@@ -161,28 +148,7 @@ fn main() -> Result<()> {
     std::process::exit(if results.is_empty() { 0 } else { 1 });
 }
 
-fn detect_format(path: &PathBuf) -> Format {
-    match path.extension().and_then(|ext| ext.to_str()) {
-        Some("json") => Format::Json,
-        Some("yaml") | Some("yml") => Format::Yaml,
-        Some("csv") => Format::Csv,
-        Some("toml") => Format::Toml,
-        Some("ini") | Some("cfg") => Format::Ini,
-        Some("xml") => Format::Xml,
-        _ => Format::Json, // Default fallback
-    }
-}
-
-fn parse_content(content: &str, format: Format) -> Result<Value> {
-    match format {
-        Format::Json => parse_json(content),
-        Format::Yaml => parse_yaml(content),
-        Format::Csv => parse_csv(content),
-        Format::Toml => parse_toml(content),
-        Format::Ini => parse_ini(content),
-        Format::Xml => parse_xml(content),
-    }
-}
+// File format and parsing functions are now handled by diffx-core
 
 fn build_diff_options(args: &Args) -> Result<DiffOptions> {
     let ignore_keys_regex = if let Some(pattern) = &args.ignore_keys_regex {

@@ -107,15 +107,17 @@ echo "$CONFIG_V1" | diffx - config_v2.json --format json
 
 ### 目录比较
 
-递归比较整个目录：
+diffx 自动检测目录并递归处理其中的所有文件：
 
 ```bash
 # 比较两个目录中的所有文件
-diffx config_dir1/ config_dir2/ --recursive
+diffx config_dir1/ config_dir2/
 
 # 仅比较特定文件类型
-diffx configs/ configs_backup/ --recursive --format json
+diffx configs/ configs_backup/ --format json
 ```
+
+> **注意**: 目录比较是自动的 - 不需要 --recursive 标志。diffx 智能检测目录并处理其中的所有文件。
 
 ## 高级功能
 
@@ -233,7 +235,7 @@ diffx config.json config.new.json --brief
 # 输出: Files config.json and config.new.json differ
 
 # 目录比较时特别有用
-diffx configs/ configs.backup/ --recursive --brief
+diffx configs/ configs.backup/ --brief
 ```
 
 #### 上下文行控制
@@ -578,7 +580,7 @@ diffx file1.json file2.json --quiet
 echo $? # 0=相同, 1=不同, 2=错误
 
 # 类似 diff --brief 的文件名报告
-diffx configs/ configs.backup/ --recursive --brief
+diffx configs/ configs.backup/ --brief
 
 # 类似 diff -i 的忽略大小写
 diffx schema.json schema_generated.json --ignore-case

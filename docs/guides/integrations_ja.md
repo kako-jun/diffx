@@ -285,6 +285,8 @@ validate_terraform:
 
 新しい高需要オプションは強力な自動化機能を提供します：
 
+**自動ディレクトリ検出**: ディレクトリを比較する際、diffx は明示的なフラグを必要とせずに、サポートされているすべてのファイル形式を再帰的に自動検出および処理します。これにより CI/CD パイプライン設定が簡素化され、包括的なカバレッジが保証されます。
+
 ```yaml
 # Quick deployment validation
 validate_deployment:
@@ -295,8 +297,8 @@ validate_deployment:
       if ! diffx baseline_config.json deployment_config.json --quiet; then
         echo "Configuration changes detected, running full validation"
         
-        # Show only filenames for quick overview  
-        diffx configs/ updated_configs/ --recursive --brief
+        # Show only filenames for quick overview (automatic directory detection)
+        diffx configs/ updated_configs/ --brief
         
         # Detailed analysis with ignore options
         diffx baseline_config.json deployment_config.json \

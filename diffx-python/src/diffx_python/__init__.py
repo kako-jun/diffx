@@ -49,7 +49,6 @@ class DiffOptions:
     # Basic options
     format: Optional[Format] = None
     output: Optional[OutputFormat] = None
-    recursive: bool = False
     path: Optional[str] = None
     ignore_keys_regex: Optional[str] = None
     epsilon: Optional[float] = None
@@ -69,8 +68,6 @@ class DiffOptions:
             args.extend(["--format", self.format.value])
         if self.output:
             args.extend(["--output", self.output.value])
-        if self.recursive:
-            args.append("--recursive")
         if self.path:
             args.extend(["--path", self.path])
         if self.ignore_keys_regex:

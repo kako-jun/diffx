@@ -18,7 +18,7 @@ A: `diffx` supports JSON, YAML, TOML, XML, INI, and CSV formats.
 
 ### Q: Does diffx support comparing directories?
 
-A: Yes, `diffx` supports recursive directory comparison using the `--recursive` option. It will find corresponding files in both directories and compare them.
+A: Yes, `diffx` automatically detects when directory paths are provided and recursively compares all files within both directories. Simply provide the directory paths and diffx will handle the rest - no special options needed.
 
 ## Usage Questions
 

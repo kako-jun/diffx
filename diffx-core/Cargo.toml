@@ -30,25 +30,6 @@ regex = { workspace = true }
 criterion = { workspace = true }
 tempfile = { workspace = true }
 
-[[test]]
-name = "basic_diff"
-path = "tests/unit/basic_diff.rs"
-
-[[test]]
-name = "advanced_options"
-path = "tests/unit/advanced_options.rs"
-
-[[test]]
-name = "array_handling"
-path = "tests/unit/array_handling.rs"
-
-[[test]]
-name = "parsing"
-path = "tests/unit/parsing.rs"
-
-[[test]]
-name = "unit_tests"
-path = "tests/unit/unit_tests.rs"
 
 [[bench]]
 name = "diff_benchmark"

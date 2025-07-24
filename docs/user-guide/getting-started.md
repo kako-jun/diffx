@@ -107,15 +107,17 @@ echo "$CONFIG_V1" | diffx - config_v2.json --format json
 
 ### Directory Comparison
 
-Compare entire directories recursively:
+diffx automatically detects when you're comparing directories and processes them recursively:
 
 ```bash
 # Compare all files in two directories
-diffx config_dir1/ config_dir2/ --recursive
+diffx config_dir1/ config_dir2/
 
 # Only compare specific file types
-diffx configs/ configs_backup/ --recursive --format json
+diffx configs/ configs_backup/ --format json
 ```
+
+> **Note**: Directory comparison is automatic - no --recursive flag needed. diffx intelligently detects directories and processes all files within them.
 
 ## Advanced Features
 

@@ -32,11 +32,11 @@ for diff_item in json_result:
     elif diff_item.modified:
         print(f"Modified: {diff_item.modified}")
 
-# Compare directory trees
+# Compare directory trees (automatic recursive detection)
 dir_result = diffx.diff(
     'dir1/', 
     'dir2/',
-    diffx.DiffOptions(recursive=True, path='config')
+    diffx.DiffOptions(path='config')
 )
 
 # Compare strings directly

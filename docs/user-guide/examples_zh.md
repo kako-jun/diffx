@@ -497,10 +497,12 @@ watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "检测
 
 ```bash
 # 快速目录扫描以查找更改的文件
-diffx config_dir/ backup_dir/ --recursive --brief
+# diffx 自动检测目录并递归比较
+diffx config_dir/ backup_dir/ --brief
 
 # 在CI流水线中用于更改检测
-changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
+# diffx 自动检测目录并递归比较
+changed_files=$(diffx current_configs/ previous_configs/ --brief)
 if [ -n "$changed_files" ]; then
   echo "检测到配置更改："
   echo "$changed_files"
@@ -582,8 +584,8 @@ diffx config.json config.backup.json \
   --ignore-whitespace
 
 # 等效于：diff -r --brief dir1/ dir2/
+# diffx 自动检测目录并递归比较
 diffx config_dir/ backup_dir/ \
-  --recursive \
   --brief
 
 # 高级模式：大小写不敏感与选择性字段忽略

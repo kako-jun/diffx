@@ -32,7 +32,7 @@ diffx config.json config.new.json
 # Compare with stdin
 cat config.json | diffx - config.new.json
 
-# Compare directories (Unix diff compatible - non-recursive by default)
+# Compare directories (automatic recursive detection)
 diffx config_dir1/ config_dir2/
 ```
 
@@ -356,8 +356,8 @@ diffx large.json large.new.json --quiet --ignore-whitespace
 diffx config.json config.new.json --brief
 # Output: Files config.json and config.new.json differ
 
-# Use with directory comparison
-diffx configs/ configs.backup/ --recursive --brief
+# Use with directory comparison (automatic recursion)
+diffx configs/ configs.backup/ --brief
 # Output: Files configs/app.json and configs.backup/app.json differ
 
 # Combine with filtering
@@ -398,8 +398,8 @@ diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilo
 # Numerical tolerance configuration:
 #   Epsilon value: 0.1
 
-# Verbose directory comparison
-diffx configs/ configs.backup/ --recursive --verbose
+# Verbose directory comparison (automatic recursion)
+diffx configs/ configs.backup/ --verbose
 # Additional output:
 # Directory scan results:
 #   Files in configs/: 12
@@ -459,8 +459,8 @@ diffx deploy.yaml deploy.new.yaml --no-color --output json > diff_report.json
 # Combine with other output options
 diffx large.json large.new.json --no-color --brief --quiet
 
-# Directory comparison without colors
-diffx configs/ configs.backup/ --recursive --no-color
+# Directory comparison without colors (automatic recursion)
+diffx configs/ configs.backup/ --no-color
 ```
 
 **Use Cases:**
@@ -473,53 +473,49 @@ diffx configs/ configs.backup/ --recursive --no-color
 
 ### Directory Options
 
-#### `-r, --recursive`
-- **Type**: Boolean flag
-- **Default**: False
-- **Description**: Compare directories recursively through subdirectories (Unix diff compatible)
+#### **Automatic Directory Detection**
+- **Type**: Automatic feature (no option required)
+- **Default**: Enabled when directory paths are provided
+- **Description**: When directory paths are provided, diffx automatically compares all files recursively through subdirectories
 
 **Examples:**
 ```bash
-# Directory comparison without --recursive (Unix diff compatible)
-# Compares files in directories directly, shows "Common subdirectories" for subdirs
+# Directory comparison (automatic recursive processing)
 diffx config_dir1/ config_dir2/
-# Output:
-# Common subdirectories: config_dir1/subdir and config_dir2/subdir
-# --- Comparing config.json ---
-# ~ version: "1.0" -> "1.1"
-
-# Recursive comparison - compares all files including subdirectories
-diffx config_dir1/ config_dir2/ --recursive
+# Automatically detects directories and compares all files recursively
 # Output:
 # --- Comparing config.json ---
 # ~ version: "1.0" -> "1.1"
 # --- Comparing subdir/nested.json ---
 # ~ data: "old" -> "new"
 
-# Recursive comparison with output format
-diffx environments/dev/ environments/prod/ -r --output json
+# Directory comparison with output format (automatic recursion)
+diffx environments/dev/ environments/prod/ --output json
 
-# Recursive with filtering
-diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
+# Directory comparison with filtering (automatic recursion)
+diffx configs/ configs.backup/ --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**Unix diff Compatible Behavior:**
+**Modern Directory Behavior:**
 
-**Without `--recursive` flag (default):**
-- Compares files directly in the specified directories only
-- Shows "Common subdirectories" message for subdirectories found in both locations
-- Does NOT compare files inside subdirectories
-- Maintains compatibility with standard Unix `diff` command
-
-**With `--recursive` flag:**
-- Compares all files recursively through subdirectories
+**Directory paths provided:**
+- Automatically detects that inputs are directories
+- Recursively compares all files in both directory trees
 - Maintains directory structure in output
-- Equivalent to `diff -r` behavior
+- No manual flag required - intelligent path-based detection
 
-**Common behavior:**
+**File paths provided:**
+- Normal file comparison behavior
+- No directory processing
+
+**Mixed file/directory paths:**
+- Returns clear error: "Cannot compare file with directory"
+
+**Directory comparison features:**
 - Skips files that don't exist in both directories
 - Respects format auto-detection for each file
 - Reports files that exist in only one directory
+- Full recursive traversal by default
 
 ### Performance Options
 
@@ -657,16 +653,12 @@ diffx users.json users.new.json \
 ### Directory Operations
 
 ```bash
-# Unix diff compatible directory comparison (non-recursive)
+# Directory comparison (automatic recursive processing)
 diffx configs/ configs.backup/
-# Shows files in directories and "Common subdirectories" message
+# Automatically detects directories and compares all files recursively
 
-# Recursive directory comparison
-diffx configs/ configs.backup/ --recursive
-
-# Directory comparison with filtering
+# Directory comparison with filtering (automatic recursion)
 diffx env/dev/ env/prod/ \
-  --recursive \
   --ignore-keys-regex "^(host|port|password)" \
   --output json > env_diff.json
 ```

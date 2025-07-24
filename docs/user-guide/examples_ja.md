@@ -497,10 +497,12 @@ watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "設定
 
 ```bash
 # 変更されたファイルの高速ディレクトリスキャン
-diffx config_dir/ backup_dir/ --recursive --brief
+# diffxはディレクトリを自動検出し、再帰的に比較します
+diffx config_dir/ backup_dir/ --brief
 
 # 変更検出のためのCIパイプラインでの使用
-changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
+# diffxはディレクトリを自動検出し、再帰的に比較します
+changed_files=$(diffx current_configs/ previous_configs/ --brief)
 if [ -n "$changed_files" ]; then
   echo "設定変更が検出されました:"
   echo "$changed_files"
@@ -582,8 +584,8 @@ diffx config.json config.backup.json \
   --ignore-whitespace
 
 # 同等: diff -r --brief dir1/ dir2/
+# diffxはディレクトリを自動検出し、再帰的に比較します
 diffx config_dir/ backup_dir/ \
-  --recursive \
   --brief
 
 # 高度なパターン: 選択的フィールド無視での大文字小文字無視

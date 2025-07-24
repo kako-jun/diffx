@@ -32,7 +32,7 @@ diffx config.json config.new.json
 # 標準入力と比較
 cat config.json | diffx - config.new.json
 
-# ディレクトリ比較（Unixのdiff互換 - デフォルトは非再帰）
+# ディレクトリ比較（自動再帰検出）
 diffx config_dir1/ config_dir2/
 ```
 
@@ -356,8 +356,8 @@ diffx large.json large.new.json --quiet --ignore-whitespace
 diffx config.json config.new.json --brief
 # 出力: Files config.json and config.new.json differ
 
-# ディレクトリ比較で使用
-diffx configs/ configs.backup/ --recursive --brief
+# ディレクトリ比較で使用（自動再帰）
+diffx configs/ configs.backup/ --brief
 # 出力: Files configs/app.json and configs.backup/app.json differ
 
 # フィルタリングと組み合わせ
@@ -398,8 +398,8 @@ diffx data.json data.new.json --verbose --ignore-keys-regex "timestamp" --epsilo
 # Numerical tolerance configuration:
 #   Epsilon value: 0.1
 
-# verboseディレクトリ比較
-diffx configs/ configs.backup/ --recursive --verbose
+# verboseディレクトリ比較（自動再帰）
+diffx configs/ configs.backup/ --verbose
 # 追加出力:
 # Directory scan results:
 #   Files in configs/: 12
@@ -459,8 +459,8 @@ diffx deploy.yaml deploy.new.yaml --no-color --output json > diff_report.json
 # 他の出力オプションと組み合わせ
 diffx large.json large.new.json --no-color --brief --quiet
 
-# カラーなしのディレクトリ比較
-diffx configs/ configs.backup/ --recursive --no-color
+# カラーなしのディレクトリ比較（自動再帰）
+diffx configs/ configs.backup/ --no-color
 ```
 
 **使用例:**
@@ -473,53 +473,50 @@ diffx configs/ configs.backup/ --recursive --no-color
 
 ### ディレクトリオプション
 
-#### `-r, --recursive`
-- **型**: ブールフラグ
-- **デフォルト**: False
-- **説明**: サブディレクトリを通じてディレクトリを再帰的に比較（Unix diff互換）
+#### **自動ディレクトリ検出**
+- **型**: 自動機能（オプション不要）
+- **デフォルト**: ディレクトリパスが提供された場合に有効
+- **説明**: ディレクトリパスが提供された場合、diffxは自動的にサブディレクトリを通じてすべてのファイルを再帰的に比較
 
 **例:**
 ```bash
-# --recursiveなしのディレクトリ比較（Unix diff互換）
-# ディレクトリ内のファイルを直接比較、サブディレクトリには「Common subdirectories」を表示
+# ディレクトリ比較（自動再帰処理）
 diffx config_dir1/ config_dir2/
-# 出力:
-# Common subdirectories: config_dir1/subdir and config_dir2/subdir
-# --- Comparing config.json ---
-# ~ version: "1.0" -> "1.1"
-
-# 再帰比較 - サブディレクトリを含むすべてのファイルを比較
-diffx config_dir1/ config_dir2/ --recursive
+# 自動的にディレクトリを検出し、すべてのファイルを再帰的に比較
 # 出力:
 # --- Comparing config.json ---
 # ~ version: "1.0" -> "1.1"
 # --- Comparing subdir/nested.json ---
 # ~ data: "old" -> "new"
 
-# 出力形式付き再帰比較
-diffx environments/dev/ environments/prod/ -r --output json
+# 出力形式付きディレクトリ比較（自動再帰）
+diffx environments/dev/ environments/prod/ --output json
 
-# フィルタリング付き再帰
-diffx configs/ configs.backup/ -r --ignore-keys-regex "^(timestamp|version)$"
+# フィルタリング付きディレクトリ比較（自動再帰）
+diffx configs/ configs.backup/ --ignore-keys-regex "^(timestamp|version)$"
 ```
 
-**Unix diff互換動作:**
+**現代的なディレクトリ動作:**
 
-**`--recursive`フラグなし（デフォルト）:**
-- 指定されたディレクトリ内のファイルのみを直接比較
-- 両方の場所にあるサブディレクトリには「Common subdirectories」メッセージを表示
-- サブディレクトリ内のファイルは比較しない
-- 標準Unix `diff`コマンドとの互換性を維持
-
-**`--recursive`フラグあり:**
-- サブディレクトリを通じてすべてのファイルを再帰的に比較
+**ディレクトリパスが提供された場合:**
+- 入力がディレクトリであることを自動的に検出
+- 両方のディレクトリツリー内のすべてのファイルを再帰的に比較
 - 出力でディレクトリ構造を維持
-- `diff -r`動作と同等
+- 手動フラグ不要 - インテリジェントなパスベース検出
 
-**共通動作:**
+**ファイルパスが提供された場合:**
+- 通常のファイル比較動作
+- ディレクトリ処理なし
+
+**ファイル/ディレクトリパスの混在:**
+- 明確なエラーを返す: "Cannot compare file with directory"
+
+**ディレクトリ比較機能:**
 - 両方のディレクトリに存在しないファイルをスキップ
 - 各ファイルの形式自動検出を尊重
-- 一方のディレクトリにのみ存在するファイルを報告
+- 片方のディレクトリにのみ存在するファイルを報告
+- デフォルトで完全な再帰的トラバーサル
+
 
 ### パフォーマンスオプション
 
