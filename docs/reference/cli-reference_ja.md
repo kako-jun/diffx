@@ -24,16 +24,36 @@ diffx [OPTIONS] <INPUT1> <INPUT2>
 - **必須**: はい
 - **説明**: 比較する2番目の入力
 
+**標準入力サポート:**
+- **片方が標準入力、片方がファイル**: `diffx - file.json` または `diffx file.json -`
+- **両方が標準入力**: `diffx - -` (標準入力から2つのデータセットを読み取り)
+  - **JSON**: 改行で区切られた、または連結された2つのJSONオブジェクト
+  - **YAML**: `---`で区切られた2つのYAMLドキュメント
+
 **例:**
 ```bash
 # 2つのファイルを比較
 diffx config.json config.new.json
 
-# 標準入力と比較
+# 標準入力とファイル
 cat config.json | diffx - config.new.json
+
+# 両方を標準入力から（パイプ両方）
+echo '{"old": "data"}
+{"new": "data"}' | diffx - -
+
+# 標準入力から2つのYAMLドキュメント
+echo 'name: Alice
+age: 25
+---
+name: Bob
+age: 30' | diffx - - --format yaml
 
 # ディレクトリ比較（自動再帰検出）
 diffx config_dir1/ config_dir2/
+
+# APIレスポンス比較（標準入力経由）
+(curl -s https://api.example.com/v1/config; echo; curl -s https://api.example.com/v2/config) | diffx - -
 ```
 
 ## オプション
