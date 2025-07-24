@@ -1,10 +1,12 @@
 # API 参考 - diffx-core
 
-`diffx-core` Rust crate 的完整 API 文档，为结构化数据提供语义差异功能。
+`diffx-core` Rust crate 的完整 API 文档，提供结构化数据的语义差异功能。
 
 ## 概述
 
-`diffx-core` crate 是 diffx 生态系统的核心，为结构化数据格式提供快速准确的语义差异操作。它可以嵌入到其他 Rust 应用程序中以添加语义比较功能。
+`diffx-core` crate 是 diffx 生态系统的核心，为结构化数据格式提供快速、准确的语义差异操作。它可以嵌入到其他 Rust 应用程序中以添加语义比较功能。
+
+**统一API设计**：核心 API 仅公开一个主函数 `diff()` 用于所有比较操作。所有功能都通过选项参数从这个统一接口访问。这种设计确保了所有用例的一致性和简单性。
 
 ## 安装
 
@@ -23,9 +25,9 @@ diffx-core = { version = "0.2.0", features = ["all-formats"] }
 ```
 
 可用功能：
-- `json` (默认) - JSON 格式支持
-- `yaml` (默认) - YAML 格式支持  
-- `toml` (默认) - TOML 格式支持
+- `json`（默认）- JSON 格式支持
+- `yaml`（默认）- YAML 格式支持  
+- `toml`（默认）- TOML 格式支持
 - `xml` - XML 格式支持
 - `ini` - INI 格式支持
 - `csv` - CSV 格式支持
@@ -42,16 +44,16 @@ diffx-core = { version = "0.2.0", features = ["all-formats"] }
 ```rust
 #[derive(Debug, PartialEq, Serialize)]
 pub enum DiffResult {
-    Added(String, Value),           // 添加了新键/值
-    Removed(String, Value),         // 移除了键/值
-    Modified(String, Value, Value), // 值已更改 (旧, 新)
-    TypeChanged(String, Value, Value), // 类型已更改 (旧, 新)
+    Added(String, Value),           // 新增键/值
+    Removed(String, Value),         // 删除键/值
+    Modified(String, Value, Value), // 值已更改（旧值，新值）
+    TypeChanged(String, String, String), // 类型已更改（路径，旧类型，新类型）
 }
 ```
 
 **字段：**
-- **路径** (`String`): 更改元素的 JSON 路径 (例如：`"config.database.port"`)
-- **值** (`Value`): 表示数据的 serde_json::Value
+- **路径** (`String`)：更改元素的 JSON 路径（例如：`"config.database.port"`）
+- **值** (`Value`)：表示数据的 serde_json::Value
 
 **示例：**
 ```rust
@@ -74,8 +76,8 @@ let modified = DiffResult::Modified(
 // 类型更改
 let type_changed = DiffResult::TypeChanged(
     "debug".to_string(),
-    Value::String("true".to_string()),
-    Value::Bool(true)
+    "string".to_string(),
+    "boolean".to_string()
 );
 ```
 
@@ -83,51 +85,75 @@ let type_changed = DiffResult::TypeChanged(
 
 #### `diff()`
 
-计算两个结构化值之间语义差异的主要函数。
+计算两个结构化值之间语义差异的主要函数。这是所有比较操作的统一 API 入口点。
 
 ```rust
 pub fn diff(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult>
+    old: &Value,
+    new: &Value,
+    options: Option<&DiffOptions>,
+) -> Result<Vec<DiffResult>, Error>
 ```
 
 **参数：**
-- `v1`: 要比较的第一个值（基线）
-- `v2`: 要比较的第二个值（目标）
-- `ignore_keys_regex`: 用于忽略某些键的可选正则表达式
-- `epsilon`: 浮点数比较的可选容差
-- `array_id_key`: 数组元素标识的可选键
+- `old`：原始/基准值
+- `new`：新/目标值  
+- `options`：比较的可选配置选项
 
-**返回值：** 表示所有发现差异的 `DiffResult` 向量
+**返回值：**表示找到的所有差异的 `Result<Vec<DiffResult>, Error>`
+
+#### DiffOptions 结构体
+
+```rust
+pub struct DiffOptions {
+    // 核心比较选项
+    pub epsilon: Option<f64>,
+    pub array_id_key: Option<String>,
+    pub ignore_keys_regex: Option<Regex>,
+    pub path_filter: Option<String>,
+    
+    // 输出控制
+    pub output_format: Option<OutputFormat>,
+    pub show_unchanged: Option<bool>,
+    pub show_types: Option<bool>,
+    
+    // 内存优化
+    pub use_memory_optimization: Option<bool>,
+    pub batch_size: Option<usize>,
+    
+    // diffx特定选项
+    pub diffx_options: Option<DiffxSpecificOptions>,
+}
+```
 
 **示例：**
 ```rust
-use diffx_core::{diff, DiffResult};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::{json, Value};
 use regex::Regex;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let v1 = json!({
+    let old = json!({
         "name": "myapp",
         "version": "1.0",
         "timestamp": "2024-01-01T00:00:00Z"
     });
     
-    let v2 = json!({
+    let new = json!({
         "name": "myapp",
         "version": "1.1", 
         "timestamp": "2024-01-02T00:00:00Z",
         "port": 8080
     });
     
-    // 忽略时间戳更改
-    let ignore_regex = Regex::new(r"^timestamp$")?;
+    // 配置选项以忽略时间戳更改
+    let options = DiffOptions {
+        ignore_keys_regex: Some(Regex::new(r"^timestamp$")?),
+        show_unchanged: Some(false),
+        ..Default::default()
+    };
     
-    let differences = diff(&v1, &v2, Some(&ignore_regex), None, None);
+    let differences = diff(&old, &new, Some(&options))?;
     
     for diff in differences {
         match diff {
@@ -145,124 +171,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### 格式解析器
-
-#### `parse_ini()`
-
-将 INI 格式内容解析为 JSON Value。
-
-```rust
-pub fn parse_ini(content: &str) -> Result<Value>
-```
-
-**示例：**
-```rust
-use diffx_core::parse_ini;
-
-let ini_content = r#"
-[database]
-host = localhost
-port = 5432
-
-[cache]
-enabled = true
-ttl = 3600
-"#;
-
-let parsed = parse_ini(ini_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-```
-
-#### `parse_xml()`
-
-将 XML 格式内容解析为 JSON Value。
-
-```rust
-pub fn parse_xml(content: &str) -> Result<Value>
-```
-
-**示例：**
-```rust
-use diffx_core::parse_xml;
-
-let xml_content = r#"
-<config>
-    <database>
-        <host>localhost</host>
-        <port>5432</port>
-    </database>
-    <cache enabled="true">
-        <ttl>3600</ttl>
-    </cache>
-</config>
-"#;
-
-let parsed = parse_xml(xml_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-```
-
-#### `parse_csv()`
-
-将 CSV 格式内容解析为 JSON Value（对象数组）。
-
-```rust
-pub fn parse_csv(content: &str) -> Result<Value>
-```
-
-**示例：**
-```rust
-use diffx_core::parse_csv;
-
-let csv_content = r#"
-name,age,city
-Alice,25,New York
-Bob,30,San Francisco
-Charlie,35,Chicago
-"#;
-
-let parsed = parse_csv(csv_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-// 输出: [{"name": "Alice", "age": "25", "city": "New York"}, ...]
-```
-
-### 实用函数
-
-#### `value_type_name()`
-
-获取 JSON 值的人类可读类型名称。
-
-```rust
-pub fn value_type_name(value: &Value) -> &str
-```
-
-**返回值：** 包含类型名称的字符串切片：`"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`
-
-**示例：**
-```rust
-use diffx_core::value_type_name;
-use serde_json::{json, Value};
-
-let values = vec![
-    json!(null),
-    json!(true),
-    json!(42),
-    json!("hello"),
-    json!([1, 2, 3]),
-    json!({"key": "value"})
-];
-
-for value in values {
-    println!("{}: {}", value, value_type_name(&value));
-}
-// 输出:
-// null: null
-// true: boolean  
-// 42: number
-// "hello": string
-// [1,2,3]: array
-// {"key":"value"}: object
-```
-
 ## 高级用法
 
 ### 自定义比较逻辑
@@ -272,18 +180,22 @@ for value in values {
 处理浮点精度差异：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 
-let v1 = json!({"pi": 3.14159});
-let v2 = json!({"pi": 3.14160});
+let old = json!({"pi": 3.14159});
+let new = json!({"pi": 3.14160});
 
 // 无 epsilon - 报告差异
-let diffs_strict = diff(&v1, &v2, None, None, None);
+let diffs_strict = diff(&old, &new, None)?;
 assert!(!diffs_strict.is_empty());
 
 // 有 epsilon - 无差异
-let diffs_epsilon = diff(&v1, &v2, None, Some(0.001), None);
+let options = DiffOptions {
+    epsilon: Some(0.001),
+    ..Default::default()
+};
+let diffs_epsilon = diff(&old, &new, Some(&options))?;
 assert!(diffs_epsilon.is_empty());
 ```
 
@@ -292,79 +204,88 @@ assert!(diffs_epsilon.is_empty());
 忽略特定键或模式：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 use regex::Regex;
 
-let v1 = json!({
+let old = json!({
     "data": {"important": "value"},
     "timestamp": "2024-01-01T00:00:00Z",
     "_internal": "system_data"
 });
 
-let v2 = json!({
+let new = json!({
     "data": {"important": "new_value"},
     "timestamp": "2024-01-02T00:00:00Z", 
     "_internal": "different_system_data"
 });
 
 // 忽略时间戳和内部字段
-let ignore_regex = Regex::new(r"^(timestamp|_.*)")?;
-let differences = diff(&v1, &v2, Some(&ignore_regex), None, None);
+let options = DiffOptions {
+    ignore_keys_regex: Some(Regex::new(r"^(timestamp|_.*)")?),
+    ..Default::default()
+};
+let differences = diff(&old, &new, Some(&options))?;
 
-// 仅报告重要数据更改
+// 仅报告重要的数据更改
 assert_eq!(differences.len(), 1);
 ```
 
 #### 数组元素跟踪
 
-通过 ID 而非位置跟踪数组元素：
+通过 ID 而不是位置跟踪数组元素：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 
-let v1 = json!({
+let old = json!({
     "users": [
         {"id": 1, "name": "Alice"},
         {"id": 2, "name": "Bob"}
     ]
 });
 
-let v2 = json!({
+let new = json!({
     "users": [
         {"id": 2, "name": "Bob"}, 
-        {"id": 1, "name": "Alice Smith"}  // 名称已更改
+        {"id": 1, "name": "Alice Smith"}  // 名字已更改
     ]
 });
 
-// 使用 ID 跟踪 - 检测名称更改
-let differences = diff(&v1, &v2, None, None, Some("id"));
-// 报告: Modified users[id=1].name: "Alice" -> "Alice Smith"
+// 使用 ID 跟踪 - 检测名字更改
+let options = DiffOptions {
+    array_id_key: Some("id".to_string()),
+    ..Default::default()
+};
+let differences = diff(&old, &new, Some(&options))?;
+// 报告：Modified users[id=1].name: "Alice" -> "Alice Smith"
 
-// 无 ID 跟踪 - 由于位置差异报告所有更改
-let differences_positional = diff(&v1, &v2, None, None, None);
+// 不使用 ID 跟踪 - 由于位置原因报告所有更改
+let differences_positional = diff(&old, &new, None)?;
 // 由于位置差异报告多个更改
 ```
 
 ### 处理不同格式
 
-#### 完整格式处理管道
+#### 完整的格式处理管道
 
 ```rust
-use diffx_core::{diff, parse_ini, parse_xml, parse_csv};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::{from_str, Value};
 use std::fs;
 
 fn compare_files(
     file1_path: &str,
     file2_path: &str,
-    format: &str
+    format: &str,
+    options: Option<&DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     let content1 = fs::read_to_string(file1_path)?;
     let content2 = fs::read_to_string(file2_path)?;
     
-    let (value1, value2) = match format {
+    // 用户应为其格式使用标准解析器
+    let (old, new) = match format {
         "json" => {
             (from_str(&content1)?, from_str(&content2)?)
         }
@@ -374,19 +295,10 @@ fn compare_files(
         "toml" => {
             (toml::from_str(&content1)?, toml::from_str(&content2)?)
         }
-        "ini" => {
-            (parse_ini(&content1)?, parse_ini(&content2)?)
-        }
-        "xml" => {
-            (parse_xml(&content1)?, parse_xml(&content2)?)
-        }
-        "csv" => {
-            (parse_csv(&content1)?, parse_csv(&content2)?)
-        }
-        _ => return Err(format!("不支持的格式: {}", format).into())
+        _ => return Err(format!("不支持的格式：{}", format).into())
     };
     
-    Ok(diff(&value1, &value2, None, None, None))
+    Ok(diff(&old, &new, options)?)
 }
 ```
 
@@ -395,7 +307,7 @@ fn compare_files(
 #### 自定义差异处理
 
 ```rust
-use diffx_core::{diff, DiffResult};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 
 struct DiffProcessor {
@@ -416,8 +328,8 @@ impl DiffProcessor {
     }
     
     pub fn process(&mut self, differences: Vec<DiffResult>) {
-        for diff in differences {
-            match diff {
+        for diff_result in differences {
+            match diff_result {
                 DiffResult::Added(path, value) => {
                     self.additions.push((path, value));
                 }
@@ -427,8 +339,9 @@ impl DiffProcessor {
                 DiffResult::Modified(path, old, new) => {
                     self.modifications.push((path, old, new));
                 }
-                DiffResult::TypeChanged(path, old, new) => {
-                    self.type_changes.push((path, old, new));
+                DiffResult::TypeChanged(path, old_type, new_type) => {
+                    // 注意：TypeChanged 现在包含类型字符串，而不是值
+                    self.type_changes.push((path, old_type.into(), new_type.into()));
                 }
             }
         }
@@ -448,15 +361,15 @@ impl DiffProcessor {
 #### 异步处理
 
 ```rust
-use diffx_core::{diff, DiffResult};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tasks = vec![
-        process_diff_async("file1.json", "file2.json"),
-        process_diff_async("file3.json", "file4.json"),
+        process_diff_async("file1.json", "file2.json", None),
+        process_diff_async("file3.json", "file4.json", None),
     ];
     
     let results = futures::future::try_join_all(tasks).await?;
@@ -470,16 +383,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn process_diff_async(
     file1: &str,
-    file2: &str
+    file2: &str,
+    options: Option<DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     let content1 = tokio::fs::read_to_string(file1).await?;
     let content2 = tokio::fs::read_to_string(file2).await?;
     
     // 在后台任务中解析以避免阻塞
     let result = tokio::task::spawn_blocking(move || {
-        let v1: Value = serde_json::from_str(&content1)?;
-        let v2: Value = serde_json::from_str(&content2)?;
-        Ok::<_, serde_json::Error>(diff(&v1, &v2, None, None, None))
+        let old: Value = serde_json::from_str(&content1)?;
+        let new: Value = serde_json::from_str(&content2)?;
+        diff(&old, &new, options.as_ref())
     }).await??;
     
     Ok(result)
@@ -490,24 +404,24 @@ async fn process_diff_async(
 
 ### 错误类型
 
-库使用 `anyhow::Error` 进行错误处理：
+该库使用 `anyhow::Error` 进行错误处理：
 
 ```rust
-use diffx_core::parse_ini;
+use diffx_core::{diff, DiffOptions};
 use anyhow::Result;
 
 fn handle_parse_errors() -> Result<()> {
-    let invalid_ini = "invalid [section syntax";
+    let invalid_data = "invalid json";
     
-    match parse_ini(invalid_ini) {
-        Ok(value) => println!("解析成功: {}", value),
+    match serde_json::from_str::<Value>(invalid_data) {
+        Ok(value) => println!("解析成功：{}", value),
         Err(e) => {
-            eprintln!("解析错误: {}", e);
+            eprintln!("解析错误：{}", e);
             
             // 错误原因链
             let mut source = e.source();
             while let Some(err) = source {
-                eprintln!("由以下原因引起: {}", err);
+                eprintln!("原因：{}", err);
                 source = err.source();
             }
         }
@@ -520,29 +434,25 @@ fn handle_parse_errors() -> Result<()> {
 ### 常见错误场景
 
 ```rust
-use diffx_core::{diff, parse_xml};
-use serde_json::json;
+use diffx_core::{diff, DiffOptions, DiffResult};
+use serde_json::Value;
 
-// 处理格式错误的数据
+// 处理多种格式可能性
 fn robust_comparison(
     data1: &str,
-    data2: &str
+    data2: &str,
+    options: Option<&DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     // 首先尝试解析为 JSON
-    let v1 = match serde_json::from_str(data1) {
-        Ok(v) => v,
-        Err(_) => {
-            // 如果 JSON 失败则尝试 XML
-            parse_xml(data1)?
-        }
-    };
+    let old = serde_json::from_str::<Value>(data1)
+        .or_else(|_| serde_yml::from_str::<Value>(data1))
+        .or_else(|_| toml::from_str::<Value>(data1))?;
     
-    let v2 = match serde_json::from_str(data2) {
-        Ok(v) => v,
-        Err(_) => parse_xml(data2)?
-    };
+    let new = serde_json::from_str::<Value>(data2)
+        .or_else(|_| serde_yml::from_str::<Value>(data2))
+        .or_else(|_| toml::from_str::<Value>(data2))?;
     
-    Ok(diff(&v1, &v2, None, None, None))
+    Ok(diff(&old, &new, options)?)
 }
 ```
 
@@ -553,40 +463,37 @@ fn robust_comparison(
 对于大型数据集：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 
 // 高效处理大文件
 fn process_large_diff(
-    v1: &Value,
-    v2: &Value,
+    old: &Value,
+    new: &Value,
     focus_path: Option<&str>
-) -> Vec<DiffResult> {
-    // 如果专注于特定路径，仅提取该部分
-    if let Some(path) = focus_path {
-        if let (Some(sub1), Some(sub2)) = (
-            extract_path(v1, path),
-            extract_path(v2, path)
-        ) {
-            return diff(&sub1, &sub2, None, None, None);
+) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
+    let options = if let Some(path) = focus_path {
+        DiffOptions {
+            path_filter: Some(path.to_string()),
+            use_memory_optimization: Some(true),
+            ..Default::default()
         }
-    }
+    } else {
+        DiffOptions {
+            use_memory_optimization: Some(true),
+            ..Default::default()
+        }
+    };
     
-    diff(v1, v2, None, None, None)
-}
-
-fn extract_path(value: &Value, path: &str) -> Option<Value> {
-    // 提取嵌套路径的实现
-    // 这将遍历 JSON 路径
-    todo!("实现路径提取")
+    Ok(diff(old, new, Some(&options))?)
 }
 ```
 
-### 优化技巧
+### 优化提示
 
-1. **使用正则表达式过滤** 忽略大型、不相关的部分
-2. **为浮点数密集数据指定 epsilon**
-3. **为具有可识别元素的大数组使用数组 ID 键**
+1. **使用正则表达式过滤** 来忽略大型无关部分
+2. **指定 epsilon** 用于浮点数较多的数据
+3. **使用数组 ID 键** 用于具有可识别元素的大型数组
 4. **考虑路径过滤** 用于非常大的对象
 
 ## 测试
@@ -601,10 +508,10 @@ mod tests {
     
     #[test]
     fn test_basic_diff() {
-        let v1 = json!({"a": 1, "b": 2});
-        let v2 = json!({"a": 1, "b": 3, "c": 4});
+        let old = json!({"a": 1, "b": 2});
+        let new = json!({"a": 1, "b": 3, "c": 4});
         
-        let diffs = diff(&v1, &v2, None, None, None);
+        let diffs = diff(&old, &new, None).unwrap();
         
         assert_eq!(diffs.len(), 2);
         // 测试特定差异...
@@ -612,13 +519,17 @@ mod tests {
     
     #[test]
     fn test_epsilon_comparison() {
-        let v1 = json!({"value": 1.0});
-        let v2 = json!({"value": 1.0001});
+        let old = json!({"value": 1.0});
+        let new = json!({"value": 1.0001});
         
-        let diffs_strict = diff(&v1, &v2, None, None, None);
+        let diffs_strict = diff(&old, &new, None).unwrap();
         assert!(!diffs_strict.is_empty());
         
-        let diffs_epsilon = diff(&v1, &v2, None, Some(0.001), None);
+        let options = DiffOptions {
+            epsilon: Some(0.001),
+            ..Default::default()
+        };
+        let diffs_epsilon = diff(&old, &new, Some(&options)).unwrap();
         assert!(diffs_epsilon.is_empty());
     }
 }
@@ -626,12 +537,13 @@ mod tests {
 
 ## 版本兼容性
 
-- **0.2.x**: 当前稳定版本
-- **最低 Rust 版本**: 1.70.0
-- **依赖关系**: 请参见 `Cargo.toml` 了解当前版本
+- **0.2.x**：当前稳定版本
+- **最低 Rust 版本**：1.70.0
+- **依赖项**：请参阅 `Cargo.toml` 了解当前版本
 
 ## 另请参阅
 
-- [CLI 参考](cli-reference.md) 了解命令行用法
-- [入门指南](../user-guide/getting-started.md) 了解基本概念
-- [示例](../user-guide/examples.md) 了解实际用例
+- [CLI 参考](cli-reference_zh.md) - 命令行使用
+- [入门指南](../user-guide/getting-started_zh.md) - 基本概念
+- [示例](../user-guide/examples_zh.md) - 实际用例
+- [统一API参考](../bindings/unified-api_zh.md) - 语言绑定

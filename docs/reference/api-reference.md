@@ -6,6 +6,8 @@ Complete API documentation for the `diffx-core` Rust crate, providing semantic d
 
 The `diffx-core` crate is the heart of the diffx ecosystem, providing fast and accurate semantic diff operations for structured data formats. It can be embedded in other Rust applications to add semantic comparison capabilities.
 
+**Unified API Design**: The core API exposes only a single main function `diff()` for all comparison operations. All functionality is accessed through this unified interface using the options parameter. This design ensures consistency and simplicity across all use cases.
+
 ## Installation
 
 Add `diffx-core` to your `Cargo.toml`:
@@ -83,51 +85,75 @@ let type_changed = DiffResult::TypeChanged(
 
 #### `diff()`
 
-Primary function for computing semantic differences between two structured values.
+Primary function for computing semantic differences between two structured values. This is the unified API entry point for all comparison operations.
 
 ```rust
 pub fn diff(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult>
+    old: &Value,
+    new: &Value,
+    options: Option<&DiffOptions>,
+) -> Result<Vec<DiffResult>, Error>
 ```
 
 **Parameters:**
-- `v1`: First value to compare (baseline)
-- `v2`: Second value to compare (target)
-- `ignore_keys_regex`: Optional regex to ignore certain keys
-- `epsilon`: Optional tolerance for floating-point comparisons
-- `array_id_key`: Optional key for array element identification
+- `old`: Original/baseline value to compare
+- `new`: New/target value to compare  
+- `options`: Optional configuration options for the comparison
 
-**Returns:** Vector of `DiffResult` representing all differences found
+**Returns:** `Result<Vec<DiffResult>, Error>` representing all differences found
+
+#### DiffOptions Structure
+
+```rust
+pub struct DiffOptions {
+    // Core comparison options
+    pub epsilon: Option<f64>,
+    pub array_id_key: Option<String>,
+    pub ignore_keys_regex: Option<Regex>,
+    pub path_filter: Option<String>,
+    
+    // Output control
+    pub output_format: Option<OutputFormat>,
+    pub show_unchanged: Option<bool>,
+    pub show_types: Option<bool>,
+    
+    // Memory optimization
+    pub use_memory_optimization: Option<bool>,
+    pub batch_size: Option<usize>,
+    
+    // diffx-specific options
+    pub diffx_options: Option<DiffxSpecificOptions>,
+}
+```
 
 **Example:**
 ```rust
-use diffx_core::{diff, DiffResult};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::{json, Value};
 use regex::Regex;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let v1 = json!({
+    let old = json!({
         "name": "myapp",
         "version": "1.0",
         "timestamp": "2024-01-01T00:00:00Z"
     });
     
-    let v2 = json!({
+    let new = json!({
         "name": "myapp",
         "version": "1.1", 
         "timestamp": "2024-01-02T00:00:00Z",
         "port": 8080
     });
     
-    // Ignore timestamp changes
-    let ignore_regex = Regex::new(r"^timestamp$")?;
+    // Configure options to ignore timestamp changes
+    let options = DiffOptions {
+        ignore_keys_regex: Some(Regex::new(r"^timestamp$")?),
+        show_unchanged: Some(false),
+        ..Default::default()
+    };
     
-    let differences = diff(&v1, &v2, Some(&ignore_regex), None, None);
+    let differences = diff(&old, &new, Some(&options))?;
     
     for diff in differences {
         match diff {
@@ -145,123 +171,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### Format Parsers
 
-#### `parse_ini()`
-
-Parse INI format content into a JSON Value.
-
-```rust
-pub fn parse_ini(content: &str) -> Result<Value>
-```
-
-**Example:**
-```rust
-use diffx_core::parse_ini;
-
-let ini_content = r#"
-[database]
-host = localhost
-port = 5432
-
-[cache]
-enabled = true
-ttl = 3600
-"#;
-
-let parsed = parse_ini(ini_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-```
-
-#### `parse_xml()`
-
-Parse XML format content into a JSON Value.
-
-```rust
-pub fn parse_xml(content: &str) -> Result<Value>
-```
-
-**Example:**
-```rust
-use diffx_core::parse_xml;
-
-let xml_content = r#"
-<config>
-    <database>
-        <host>localhost</host>
-        <port>5432</port>
-    </database>
-    <cache enabled="true">
-        <ttl>3600</ttl>
-    </cache>
-</config>
-"#;
-
-let parsed = parse_xml(xml_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-```
-
-#### `parse_csv()`
-
-Parse CSV format content into a JSON Value (array of objects).
-
-```rust
-pub fn parse_csv(content: &str) -> Result<Value>
-```
-
-**Example:**
-```rust
-use diffx_core::parse_csv;
-
-let csv_content = r#"
-name,age,city
-Alice,25,New York
-Bob,30,San Francisco
-Charlie,35,Chicago
-"#;
-
-let parsed = parse_csv(csv_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-// Output: [{"name": "Alice", "age": "25", "city": "New York"}, ...]
-```
-
-### Utility Functions
-
-#### `value_type_name()`
-
-Get a human-readable type name for a JSON value.
-
-```rust
-pub fn value_type_name(value: &Value) -> &str
-```
-
-**Returns:** String slice with type name: `"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`
-
-**Example:**
-```rust
-use diffx_core::value_type_name;
-use serde_json::{json, Value};
-
-let values = vec![
-    json!(null),
-    json!(true),
-    json!(42),
-    json!("hello"),
-    json!([1, 2, 3]),
-    json!({"key": "value"})
-];
-
-for value in values {
-    println!("{}: {}", value, value_type_name(&value));
-}
-// Output:
-// null: null
-// true: boolean  
-// 42: number
-// "hello": string
-// [1,2,3]: array
-// {"key":"value"}: object
-```
 
 ## Advanced Usage
 
@@ -272,18 +182,22 @@ for value in values {
 Handle floating-point precision differences:
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 
-let v1 = json!({"pi": 3.14159});
-let v2 = json!({"pi": 3.14160});
+let old = json!({"pi": 3.14159});
+let new = json!({"pi": 3.14160});
 
 // Without epsilon - reports difference
-let diffs_strict = diff(&v1, &v2, None, None, None);
+let diffs_strict = diff(&old, &new, None)?;
 assert!(!diffs_strict.is_empty());
 
 // With epsilon - no difference
-let diffs_epsilon = diff(&v1, &v2, None, Some(0.001), None);
+let options = DiffOptions {
+    epsilon: Some(0.001),
+    ..Default::default()
+};
+let diffs_epsilon = diff(&old, &new, Some(&options))?;
 assert!(diffs_epsilon.is_empty());
 ```
 
@@ -292,25 +206,28 @@ assert!(diffs_epsilon.is_empty());
 Ignore specific keys or patterns:
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 use regex::Regex;
 
-let v1 = json!({
+let old = json!({
     "data": {"important": "value"},
     "timestamp": "2024-01-01T00:00:00Z",
     "_internal": "system_data"
 });
 
-let v2 = json!({
+let new = json!({
     "data": {"important": "new_value"},
     "timestamp": "2024-01-02T00:00:00Z", 
     "_internal": "different_system_data"
 });
 
 // Ignore timestamp and internal fields
-let ignore_regex = Regex::new(r"^(timestamp|_.*)")?;
-let differences = diff(&v1, &v2, Some(&ignore_regex), None, None);
+let options = DiffOptions {
+    ignore_keys_regex: Some(Regex::new(r"^(timestamp|_.*)")?),
+    ..Default::default()
+};
+let differences = diff(&old, &new, Some(&options))?;
 
 // Only reports the important data change
 assert_eq!(differences.len(), 1);
@@ -321,17 +238,17 @@ assert_eq!(differences.len(), 1);
 Track array elements by ID instead of position:
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 
-let v1 = json!({
+let old = json!({
     "users": [
         {"id": 1, "name": "Alice"},
         {"id": 2, "name": "Bob"}
     ]
 });
 
-let v2 = json!({
+let new = json!({
     "users": [
         {"id": 2, "name": "Bob"}, 
         {"id": 1, "name": "Alice Smith"}  // Name changed
@@ -339,11 +256,15 @@ let v2 = json!({
 });
 
 // With ID tracking - detects name change
-let differences = diff(&v1, &v2, None, None, Some("id"));
+let options = DiffOptions {
+    array_id_key: Some("id".to_string()),
+    ..Default::default()
+};
+let differences = diff(&old, &new, Some(&options))?;
 // Reports: Modified users[id=1].name: "Alice" -> "Alice Smith"
 
 // Without ID tracking - reports all as changed due to position
-let differences_positional = diff(&v1, &v2, None, None, None);
+let differences_positional = diff(&old, &new, None)?;
 // Reports multiple changes due to position differences
 ```
 
@@ -352,19 +273,21 @@ let differences_positional = diff(&v1, &v2, None, None, None);
 #### Complete Format Processing Pipeline
 
 ```rust
-use diffx_core::{diff, parse_ini, parse_xml, parse_csv};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::{from_str, Value};
 use std::fs;
 
 fn compare_files(
     file1_path: &str,
     file2_path: &str,
-    format: &str
+    format: &str,
+    options: Option<&DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     let content1 = fs::read_to_string(file1_path)?;
     let content2 = fs::read_to_string(file2_path)?;
     
-    let (value1, value2) = match format {
+    // Users should use standard parsers for their formats
+    let (old, new) = match format {
         "json" => {
             (from_str(&content1)?, from_str(&content2)?)
         }
@@ -374,19 +297,10 @@ fn compare_files(
         "toml" => {
             (toml::from_str(&content1)?, toml::from_str(&content2)?)
         }
-        "ini" => {
-            (parse_ini(&content1)?, parse_ini(&content2)?)
-        }
-        "xml" => {
-            (parse_xml(&content1)?, parse_xml(&content2)?)
-        }
-        "csv" => {
-            (parse_csv(&content1)?, parse_csv(&content2)?)
-        }
         _ => return Err(format!("Unsupported format: {}", format).into())
     };
     
-    Ok(diff(&value1, &value2, None, None, None))
+    Ok(diff(&old, &new, options)?)
 }
 ```
 
@@ -416,8 +330,8 @@ impl DiffProcessor {
     }
     
     pub fn process(&mut self, differences: Vec<DiffResult>) {
-        for diff in differences {
-            match diff {
+        for diff_result in differences {
+            match diff_result {
                 DiffResult::Added(path, value) => {
                     self.additions.push((path, value));
                 }
@@ -427,8 +341,9 @@ impl DiffProcessor {
                 DiffResult::Modified(path, old, new) => {
                     self.modifications.push((path, old, new));
                 }
-                DiffResult::TypeChanged(path, old, new) => {
-                    self.type_changes.push((path, old, new));
+                DiffResult::TypeChanged(path, old_type, new_type) => {
+                    // Note: TypeChanged now contains type strings, not values
+                    self.type_changes.push((path, old_type.into(), new_type.into()));
                 }
             }
         }
@@ -470,16 +385,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn process_diff_async(
     file1: &str,
-    file2: &str
+    file2: &str,
+    options: Option<DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     let content1 = tokio::fs::read_to_string(file1).await?;
     let content2 = tokio::fs::read_to_string(file2).await?;
     
     // Parse in background task to avoid blocking
     let result = tokio::task::spawn_blocking(move || {
-        let v1: Value = serde_json::from_str(&content1)?;
-        let v2: Value = serde_json::from_str(&content2)?;
-        Ok::<_, serde_json::Error>(diff(&v1, &v2, None, None, None))
+        let old: Value = serde_json::from_str(&content1)?;
+        let new: Value = serde_json::from_str(&content2)?;
+        diff(&old, &new, options.as_ref())
     }).await??;
     
     Ok(result)
@@ -520,29 +436,25 @@ fn handle_parse_errors() -> Result<()> {
 ### Common Error Scenarios
 
 ```rust
-use diffx_core::{diff, parse_xml};
-use serde_json::json;
+use diffx_core::{diff, DiffOptions, DiffResult};
+use serde_json::Value;
 
-// Handle malformed data
+// Handle multiple format possibilities
 fn robust_comparison(
     data1: &str,
-    data2: &str
+    data2: &str,
+    options: Option<&DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     // Attempt to parse as JSON first
-    let v1 = match serde_json::from_str(data1) {
-        Ok(v) => v,
-        Err(_) => {
-            // Try XML if JSON fails
-            parse_xml(data1)?
-        }
-    };
+    let old = serde_json::from_str::<Value>(data1)
+        .or_else(|_| serde_yml::from_str::<Value>(data1))
+        .or_else(|_| toml::from_str::<Value>(data1))?;
     
-    let v2 = match serde_json::from_str(data2) {
-        Ok(v) => v,
-        Err(_) => parse_xml(data2)?
-    };
+    let new = serde_json::from_str::<Value>(data2)
+        .or_else(|_| serde_yml::from_str::<Value>(data2))
+        .or_else(|_| toml::from_str::<Value>(data2))?;
     
-    Ok(diff(&v1, &v2, None, None, None))
+    Ok(diff(&old, &new, options)?)
 }
 ```
 
@@ -553,33 +465,29 @@ fn robust_comparison(
 For large datasets:
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 
 // Process large files efficiently
 fn process_large_diff(
-    v1: &Value,
-    v2: &Value,
+    old: &Value,
+    new: &Value,
     focus_path: Option<&str>
-) -> Vec<DiffResult> {
-    // If focusing on a specific path, extract just that portion
-    if let Some(path) = focus_path {
-        if let (Some(sub1), Some(sub2)) = (
-            extract_path(v1, path),
-            extract_path(v2, path)
-        ) {
-            return diff(&sub1, &sub2, None, None, None);
+) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
+    let options = if let Some(path) = focus_path {
+        DiffOptions {
+            path_filter: Some(path.to_string()),
+            use_memory_optimization: Some(true),
+            ..Default::default()
         }
-    }
+    } else {
+        DiffOptions {
+            use_memory_optimization: Some(true),
+            ..Default::default()
+        }
+    };
     
-    diff(v1, v2, None, None, None)
-}
-
-fn extract_path(value: &Value, path: &str) -> Option<Value> {
-    // Implementation to extract nested path
-    // This would traverse the JSON path
-    todo!("Implement path extraction")
-}
+    Ok(diff(old, new, Some(&options))?)
 ```
 
 ### Optimization Tips
@@ -601,10 +509,10 @@ mod tests {
     
     #[test]
     fn test_basic_diff() {
-        let v1 = json!({"a": 1, "b": 2});
-        let v2 = json!({"a": 1, "b": 3, "c": 4});
+        let old = json!({"a": 1, "b": 2});
+        let new = json!({"a": 1, "b": 3, "c": 4});
         
-        let diffs = diff(&v1, &v2, None, None, None);
+        let diffs = diff(&old, &new, None).unwrap();
         
         assert_eq!(diffs.len(), 2);
         // Test specific differences...
@@ -612,13 +520,17 @@ mod tests {
     
     #[test]
     fn test_epsilon_comparison() {
-        let v1 = json!({"value": 1.0});
-        let v2 = json!({"value": 1.0001});
+        let old = json!({"value": 1.0});
+        let new = json!({"value": 1.0001});
         
-        let diffs_strict = diff(&v1, &v2, None, None, None);
+        let diffs_strict = diff(&old, &new, None).unwrap();
         assert!(!diffs_strict.is_empty());
         
-        let diffs_epsilon = diff(&v1, &v2, None, Some(0.001), None);
+        let options = DiffOptions {
+            epsilon: Some(0.001),
+            ..Default::default()
+        };
+        let diffs_epsilon = diff(&old, &new, Some(&options)).unwrap();
         assert!(diffs_epsilon.is_empty());
     }
 }
@@ -635,3 +547,4 @@ mod tests {
 - [CLI Reference](cli-reference.md) for command-line usage
 - [Getting Started Guide](../user-guide/getting-started.md) for basic concepts
 - [Examples](../user-guide/examples.md) for practical use cases
+- [Unified API Reference](../bindings/unified-api.md) for language bindings

@@ -1,81 +1,83 @@
 # API リファレンス - diffx-core
 
-構造化データのセマンティック差分機能を提供する `diffx-core` Rust クレートの完全なAPI ドキュメントです。
+構造化データのセマンティック差分機能を提供する `diffx-core` Rust クレートの完全な API ドキュメント。
 
 ## 概要
 
-`diffx-core` クレートは diffx エコシステムの中核であり、構造化データ形式に対する高速で正確なセマンティック差分操作を提供します。他の Rust アプリケーションに組み込んで、セマンティック比較機能を追加できます。
+`diffx-core` クレートは diffx エコシステムの中核であり、構造化データフォーマットに対する高速で正確なセマンティック差分操作を提供します。他の Rust アプリケーションに組み込んで、セマンティック比較機能を追加できます。
+
+**統一API設計**: コアAPIは、すべての比較操作に対して単一のメイン関数 `diff()` のみを公開します。すべての機能はオプションパラメータを使用してこの統一インターフェースからアクセスできます。この設計により、すべてのユースケースにおいて一貫性とシンプルさが保証されます。
 
 ## インストール
 
-`Cargo.toml` に `diffx-core` を追加してください：
+`Cargo.toml` に `diffx-core` を追加：
 
 ```toml
 [dependencies]
 diffx-core = "0.2.0"
 ```
 
-### 機能フラグ
+### フィーチャーフラグ
 
 ```toml
 [dependencies]
 diffx-core = { version = "0.2.0", features = ["all-formats"] }
 ```
 
-利用可能な機能：
-- `json` (デフォルト) - JSON形式サポート
-- `yaml` (デフォルト) - YAML形式サポート  
-- `toml` (デフォルト) - TOML形式サポート
-- `xml` - XML形式サポート
-- `ini` - INI形式サポート
-- `csv` - CSV形式サポート
-- `all-formats` - 全形式パーサーを有効化
+利用可能なフィーチャー：
+- `json` (デフォルト) - JSON フォーマットサポート
+- `yaml` (デフォルト) - YAML フォーマットサポート  
+- `toml` (デフォルト) - TOML フォーマットサポート
+- `xml` - XML フォーマットサポート
+- `ini` - INI フォーマットサポート
+- `csv` - CSV フォーマットサポート
+- `all-formats` - すべてのフォーマットパーサーを有効化
 
 ## パブリック API
 
-### コア型
+### コアタイプ
 
 #### `DiffResult`
 
-2つの構造化値間の単一のセマンティック差分を表します。
+2つの構造化された値の間の単一のセマンティック差分を表します。
 
 ```rust
 #[derive(Debug, PartialEq, Serialize)]
 pub enum DiffResult {
-    Added(String, Value),           // 新しいキー/値が追加
-    Removed(String, Value),         // キー/値が削除
-    Modified(String, Value, Value), // 値が変更 (旧, 新)
-    TypeChanged(String, Value, Value), // 型が変更 (旧, 新)
+    Added(String, Value),           // 新しいキー/値が追加された
+    Removed(String, Value),         // キー/値が削除された
+    Modified(String, Value, Value), // 値が変更された (古い値, 新しい値)
+    TypeChanged(String, String, String), // 型が変更された (パス, 古い型, 新しい型)
 }
 ```
 
-**フィールド：**
-- **パス** (`String`): 変更された要素へのJSONパス (例: `"config.database.port"`)
-- **値** (`Value`): データを表すserde_json::Value
+**フィールド:**
+- **パス** (`String`): 変更された要素への JSON パス（例: `"config.database.port"`）
+- **値** (`Value`): データを表す serde_json::Value
 
-**例：**
+**例:**
 ```rust
 use diffx_core::DiffResult;
 use serde_json::Value;
 
-// キー追加
+// キーの追加
 let added = DiffResult::Added(
     "database.port".to_string(),
     Value::Number(5432.into())
 );
 
-// 値修正  
+// 値の変更  
 let modified = DiffResult::Modified(
     "version".to_string(),
     Value::String("1.0".to_string()),
     Value::String("1.1".to_string())
 );
 
-// 型変更
+// 型の変更
 let type_changed = DiffResult::TypeChanged(
     "debug".to_string(),
-    Value::String("true".to_string()),
-    Value::Bool(true)
+    "string".to_string(),
+    "boolean".to_string()
 );
 ```
 
@@ -83,51 +85,75 @@ let type_changed = DiffResult::TypeChanged(
 
 #### `diff()`
 
-2つの構造化値間のセマンティック差分を計算する主関数です。
+2つの構造化された値の間のセマンティック差分を計算するための主要関数。これはすべての比較操作のための統一APIエントリーポイントです。
 
 ```rust
 pub fn diff(
-    v1: &Value,
-    v2: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult>
+    old: &Value,
+    new: &Value,
+    options: Option<&DiffOptions>,
+) -> Result<Vec<DiffResult>, Error>
 ```
 
-**パラメータ：**
-- `v1`: 比較する最初の値（ベースライン）
-- `v2`: 比較する2番目の値（ターゲット）
-- `ignore_keys_regex`: 特定のキーを無視するためのオプション正規表現
-- `epsilon`: 浮動小数点比較の許容値（オプション）
-- `array_id_key`: 配列要素識別用のオプションキー
+**パラメータ:**
+- `old`: 元の/ベースラインの値
+- `new`: 新しい/ターゲットの値  
+- `options`: 比較のためのオプション設定
 
-**戻り値：** 発見されたすべての差分を表す `DiffResult` のベクター
+**戻り値:** 見つかったすべての差分を表す `Result<Vec<DiffResult>, Error>`
 
-**例：**
+#### DiffOptions 構造体
+
 ```rust
-use diffx_core::{diff, DiffResult};
+pub struct DiffOptions {
+    // コア比較オプション
+    pub epsilon: Option<f64>,
+    pub array_id_key: Option<String>,
+    pub ignore_keys_regex: Option<Regex>,
+    pub path_filter: Option<String>,
+    
+    // 出力制御
+    pub output_format: Option<OutputFormat>,
+    pub show_unchanged: Option<bool>,
+    pub show_types: Option<bool>,
+    
+    // メモリ最適化
+    pub use_memory_optimization: Option<bool>,
+    pub batch_size: Option<usize>,
+    
+    // diffx固有オプション
+    pub diffx_options: Option<DiffxSpecificOptions>,
+}
+```
+
+**例:**
+```rust
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::{json, Value};
 use regex::Regex;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let v1 = json!({
+    let old = json!({
         "name": "myapp",
         "version": "1.0",
         "timestamp": "2024-01-01T00:00:00Z"
     });
     
-    let v2 = json!({
+    let new = json!({
         "name": "myapp",
         "version": "1.1", 
         "timestamp": "2024-01-02T00:00:00Z",
         "port": 8080
     });
     
-    // タイムスタンプの変更を無視
-    let ignore_regex = Regex::new(r"^timestamp$")?;
+    // タイムスタンプの変更を無視する設定
+    let options = DiffOptions {
+        ignore_keys_regex: Some(Regex::new(r"^timestamp$")?),
+        show_unchanged: Some(false),
+        ..Default::default()
+    };
     
-    let differences = diff(&v1, &v2, Some(&ignore_regex), None, None);
+    let differences = diff(&old, &new, Some(&options))?;
     
     for diff in differences {
         match diff {
@@ -135,7 +161,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("追加 {}: {}", path, value);
             }
             DiffResult::Modified(path, old, new) => {
-                println!("修正 {}: {} -> {}", path, old, new);
+                println!("変更 {}: {} -> {}", path, old, new);
             }
             _ => {}
         }
@@ -145,145 +171,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-### 形式パーサー
-
-#### `parse_ini()`
-
-INI形式のコンテンツをJSON Valueに解析します。
-
-```rust
-pub fn parse_ini(content: &str) -> Result<Value>
-```
-
-**例：**
-```rust
-use diffx_core::parse_ini;
-
-let ini_content = r#"
-[database]
-host = localhost
-port = 5432
-
-[cache]
-enabled = true
-ttl = 3600
-"#;
-
-let parsed = parse_ini(ini_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-```
-
-#### `parse_xml()`
-
-XML形式のコンテンツをJSON Valueに解析します。
-
-```rust
-pub fn parse_xml(content: &str) -> Result<Value>
-```
-
-**例：**
-```rust
-use diffx_core::parse_xml;
-
-let xml_content = r#"
-<config>
-    <database>
-        <host>localhost</host>
-        <port>5432</port>
-    </database>
-    <cache enabled="true">
-        <ttl>3600</ttl>
-    </cache>
-</config>
-"#;
-
-let parsed = parse_xml(xml_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-```
-
-#### `parse_csv()`
-
-CSV形式のコンテンツをJSON Value（オブジェクトの配列）に解析します。
-
-```rust
-pub fn parse_csv(content: &str) -> Result<Value>
-```
-
-**例：**
-```rust
-use diffx_core::parse_csv;
-
-let csv_content = r#"
-name,age,city
-Alice,25,New York
-Bob,30,San Francisco
-Charlie,35,Chicago
-"#;
-
-let parsed = parse_csv(csv_content)?;
-println!("{}", serde_json::to_string_pretty(&parsed)?);
-// 出力: [{"name": "Alice", "age": "25", "city": "New York"}, ...]
-```
-
-### ユーティリティ関数
-
-#### `value_type_name()`
-
-JSON値の人間が読める型名を取得します。
-
-```rust
-pub fn value_type_name(value: &Value) -> &str
-```
-
-**戻り値：** 型名を含む文字列スライス: `"null"`, `"boolean"`, `"number"`, `"string"`, `"array"`, `"object"`
-
-**例：**
-```rust
-use diffx_core::value_type_name;
-use serde_json::{json, Value};
-
-let values = vec![
-    json!(null),
-    json!(true),
-    json!(42),
-    json!("hello"),
-    json!([1, 2, 3]),
-    json!({"key": "value"})
-];
-
-for value in values {
-    println!("{}: {}", value, value_type_name(&value));
-}
-// 出力:
-// null: null
-// true: boolean  
-// 42: number
-// "hello": string
-// [1,2,3]: array
-// {"key":"value"}: object
-```
-
 ## 高度な使用法
 
 ### カスタム比較ロジック
 
 #### イプシロン比較
 
-浮動小数点精度の差異を処理：
+浮動小数点精度の差を扱う：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 
-let v1 = json!({"pi": 3.14159});
-let v2 = json!({"pi": 3.14160});
+let old = json!({"pi": 3.14159});
+let new = json!({"pi": 3.14160});
 
 // イプシロンなし - 差分を報告
-let diffs_strict = diff(&v1, &v2, None, None, None);
+let diffs_strict = diff(&old, &new, None)?;
 assert!(!diffs_strict.is_empty());
 
 // イプシロンあり - 差分なし
-let diffs_epsilon = diff(&v1, &v2, None, Some(0.001), None);
+let options = DiffOptions {
+    epsilon: Some(0.001),
+    ..Default::default()
+};
+let diffs_epsilon = diff(&old, &new, Some(&options))?;
 assert!(diffs_epsilon.is_empty());
 ```
 
@@ -292,79 +204,88 @@ assert!(diffs_epsilon.is_empty());
 特定のキーやパターンを無視：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 use regex::Regex;
 
-let v1 = json!({
+let old = json!({
     "data": {"important": "value"},
     "timestamp": "2024-01-01T00:00:00Z",
     "_internal": "system_data"
 });
 
-let v2 = json!({
+let new = json!({
     "data": {"important": "new_value"},
     "timestamp": "2024-01-02T00:00:00Z", 
     "_internal": "different_system_data"
 });
 
 // タイムスタンプと内部フィールドを無視
-let ignore_regex = Regex::new(r"^(timestamp|_.*)")?;
-let differences = diff(&v1, &v2, Some(&ignore_regex), None, None);
+let options = DiffOptions {
+    ignore_keys_regex: Some(Regex::new(r"^(timestamp|_.*)")?),
+    ..Default::default()
+};
+let differences = diff(&old, &new, Some(&options))?;
 
-// 重要なデータ変更のみを報告
+// 重要なデータの変更のみ報告
 assert_eq!(differences.len(), 1);
 ```
 
-#### 配列要素追跡
+#### 配列要素トラッキング
 
 位置ではなくIDで配列要素を追跡：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions};
 use serde_json::json;
 
-let v1 = json!({
+let old = json!({
     "users": [
         {"id": 1, "name": "Alice"},
         {"id": 2, "name": "Bob"}
     ]
 });
 
-let v2 = json!({
+let new = json!({
     "users": [
         {"id": 2, "name": "Bob"}, 
-        {"id": 1, "name": "Alice Smith"}  // 名前が変更
+        {"id": 1, "name": "Alice Smith"}  // 名前が変更された
     ]
 });
 
-// ID追跡あり - 名前変更を検出
-let differences = diff(&v1, &v2, None, None, Some("id"));
+// IDトラッキングあり - 名前の変更を検出
+let options = DiffOptions {
+    array_id_key: Some("id".to_string()),
+    ..Default::default()
+};
+let differences = diff(&old, &new, Some(&options))?;
 // 報告: Modified users[id=1].name: "Alice" -> "Alice Smith"
 
-// ID追跡なし - 位置のため全て変更として報告
-let differences_positional = diff(&v1, &v2, None, None, None);
-// 位置の差異により複数の変更を報告
+// IDトラッキングなし - 位置のため全て変更として報告
+let differences_positional = diff(&old, &new, None)?;
+// 位置の違いによる複数の変更を報告
 ```
 
-### 異なる形式での作業
+### 異なるフォーマットでの作業
 
-#### 完全な形式処理パイプライン
+#### 完全なフォーマット処理パイプライン
 
 ```rust
-use diffx_core::{diff, parse_ini, parse_xml, parse_csv};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::{from_str, Value};
 use std::fs;
 
 fn compare_files(
     file1_path: &str,
     file2_path: &str,
-    format: &str
+    format: &str,
+    options: Option<&DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     let content1 = fs::read_to_string(file1_path)?;
     let content2 = fs::read_to_string(file2_path)?;
     
-    let (value1, value2) = match format {
+    // ユーザーは各フォーマット用の標準パーサーを使用すべき
+    let (old, new) = match format {
         "json" => {
             (from_str(&content1)?, from_str(&content2)?)
         }
@@ -374,19 +295,10 @@ fn compare_files(
         "toml" => {
             (toml::from_str(&content1)?, toml::from_str(&content2)?)
         }
-        "ini" => {
-            (parse_ini(&content1)?, parse_ini(&content2)?)
-        }
-        "xml" => {
-            (parse_xml(&content1)?, parse_xml(&content2)?)
-        }
-        "csv" => {
-            (parse_csv(&content1)?, parse_csv(&content2)?)
-        }
-        _ => return Err(format!("サポートされていない形式: {}", format).into())
+        _ => return Err(format!("サポートされていないフォーマット: {}", format).into())
     };
     
-    Ok(diff(&value1, &value2, None, None, None))
+    Ok(diff(&old, &new, options)?)
 }
 ```
 
@@ -395,7 +307,7 @@ fn compare_files(
 #### カスタム差分処理
 
 ```rust
-use diffx_core::{diff, DiffResult};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 
 struct DiffProcessor {
@@ -416,8 +328,8 @@ impl DiffProcessor {
     }
     
     pub fn process(&mut self, differences: Vec<DiffResult>) {
-        for diff in differences {
-            match diff {
+        for diff_result in differences {
+            match diff_result {
                 DiffResult::Added(path, value) => {
                     self.additions.push((path, value));
                 }
@@ -427,8 +339,9 @@ impl DiffProcessor {
                 DiffResult::Modified(path, old, new) => {
                     self.modifications.push((path, old, new));
                 }
-                DiffResult::TypeChanged(path, old, new) => {
-                    self.type_changes.push((path, old, new));
+                DiffResult::TypeChanged(path, old_type, new_type) => {
+                    // 注意: TypeChanged は型文字列を含む（値ではない）
+                    self.type_changes.push((path, old_type.into(), new_type.into()));
                 }
             }
         }
@@ -448,15 +361,15 @@ impl DiffProcessor {
 #### 非同期処理
 
 ```rust
-use diffx_core::{diff, DiffResult};
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let tasks = vec![
-        process_diff_async("file1.json", "file2.json"),
-        process_diff_async("file3.json", "file4.json"),
+        process_diff_async("file1.json", "file2.json", None),
+        process_diff_async("file3.json", "file4.json", None),
     ];
     
     let results = futures::future::try_join_all(tasks).await?;
@@ -470,16 +383,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 async fn process_diff_async(
     file1: &str,
-    file2: &str
+    file2: &str,
+    options: Option<DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
     let content1 = tokio::fs::read_to_string(file1).await?;
     let content2 = tokio::fs::read_to_string(file2).await?;
     
     // ブロッキングを避けるためバックグラウンドタスクで解析
     let result = tokio::task::spawn_blocking(move || {
-        let v1: Value = serde_json::from_str(&content1)?;
-        let v2: Value = serde_json::from_str(&content2)?;
-        Ok::<_, serde_json::Error>(diff(&v1, &v2, None, None, None))
+        let old: Value = serde_json::from_str(&content1)?;
+        let new: Value = serde_json::from_str(&content2)?;
+        diff(&old, &new, options.as_ref())
     }).await??;
     
     Ok(result)
@@ -488,19 +402,19 @@ async fn process_diff_async(
 
 ## エラーハンドリング
 
-### エラー型
+### エラータイプ
 
-ライブラリはエラーハンドリングに `anyhow::Error` を使用：
+ライブラリはエラーハンドリングに `anyhow::Error` を使用します：
 
 ```rust
-use diffx_core::parse_ini;
+use diffx_core::{diff, DiffOptions};
 use anyhow::Result;
 
 fn handle_parse_errors() -> Result<()> {
-    let invalid_ini = "invalid [section syntax";
+    let invalid_data = "invalid json";
     
-    match parse_ini(invalid_ini) {
-        Ok(value) => println!("正常に解析: {}", value),
+    match serde_json::from_str::<Value>(invalid_data) {
+        Ok(value) => println!("解析成功: {}", value),
         Err(e) => {
             eprintln!("解析エラー: {}", e);
             
@@ -520,29 +434,25 @@ fn handle_parse_errors() -> Result<()> {
 ### 一般的なエラーシナリオ
 
 ```rust
-use diffx_core::{diff, parse_xml};
-use serde_json::json;
+use diffx_core::{diff, DiffOptions, DiffResult};
+use serde_json::Value;
 
-// 不正なデータの処理
+// 複数のフォーマットの可能性を扱う
 fn robust_comparison(
     data1: &str,
-    data2: &str
+    data2: &str,
+    options: Option<&DiffOptions>
 ) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
-    // まずJSONとして解析を試行
-    let v1 = match serde_json::from_str(data1) {
-        Ok(v) => v,
-        Err(_) => {
-            // JSONが失敗した場合XMLを試行
-            parse_xml(data1)?
-        }
-    };
+    // 最初に JSON として解析を試みる
+    let old = serde_json::from_str::<Value>(data1)
+        .or_else(|_| serde_yml::from_str::<Value>(data1))
+        .or_else(|_| toml::from_str::<Value>(data1))?;
     
-    let v2 = match serde_json::from_str(data2) {
-        Ok(v) => v,
-        Err(_) => parse_xml(data2)?
-    };
+    let new = serde_json::from_str::<Value>(data2)
+        .or_else(|_| serde_yml::from_str::<Value>(data2))
+        .or_else(|_| toml::from_str::<Value>(data2))?;
     
-    Ok(diff(&v1, &v2, None, None, None))
+    Ok(diff(&old, &new, options)?)
 }
 ```
 
@@ -550,48 +460,45 @@ fn robust_comparison(
 
 ### メモリ使用量
 
-大容量データセットの場合：
+大きなデータセットの場合：
 
 ```rust
-use diffx_core::diff;
+use diffx_core::{diff, DiffOptions, DiffResult};
 use serde_json::Value;
 
-// 大容量ファイルを効率的に処理
+// 大きなファイルを効率的に処理
 fn process_large_diff(
-    v1: &Value,
-    v2: &Value,
+    old: &Value,
+    new: &Value,
     focus_path: Option<&str>
-) -> Vec<DiffResult> {
-    // 特定のパスに焦点を当てる場合、その部分のみを抽出
-    if let Some(path) = focus_path {
-        if let (Some(sub1), Some(sub2)) = (
-            extract_path(v1, path),
-            extract_path(v2, path)
-        ) {
-            return diff(&sub1, &sub2, None, None, None);
+) -> Result<Vec<DiffResult>, Box<dyn std::error::Error>> {
+    let options = if let Some(path) = focus_path {
+        DiffOptions {
+            path_filter: Some(path.to_string()),
+            use_memory_optimization: Some(true),
+            ..Default::default()
         }
-    }
+    } else {
+        DiffOptions {
+            use_memory_optimization: Some(true),
+            ..Default::default()
+        }
+    };
     
-    diff(v1, v2, None, None, None)
-}
-
-fn extract_path(value: &Value, path: &str) -> Option<Value> {
-    // ネストしたパスを抽出する実装
-    // これはJSONパスを辿る処理
-    todo!("パス抽出を実装")
+    Ok(diff(old, new, Some(&options))?)
 }
 ```
 
-### 最適化のコツ
+### 最適化のヒント
 
-1. **正規表現フィルタリングを使用**して大きな無関係なセクションを無視
-2. **浮動小数点が多いデータにはイプシロンを指定**
-3. **識別可能な要素を持つ大きな配列には配列IDキーを使用**
-4. **非常に大きなオブジェクトにはパスフィルタリングを検討**
+1. **正規表現フィルタリングを使用** して大きな無関係なセクションを無視
+2. **イプシロンを指定** して浮動小数点の多いデータに対応
+3. **配列IDキーを使用** して識別可能な要素を持つ大きな配列に対応
+4. **パスフィルタリングを検討** して非常に大きなオブジェクトに対応
 
 ## テスト
 
-### 単体テスト
+### ユニットテスト
 
 ```rust
 #[cfg(test)]
@@ -601,10 +508,10 @@ mod tests {
     
     #[test]
     fn test_basic_diff() {
-        let v1 = json!({"a": 1, "b": 2});
-        let v2 = json!({"a": 1, "b": 3, "c": 4});
+        let old = json!({"a": 1, "b": 2});
+        let new = json!({"a": 1, "b": 3, "c": 4});
         
-        let diffs = diff(&v1, &v2, None, None, None);
+        let diffs = diff(&old, &new, None).unwrap();
         
         assert_eq!(diffs.len(), 2);
         // 特定の差分をテスト...
@@ -612,13 +519,17 @@ mod tests {
     
     #[test]
     fn test_epsilon_comparison() {
-        let v1 = json!({"value": 1.0});
-        let v2 = json!({"value": 1.0001});
+        let old = json!({"value": 1.0});
+        let new = json!({"value": 1.0001});
         
-        let diffs_strict = diff(&v1, &v2, None, None, None);
+        let diffs_strict = diff(&old, &new, None).unwrap();
         assert!(!diffs_strict.is_empty());
         
-        let diffs_epsilon = diff(&v1, &v2, None, Some(0.001), None);
+        let options = DiffOptions {
+            epsilon: Some(0.001),
+            ..Default::default()
+        };
+        let diffs_epsilon = diff(&old, &new, Some(&options)).unwrap();
         assert!(diffs_epsilon.is_empty());
     }
 }
@@ -627,11 +538,12 @@ mod tests {
 ## バージョン互換性
 
 - **0.2.x**: 現在の安定版
-- **最小Rustバージョン**: 1.70.0
-- **依存関係**: 現在のバージョンについては `Cargo.toml` を参照
+- **最小 Rust バージョン**: 1.70.0
+- **依存関係**: 現在のバージョンは `Cargo.toml` を参照
 
 ## 関連項目
 
-- [CLIリファレンス](cli-reference_ja.md) コマンドライン使用法について
-- [スタートガイド](../user-guide/getting-started_ja.md) 基本概念について
-- [例](../user-guide/examples_ja.md) 実用的な使用例について
+- [CLI リファレンス](cli-reference_ja.md) - コマンドライン使用法
+- [はじめに](../user-guide/getting-started_ja.md) - 基本概念
+- [実用例](../user-guide/examples_ja.md) - 実用的なユースケース
+- [統一API リファレンス](../bindings/unified-api_ja.md) - 言語バインディング

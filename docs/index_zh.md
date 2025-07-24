@@ -29,6 +29,11 @@
 - **[API参考](reference/api-reference_zh.md)** - Rust crate API 文档
 - **[工具比较](reference/comparison_zh.md)** - diffx 与其他工具的比较
 
+### 🔗 语言绑定
+*Python 和 JavaScript 绑定 API 文档*
+
+- **[统一API参考](bindings/unified-api_zh.md)** - diffx-python 和 diffx-js 语言绑定
+
 ### 🛠️ 指南
 *高级主题和集成指导*
 
