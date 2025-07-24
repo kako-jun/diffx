@@ -103,10 +103,6 @@ Traditional `diff` tools show you formatting noise. `diffx` shows you what actua
   - Machine-readable format. Used for CI/CD and integration with other programs, similar to JSON.
   - Differences detected by `diffx` are output as a YAML array.
 
-- **diff-compatible Format (Unified Format)**
-  - Provided with the `--output unified` option.
-  - Intended for integration with `git` and existing merge tools.
-  - **Note**: This format only shows the semantic differences detected by `diffx` in traditional diff format. Changes that are not semantic differences (e.g., key order changes, whitespace changes) are not displayed. This is purely for compatibility with existing tools.
 
 ## 🏗️ Architecture
 
@@ -135,7 +131,6 @@ graph TB
     D --> N[CLI Display]
     D --> O[JSON Output]
     D --> P[YAML Output]
-    D --> Q[Unified Diff]
 ```
 
 ### Project Structure
@@ -231,7 +226,7 @@ diffx metrics.json metrics_v2.json --epsilon 0.001
 # High-demand practical options
 diffx config.yaml config_new.yaml --ignore-case          # Ignore case differences
 diffx api.json api_formatted.json --ignore-whitespace    # Ignore whitespace changes
-diffx large.json large_v2.json --context 3 --output unified  # Show 3 lines of context
+diffx large.json large_v2.json --output json              # JSON output for automation
 diffx file1.json file2.json --quiet && echo "Files identical"  # Script automation
 diffx dir1/ dir2/ --brief                              # Quick directory change check (automatic recursive)
 

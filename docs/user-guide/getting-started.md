@@ -229,13 +229,6 @@ Human-readable structured output:
 diffx config.json config.new.json --output yaml
 ```
 
-### Unified Diff Format
-
-Compatible with traditional diff tools:
-
-```bash
-diffx config.json config.new.json --output unified
-```
 
 ## Practical Examples
 
@@ -249,7 +242,7 @@ diffx k8s-prod.yaml k8s-staging.yaml --ignore-keys-regex "namespace|name"
 diffx terraform.tfstate terraform.tfstate.backup --path "resources"
 
 # Compare Docker Compose files
-diffx docker-compose.yml docker-compose.override.yml
+diffx docker-compose.yml docker-compose.override.yml --output json
 ```
 
 ### Data Validation
@@ -275,7 +268,7 @@ diffx package.json package.json.template --ignore-keys-regex "^(name|version)"
 diffx .env.example .env.local --format ini
 
 # Validate build outputs
-diffx build_manifest.json build_manifest.expected.json
+diffx build_manifest.json build_manifest.expected.json --output json
 ```
 
 ## Performance Optimization

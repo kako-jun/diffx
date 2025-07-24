@@ -103,10 +103,6 @@ diffx：      ~0.005秒（清洁的语义输出）
   - 机器可读格式。用于CI/CD和与其他程序的集成，类似JSON。
   - `diffx`检测到的差异作为YAML数组输出。
 
-- **diff兼容格式（统一格式）**
-  - 通过`--output unified`选项提供。
-  - 旨在与`git`和现有合并工具集成。
-  - **注意**: 此格式仅以传统的diff格式显示`diffx`检测到的语义差异。非语义差异的变化（例如键顺序变化、空白变化）不会显示。这纯粹是为了与现有工具兼容。
 
 ## 🏗️ 架构
 
@@ -135,7 +131,6 @@ graph TB
     D --> N[CLI Display]
     D --> O[JSON Output]
     D --> P[YAML Output]
-    D --> Q[Unified Diff]
 ```
 
 ### 项目结构
@@ -159,7 +154,6 @@ diffx/
 - `serde_json`、`serde_yml`、`toml`、`configparser`、`quick-xml`、`csv`解析器
 - `clap`（CLI参数解析）
 - `colored`（CLI输出着色）
-- `similar`（统一格式输出）
 
 ## 🔗 Meta-Chaining
 
@@ -231,7 +225,7 @@ diffx metrics.json metrics_v2.json --epsilon 0.001
 # High-demand practical options
 diffx config.yaml config_new.yaml --ignore-case          # Ignore case differences
 diffx api.json api_formatted.json --ignore-whitespace    # Ignore whitespace changes
-diffx large.json large_v2.json --context 3 --output unified  # Show 3 lines of context
+diffx large.json large_v2.json --output json  # 输出JSON格式的差异
 diffx file1.json file2.json --quiet && echo "Files identical"  # Script automation
 diffx dir1/ dir2/ --brief                              # 快速目录变更检查（自动递归处理）
 

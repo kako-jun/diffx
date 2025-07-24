@@ -47,7 +47,7 @@ $ diffx config_v1.json config_v2.json
 | **尾随逗号** | 报告差异 | 忽略格式 |
 | **类型变化** | 显示为文本变化 | 报告类型转换 |
 | **数组处理** | 基于位置 | 可使用基于ID的跟踪 |
-| **输出格式** | 文本差异 | CLI/JSON/YAML/Unified |
+| **输出格式** | 文本差异 | CLI/JSON/YAML/diffx |
 
 **何时使用传统diff:**
 - 通用文本文件
@@ -242,7 +242,7 @@ git show HEAD~1:config.json | diffx - config.json
 ```bash
 # 添加到.gitconfig
 [diff "json"]
-    textconv = diffx --output unified
+    textconv = diffx --output diffx
 
 # 在.gitattributes中
 *.json diff=json
@@ -387,7 +387,7 @@ diff config1.json config2.json > changes.txt
 
 **新工作流:**
 ```bash
-diffx config1.json config2.json --output unified > changes.txt
+diffx config1.json config2.json --output diffx > changes.txt
 # 或用于语义差异:
 diffx config1.json config2.json > semantic_changes.txt
 ```

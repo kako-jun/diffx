@@ -340,8 +340,8 @@ impl DiffProcessor {
                     self.modifications.push((path, old, new));
                 }
                 DiffResult::TypeChanged(path, old_type, new_type) => {
-                    // 注意：TypeChanged 现在包含类型字符串，而不是值
-                    self.type_changes.push((path, old_type.into(), new_type.into()));
+                    // 注意：TypeChanged 包含类型字符串，而不是值
+                    self.type_changes.push((path, old_type, new_type));
                 }
             }
         }

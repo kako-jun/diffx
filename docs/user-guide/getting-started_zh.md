@@ -238,21 +238,6 @@ diffx config.json config.new.json --brief
 diffx configs/ configs.backup/ --brief
 ```
 
-#### 上下文行控制
-
-在统一输出中控制上下文行数：
-
-```bash
-# 显示变化周围的 3 行上下文
-diffx config.json config.new.json \
-  --output unified \
-  --context 3
-
-# 仅显示变化行，无上下文
-diffx config.json config.new.json \
-  --output unified \
-  --context 0
-```
 
 ## 输出格式
 
@@ -308,13 +293,6 @@ diffx config.json config.new.json --output json
 diffx config.json config.new.json --output yaml
 ```
 
-### 统一差分格式
-
-与传统差分工具兼容：
-
-```bash
-diffx config.json config.new.json --output unified
-```
 
 ## 实际示例
 
@@ -565,8 +543,7 @@ done
 
 # 部署前的详细验证
 diffx current_deployment.yaml new_deployment.yaml \
-  --output unified \
-  --context 2 \
+  --output json \
   --ignore-keys-regex "^(metadata\..*|status\..*)"
 ```
 
@@ -588,10 +565,9 @@ diffx schema.json schema_generated.json --ignore-case
 # 类似 diff -w 的忽略空白
 diffx formatted.json minified.json --ignore-whitespace
 
-# 类似 diff -C3 的上下文显示
+# 类似 diff -C3 的输出格式（使用 JSON 输出）
 diffx config.json config.new.json \
-  --output unified \
-  --context 3
+  --output json
 ```
 
 ## 故障排除

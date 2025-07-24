@@ -122,7 +122,7 @@ The diffx format prioritizes understanding **what changed** over **how the text 
 ### 2. Format Independence
 The same diffx format output represents changes consistently across all supported data formats:
 
-- JSON, YAML, TOML, XML, INI, CSV all produce unified diffx format output
+- JSON, YAML, TOML, XML, INI, CSV all produce consistent diffx format output
 - Users learn one format instead of format-specific diff representations
 - Tools can process diffx format output regardless of source data format
 

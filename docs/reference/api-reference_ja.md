@@ -341,7 +341,7 @@ impl DiffProcessor {
                 }
                 DiffResult::TypeChanged(path, old_type, new_type) => {
                     // 注意: TypeChanged は型文字列を含む（値ではない）
-                    self.type_changes.push((path, old_type.into(), new_type.into()));
+                    self.type_changes.push((path, old_type, new_type));
                 }
             }
         }

@@ -121,7 +121,7 @@ pub struct DiffxSpecificOptions {
 #### diffx-Specific Options (DiffxSpecificOptions)
 These options are nested within the `diffx_options` field:
 
-- **`context_lines`**: Number of context lines to show in unified diff format
+- **`context_lines`**: Number of context lines to show in diffx format output
   - Default: `3`
 - **`ignore_whitespace`**: Ignore whitespace differences in string comparisons
   - Default: `false`
