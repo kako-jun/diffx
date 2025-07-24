@@ -1,4 +1,6 @@
-# diffx API Reference
+# diffx Unified API Reference
+
+*Language bindings API documentation for diffx-python and diffx-js*
 
 ## Overview
 

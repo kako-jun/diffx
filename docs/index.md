@@ -29,6 +29,11 @@ Welcome to the comprehensive `diffx` documentation!
 - **[API Reference](reference/api-reference.md)** - Rust crate API documentation
 - **[Tool Comparison](reference/comparison.md)** - How diffx compares to other tools
 
+### 🔗 Language Bindings
+*API documentation for Python and JavaScript bindings*
+
+- **[Unified API Reference](bindings/unified-api.md)** - diffx-python and diffx-js language bindings
+
 ### 🛠️ Guides
 *Advanced topics and integration guidance*
 

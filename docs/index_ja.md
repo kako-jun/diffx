@@ -29,6 +29,11 @@
 - **[APIリファレンス](reference/api-reference_ja.md)** - Rust クレート API 資料
 - **[ツール比較](reference/comparison_ja.md)** - diffx と他のツールとの比較
 
+### 🔗 言語バインディング
+*Python および JavaScript バインディング API ドキュメント*
+
+- **[統一API リファレンス](bindings/unified-api_ja.md)** - diffx-python および diffx-js 言語バインディング
+
 ### 🛠️ ガイド
 *高度なトピックと統合ガイダンス*
 
