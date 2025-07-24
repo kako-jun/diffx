@@ -20,10 +20,7 @@
     "automation",
     "data-analysis"
   ],
-  "main": "lib.js",
-  "bin": {
-    "diffx": "index.js"
-  },
+  "main": "index.js",
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
@@ -38,8 +35,7 @@
   },
   "files": [
     "index.js",
-    "lib.js",
-    "bin/",
+    "*.node",
     "README.md",
     "examples.js",
     "test.js"
