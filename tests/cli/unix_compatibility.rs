@@ -72,23 +72,6 @@ fn test_unix_pattern_diff_w_equivalent() -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-#[test]
-fn test_unix_pattern_diff_c3_equivalent() -> Result<(), Box<dyn std::error::Error>> {
-    // Test diff -C3 equivalent: context lines
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/context_test1.json")
-        .arg("../tests/fixtures/context_test2.json")
-        .arg("--output")
-        .arg("unified")
-        .arg("--context")
-        .arg("2");
-    cmd.assert()
-        .code(1) // Differences found
-        .stdout(predicates::str::contains("-      \"port\": 5432"))
-        .stdout(predicates::str::contains("+      \"port\": 5433"))
-        .stdout(predicates::str::contains("\"host\": \"localhost\"")); // Context line
-    Ok(())
-}
 
 #[test]
 fn test_unix_combined_pattern_qiw() -> Result<(), Box<dyn std::error::Error>> {

@@ -42,7 +42,7 @@ mod color_utils {
 
 #[derive(Parser)]
 #[command(name = "diffx")]
-#[command(about = "A unified diff tool for structured data")]
+#[command(about = "A diff tool for structured data")]
 #[command(version)]
 struct Args {
     /// The first input file
@@ -76,10 +76,6 @@ struct Args {
     /// Array comparison by ID key (compare arrays by this field instead of index)
     #[arg(long)]
     array_id_key: Option<String>,
-
-    /// Number of context lines for diff output
-    #[arg(long)]
-    context: Option<usize>,
 
     /// Ignore whitespace differences
     #[arg(long)]
@@ -260,7 +256,7 @@ fn run() -> Result<()> {
             print_cli_output(results, &args);
         }
         _ => {
-            let formatted_output = format_diff_output(&results, output_format)?;
+            let formatted_output = format_diff_output(&results, output_format, Some(&options))?;
             if !formatted_output.trim().is_empty() {
                 println!("{}", formatted_output);
             }
@@ -303,7 +299,6 @@ fn build_diff_options(args: &Args) -> Result<DiffOptions> {
     };
 
     let diffx_options = Some(DiffxSpecificOptions {
-        context_lines: args.context,
         ignore_whitespace: Some(args.ignore_whitespace),
         ignore_case: Some(args.ignore_case),
         brief_mode: Some(args.brief),
@@ -439,7 +434,7 @@ fn handle_stdin_input(args: &Args, input1_is_stdin: bool, input2_is_stdin: bool)
     let differences = diff(&v1, &v2, Some(&options))?;
 
     // Handle output
-    handle_output_and_exit(&differences, args)
+    handle_output_and_exit(&differences, args, Some(&options))
 }
 
 fn handle_both_stdin(args: &Args) -> Result<()> {
@@ -479,7 +474,7 @@ fn handle_both_stdin_json(buffer: &str, args: &Args) -> Result<()> {
             let options = build_diff_options_for_values(args)?;
             let differences = diff(&v1, &v2, Some(&options))?;
             
-            return handle_output_and_exit(&differences, args);
+            return handle_output_and_exit(&differences, args, Some(&options));
         }
     }
     
@@ -496,7 +491,7 @@ fn handle_both_stdin_json(buffer: &str, args: &Args) -> Result<()> {
             let options = build_diff_options_for_values(args)?;
             let differences = diff(&v1, &v2, Some(&options))?;
             
-            return handle_output_and_exit(&differences, args);
+            return handle_output_and_exit(&differences, args, Some(&options));
         }
     }
     
@@ -518,7 +513,7 @@ fn handle_both_stdin_yaml(buffer: &str, args: &Args) -> Result<()> {
             let options = build_diff_options_for_values(args)?;
             let differences = diff(&v1, &v2, Some(&options))?;
             
-            return handle_output_and_exit(&differences, args);
+            return handle_output_and_exit(&differences, args, Some(&options));
         }
     }
     
@@ -561,7 +556,6 @@ fn build_diff_options_for_values(args: &Args) -> Result<DiffOptions> {
     };
 
     let diffx_options = Some(DiffxSpecificOptions {
-        context_lines: args.context,
         ignore_whitespace: Some(args.ignore_whitespace),
         ignore_case: Some(args.ignore_case),
         brief_mode: Some(args.brief),
@@ -588,7 +582,7 @@ fn build_diff_options_for_values(args: &Args) -> Result<DiffOptions> {
     })
 }
 
-fn handle_output_and_exit(differences: &[DiffResult], args: &Args) -> Result<()> {
+fn handle_output_and_exit(differences: &[DiffResult], args: &Args, options: Option<&DiffOptions>) -> Result<()> {
     // Handle quiet mode
     if args.quiet {
         std::process::exit(if differences.is_empty() { 0 } else { 1 });
@@ -618,7 +612,7 @@ fn handle_output_and_exit(differences: &[DiffResult], args: &Args) -> Result<()>
             print_cli_output(differences.to_vec(), args);
         }
         _ => {
-            let formatted_output = format_diff_output(differences, output_format)?;
+            let formatted_output = format_diff_output(differences, output_format, options)?;
             if !formatted_output.trim().is_empty() {
                 println!("{}", formatted_output);
             }

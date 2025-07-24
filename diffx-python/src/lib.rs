@@ -240,10 +240,6 @@ fn build_options_from_kwargs(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Dif
         let mut diffx_options = DiffxSpecificOptions::default();
         let mut has_diffx_options = false;
         
-        if let Some(context_lines) = kwargs.get_item("context_lines")? {
-            diffx_options.context_lines = Some(context_lines.extract::<usize>()?);
-            has_diffx_options = true;
-        }
         
         if let Some(ignore_whitespace) = kwargs.get_item("ignore_whitespace")? {
             diffx_options.ignore_whitespace = Some(ignore_whitespace.extract::<bool>()?);
