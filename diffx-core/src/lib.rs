@@ -498,57 +498,24 @@ fn diff_arrays_by_index(
 }
 
 // ============================================================================
-// BACKWARD COMPATIBILITY FUNCTIONS
+// BACKWARD COMPATIBILITY FUNCTIONS - REMOVED PER UNIFIED API SPECIFICATION
 // ============================================================================
-
-/// Legacy diff function with old signature for backward compatibility
-pub fn diff_with_config(old: &Value, new: &Value, config: &DiffConfig) -> Vec<DiffResult> {
-    let options: DiffOptions = config.into();
-    diff(old, new, Some(&options)).unwrap_or_default()
-}
-
-/// Legacy diff function - optimized variant 
-pub fn diff_optimized(
-    old: &Value,
-    new: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult> {
-    let mut options = DiffOptions::default();
-    options.ignore_keys_regex = ignore_keys_regex.cloned();
-    options.epsilon = epsilon;
-    options.array_id_key = array_id_key.map(|s| s.to_string());
-    options.use_memory_optimization = Some(true);
-    
-    diff(old, new, Some(&options)).unwrap_or_default()
-}
-
-/// Legacy diff function - standard variant
-pub fn diff_standard(
-    old: &Value,
-    new: &Value,
-    ignore_keys_regex: Option<&Regex>,
-    epsilon: Option<f64>,
-    array_id_key: Option<&str>,
-) -> Vec<DiffResult> {
-    let mut options = DiffOptions::default();
-    options.ignore_keys_regex = ignore_keys_regex.cloned();
-    options.epsilon = epsilon;
-    options.array_id_key = array_id_key.map(|s| s.to_string());
-    options.use_memory_optimization = Some(false);
-    
-    diff(old, new, Some(&options)).unwrap_or_default()
-}
+// All backward compatibility functions have been removed to comply with
+// the unified API design philosophy: only the single diff() function should be exposed.
 
 // ============================================================================
-// UNIFIED API - Parser Functions
+// PARSER FUNCTIONS - FOR INTERNAL USE ONLY
 // ============================================================================
+// These functions are public only for CLI and language bindings.
+// External users should use the main diff() function with file reading.
 
+/// Parse JSON content - FOR INTERNAL USE ONLY
+/// External users should read files themselves and use diff() function
 pub fn parse_json(content: &str) -> Result<Value> {
     serde_json::from_str(content).map_err(|e| anyhow!("JSON parse error: {}", e))
 }
 
+/// Parse CSV content - FOR INTERNAL USE ONLY
 pub fn parse_csv(content: &str) -> Result<Value> {
     let mut reader = ReaderBuilder::new()
         .has_headers(true)
@@ -573,10 +540,12 @@ pub fn parse_csv(content: &str) -> Result<Value> {
     Ok(Value::Array(records))
 }
 
+/// Parse YAML content - FOR INTERNAL USE ONLY
 pub fn parse_yaml(content: &str) -> Result<Value> {
     serde_yaml::from_str(content).map_err(|e| anyhow!("YAML parse error: {}", e))
 }
 
+/// Parse TOML content - FOR INTERNAL USE ONLY
 pub fn parse_toml(content: &str) -> Result<Value> {
     let toml_value: toml::Value = content.parse()?;
     toml_to_json_value(toml_value)
@@ -608,6 +577,7 @@ fn toml_to_json_value(toml_val: toml::Value) -> Result<Value> {
     }
 }
 
+/// Parse INI content - FOR INTERNAL USE ONLY
 pub fn parse_ini(content: &str) -> Result<Value> {
     let mut result = serde_json::Map::new();
     let mut current_section = String::new();
@@ -645,6 +615,7 @@ pub fn parse_ini(content: &str) -> Result<Value> {
     Ok(Value::Object(result))
 }
 
+/// Parse XML content - FOR INTERNAL USE ONLY
 pub fn parse_xml(content: &str) -> Result<Value> {
     use quick_xml::events::Event;
     use quick_xml::Reader;
@@ -722,9 +693,12 @@ pub fn parse_xml(content: &str) -> Result<Value> {
 }
 
 // ============================================================================
-// UNIFIED API - Utility Functions
+// UTILITY FUNCTIONS - FOR INTERNAL USE ONLY
 // ============================================================================
+// These functions are public only for CLI and language bindings.
+// External users should use the main diff() function.
 
+/// Get type name of a JSON value - FOR INTERNAL USE ONLY
 pub fn value_type_name(value: &Value) -> &str {
     match value {
         Value::Null => "Null",
@@ -736,6 +710,7 @@ pub fn value_type_name(value: &Value) -> &str {
     }
 }
 
+/// Estimate memory usage of a JSON value - FOR INTERNAL USE ONLY
 pub fn estimate_memory_usage(value: &Value) -> usize {
     match value {
         Value::Null => 0,
@@ -753,6 +728,7 @@ pub fn estimate_memory_usage(value: &Value) -> usize {
     }
 }
 
+/// Check if values would exceed memory limit - FOR INTERNAL USE ONLY
 pub fn would_exceed_memory_limit(v1: &Value, v2: &Value) -> bool {
     const MAX_MEMORY_MB: usize = 100;
     const BYTES_PER_MB: usize = 1024 * 1024;
@@ -761,6 +737,7 @@ pub fn would_exceed_memory_limit(v1: &Value, v2: &Value) -> bool {
     total_size > MAX_MEMORY_MB * BYTES_PER_MB
 }
 
+/// Format output to string - FOR INTERNAL USE ONLY
 pub fn format_output<T: Serialize>(
     results: &[T],
     format: OutputFormat,

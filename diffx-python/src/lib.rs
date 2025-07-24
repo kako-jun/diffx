@@ -1,8 +1,7 @@
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList, PyAny};
 use diffx_core::{
-    diff, parse_json, parse_csv, parse_yaml, parse_toml, parse_ini, parse_xml,
-    DiffOptions, DiffxSpecificOptions, OutputFormat, format_output, DiffResult
+    diff, DiffOptions, DiffxSpecificOptions, OutputFormat, DiffResult
 };
 use regex::Regex;
 use serde_json::Value;
@@ -54,77 +53,17 @@ fn diff_py(py: Python, old: &Bound<'_, PyAny>, new: &Bound<'_, PyAny>, kwargs: O
     Ok(py_results.into())
 }
 
-/// Parse JSON string to Python dict
-#[pyfunction]
-fn parse_json_py(py: Python, content: &str) -> PyResult<PyObject> {
-    let json_value = parse_json(content)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("JSON parse error: {}", e)))?;
-    
-    json_value_to_python(py, &json_value)
-}
-
-/// Parse CSV string to Python list of dicts
-#[pyfunction] 
-fn parse_csv_py(py: Python, content: &str) -> PyResult<PyObject> {
-    let csv_value = parse_csv(content)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("CSV parse error: {}", e)))?;
-    
-    json_value_to_python(py, &csv_value)
-}
-
-/// Parse YAML string to Python dict
-#[pyfunction]
-fn parse_yaml_py(py: Python, content: &str) -> PyResult<PyObject> {
-    let yaml_value = parse_yaml(content)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("YAML parse error: {}", e)))?;
-    
-    json_value_to_python(py, &yaml_value)
-}
-
-/// Parse TOML string to Python dict
-#[pyfunction]
-fn parse_toml_py(py: Python, content: &str) -> PyResult<PyObject> {
-    let toml_value = parse_toml(content)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("TOML parse error: {}", e)))?;
-    
-    json_value_to_python(py, &toml_value)
-}
-
-/// Parse INI string to Python dict
-#[pyfunction]
-fn parse_ini_py(py: Python, content: &str) -> PyResult<PyObject> {
-    let ini_value = parse_ini(content)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("INI parse error: {}", e)))?;
-    
-    json_value_to_python(py, &ini_value)
-}
-
-/// Parse XML string to Python dict
-#[pyfunction]
-fn parse_xml_py(py: Python, content: &str) -> PyResult<PyObject> {
-    let xml_value = parse_xml(content)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("XML parse error: {}", e)))?;
-    
-    json_value_to_python(py, &xml_value)
-}
-
-/// Format diff results
-#[pyfunction]
-#[pyo3(signature = (results, format = "diffx"))]
-fn format_output_py(results: &Bound<'_, PyList>, format: &str) -> PyResult<String> {
-    // Convert Python list back to Rust Vec<DiffResult>
-    let mut rust_results = Vec::new();
-    for item in results.iter() {
-        let diff_result = python_to_diff_result(&item)?;
-        rust_results.push(diff_result);
-    }
-    
-    let output_format = OutputFormat::from_str(format)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid format: {}", e)))?;
-    
-    format_output(&rust_results, output_format)
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Format error: {}", e)))
-}
+// ============================================================================
+// REMOVED INDIVIDUAL PARSER FUNCTIONS - UNIFIED API DESIGN
+// ============================================================================
+// Individual parser functions have been removed to comply with unified API design.
+// Users should read files themselves and use the main diff() function.
+// 
+// Example usage:
+//   import json
+//   old_data = json.load(open('old.json'))
+//   new_data = json.load(open('new.json'))
+//   results = diffx_python.diff(old_data, new_data, **options)
 
 // Helper functions for Python <-> Rust conversion
 
@@ -334,17 +273,11 @@ fn build_options_from_kwargs(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Dif
     Ok(options)
 }
 
-/// Python module for diffx
+/// Python module for diffx - UNIFIED API DESIGN
 #[pymodule]
 fn diffx_python(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    // Only expose the main diff function - unified API design
     m.add_function(wrap_pyfunction!(diff_py, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_json_py, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_csv_py, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_yaml_py, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_toml_py, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_ini_py, m)?)?;
-    m.add_function(wrap_pyfunction!(parse_xml_py, m)?)?;
-    m.add_function(wrap_pyfunction!(format_output_py, m)?)?;
     
     // Add version
     m.add("__version__", "0.5.7")?;

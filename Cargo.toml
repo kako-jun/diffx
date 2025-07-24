@@ -3,8 +3,7 @@ resolver = "2"
 members = [
     "diffx-core",
     "diffx-cli",
-    "diffx-python",
-    "diffx-js"
+    "diffx-python"
 ]
 
 [workspace.package]

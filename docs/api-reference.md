@@ -4,6 +4,8 @@
 
 diffx provides a unified API for comparing structured data files (JSON, YAML, TOML, XML, INI, CSV). The library focuses on semantic differences rather than formatting changes.
 
+**Unified API Design**: The core API exposes only a single main function `diff()` for all comparison operations. All functionality is accessed through this unified interface using the options parameter. This design ensures consistency and simplicity across all use cases.
+
 ## Main Function
 
 ### `diff(old, new, options)`
@@ -23,7 +25,7 @@ Compares two structured data values and returns the differences.
 #### Example
 
 ```rust
-use diffx_core::{diff, DiffOptions};
+use diffx_core::{diff, DiffOptions, OutputFormat};
 use serde_json::json;
 
 let old = json!({
@@ -53,14 +55,10 @@ let results = diff(&old, &new, Some(&options))?;
 
 ```rust
 pub struct DiffOptions {
-    // Numeric comparison
+    // Core comparison options
     pub epsilon: Option<f64>,
-    
-    // Array comparison
     pub array_id_key: Option<String>,
-    
-    // Filtering
-    pub ignore_keys_regex: Option<String>,
+    pub ignore_keys_regex: Option<Regex>,
     pub path_filter: Option<String>,
     
     // Output control
@@ -73,13 +71,15 @@ pub struct DiffOptions {
     pub batch_size: Option<usize>,
     
     // diffx-specific options
+    pub diffx_options: Option<DiffxSpecificOptions>,
+}
+
+pub struct DiffxSpecificOptions {
     pub context_lines: Option<usize>,
     pub ignore_whitespace: Option<bool>,
     pub ignore_case: Option<bool>,
     pub brief_mode: Option<bool>,
     pub quiet_mode: Option<bool>,
-    pub verbose: Option<bool>,
-    pub no_color: Option<bool>,
 }
 ```
 
@@ -116,7 +116,9 @@ pub struct DiffOptions {
 - **`batch_size`**: Number of items to process in each batch when memory optimization is enabled
   - Default: `1000`
 
-#### diffx-Specific Options
+#### diffx-Specific Options (DiffxSpecificOptions)
+These options are nested within the `diffx_options` field:
+
 - **`context_lines`**: Number of context lines to show in unified diff format
   - Default: `3`
 - **`ignore_whitespace`**: Ignore whitespace differences in string comparisons
@@ -126,10 +128,6 @@ pub struct DiffOptions {
 - **`brief_mode`**: Show only whether files differ, not the differences
   - Default: `false`
 - **`quiet_mode`**: Suppress all normal output
-  - Default: `false`
-- **`verbose`**: Enable verbose output
-  - Default: `false`
-- **`no_color`**: Disable colored output
   - Default: `false`
 
 ## Result Types
@@ -150,28 +148,6 @@ pub enum DiffResult {
 - **`Modified(path, old_value, new_value)`**: A value was changed at the given path
 - **`TypeChanged(path, old_type, new_type)`**: The type of value changed at the given path
 
-## Utility Functions
-
-### Parser Functions
-
-```rust
-pub fn parse_json(content: &str) -> Result<Value, Error>
-pub fn parse_yaml(content: &str) -> Result<Value, Error>
-pub fn parse_toml(content: &str) -> Result<Value, Error>
-pub fn parse_xml(content: &str) -> Result<Value, Error>
-pub fn parse_ini(content: &str) -> Result<Value, Error>
-pub fn parse_csv(content: &str) -> Result<Value, Error>
-```
-
-These functions parse various file formats into a common `Value` type for comparison.
-
-### Helper Functions
-
-```rust
-pub fn estimate_memory_usage(value: &Value) -> usize
-pub fn value_type_name(value: &Value) -> &str
-pub fn format_output<T: Serialize>(results: &[T], format: OutputFormat) -> Result<String, Error>
-```
 
 ## Language Bindings
 
@@ -195,22 +171,26 @@ results = diffx_python.diff(
 )
 ```
 
-### JavaScript
+### TypeScript/JavaScript
 
-```javascript
-const diffx = require('diffx-js');
+```typescript
+import { diff, DiffOptions } from 'diffx-js';
+import * as fs from 'fs';
 
-// Basic usage
-const results = diffx.diff(oldObj, newObj);
+// Basic usage - users parse files themselves
+const oldData = JSON.parse(fs.readFileSync('old.json', 'utf8'));
+const newData = JSON.parse(fs.readFileSync('new.json', 'utf8'));
+const results = await diff(oldData, newData);
 
 // With options
-const results = diffx.diff(oldObj, newObj, {
+const options: DiffOptions = {
     epsilon: 0.001,
-    arrayIdKey: "id",
-    ignoreKeysRegex: "^(timestamp|metadata)",
-    outputFormat: "json",
+    arrayIdKey: 'id',
+    ignoreKeysRegex: '^(timestamp|metadata)',
+    outputFormat: 'json',
     showUnchanged: false
-});
+};
+const results = await diff(oldData, newData, options);
 ```
 
 ## Error Handling
@@ -234,13 +214,15 @@ The library returns detailed error messages for:
 ### Comparing JSON Files
 
 ```rust
-use diffx_core::{diff, parse_json, DiffOptions};
+use diffx_core::{diff, DiffOptions};
+use serde_json;
 
+// Users should parse data themselves using standard libraries
 let old_content = std::fs::read_to_string("old.json")?;
 let new_content = std::fs::read_to_string("new.json")?;
 
-let old = parse_json(&old_content)?;
-let new = parse_json(&new_content)?;
+let old: serde_json::Value = serde_json::from_str(&old_content)?;
+let new: serde_json::Value = serde_json::from_str(&new_content)?;
 
 let results = diff(&old, &new, None)?;
 ```
@@ -248,8 +230,10 @@ let results = diff(&old, &new, None)?;
 ### Ignoring Timestamps
 
 ```rust
+use regex::Regex;
+
 let options = DiffOptions {
-    ignore_keys_regex: Some("timestamp|updated_at|created_at".to_string()),
+    ignore_keys_regex: Some(Regex::new("timestamp|updated_at|created_at")?),
     ..Default::default()
 };
 
@@ -261,6 +245,26 @@ let results = diff(&old, &new, Some(&options))?;
 ```rust
 let options = DiffOptions {
     array_id_key: Some("id".to_string()),
+    ..Default::default()
+};
+
+let results = diff(&old, &new, Some(&options))?;
+```
+
+### Using diffx-Specific Options
+
+```rust
+use diffx_core::{DiffOptions, DiffxSpecificOptions};
+
+let diffx_opts = DiffxSpecificOptions {
+    ignore_whitespace: Some(true),
+    ignore_case: Some(true),
+    brief_mode: Some(false),
+    ..Default::default()
+};
+
+let options = DiffOptions {
+    diffx_options: Some(diffx_opts),
     ..Default::default()
 };
 

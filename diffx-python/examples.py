@@ -1,58 +1,102 @@
 #!/usr/bin/env python3
 """
-Examples demonstrating diffx-python usage
-Shows various use cases and integration patterns
+diffx-python Examples - UNIFIED API DESIGN
+
+Demonstrates native Python API usage for semantic diffing
+Users parse files themselves and call the unified diff() function
 """
+
 import json
 import tempfile
 import os
+import yaml
 from pathlib import Path
-from diffx import diff, diff_files, diff_json, diff_directories
+from typing import Any, Dict, List
+from diffx_python import diff
 
-def example_basic_comparison():
-    """Basic JSON comparison example"""
-    print("Example 1: Basic JSON Comparison")
-    print("-" * 40)
+def print_header(title: str) -> None:
+    """Print a formatted header"""
+    print(f"\n{title}")
+    print("=" * len(title))
+
+def print_example(title: str, description: str) -> None:
+    """Print example title and description"""
+    print(f"\n{title}")
+    print(f"   {description}")
+
+def print_results(results: List[Dict[str, Any]]) -> None:
+    """Print diff results in a formatted way"""
+    if not results:
+        print("   No differences found.")
+        return
     
-    # Configuration files before and after
-    before = {
+    print("   Differences:")
+    for result in results:
+        result_type = result.get('type', 'unknown')
+        path = result.get('path', '')
+        
+        if result_type == 'added':
+            print(f"   ➕ Added: {path} = {result.get('new_value')}")
+        elif result_type == 'removed':
+            print(f"   ➖ Removed: {path} = {result.get('old_value')}")
+        elif result_type == 'modified':
+            print(f"   🔄 Modified: {path}")
+            print(f"      Old: {result.get('old_value')}")
+            print(f"      New: {result.get('new_value')}")
+        elif result_type == 'type_changed':
+            print(f"   🔀 Type Changed: {path} ({result.get('old_type')} → {result.get('new_type')})")
+        else:
+            print(f"   • {result}")
+
+def example_basic_configuration():
+    """Basic configuration comparison using unified API"""
+    print_example(
+        "Basic Configuration Comparison",
+        "Compare application configurations using the unified diff() function"
+    )
+    
+    # Configuration before
+    config_v1 = {
         "app": {
             "name": "MyApp",
             "version": "1.0.0",
-            "environment": "development"
+            "environment": "development",
+            "debug": True
         },
         "database": {
-            "host": "localhost",
-            "port": 5432
-        }
+            "host": "localhost", 
+            "port": 5432,
+            "ssl": False
+        },
+        "features": ["auth", "logging"]
     }
     
-    after = {
+    # Configuration after
+    config_v2 = {
         "app": {
             "name": "MyApp",
-            "version": "1.1.0",
-            "environment": "production"
+            "version": "1.1.0", 
+            "environment": "production",
+            "debug": False
         },
         "database": {
             "host": "prod-db.example.com",
             "port": 5432,
             "ssl": True
-        }
+        },
+        "features": ["auth", "logging", "monitoring"]
     }
     
-    # Compare configurations
-    differences = diff(before, after)
-    
-    print("Configuration changes detected:")
-    for diff_item in differences:
-        print(f"  • {diff_item}")
-    
-    print()
+    # Use unified diff() API
+    results = diff(config_v1, config_v2)
+    print_results(results)
 
 def example_api_schema_evolution():
-    """API schema evolution tracking example"""
-    print("Example 2: API Schema Evolution")
-    print("-" * 40)
+    """API schema evolution tracking"""
+    print_example(
+        "OpenAPI Schema Evolution",
+        "Track API schema changes for compatibility analysis"
+    )
     
     # API v1 schema
     api_v1 = {
@@ -66,13 +110,11 @@ def example_api_schema_evolution():
                 "get": {
                     "responses": {
                         "200": {
-                            "description": "List of users",
                             "content": {
                                 "application/json": {
                                     "schema": {
                                         "type": "array",
                                         "items": {
-                                            "type": "object",
                                             "properties": {
                                                 "id": {"type": "integer"},
                                                 "name": {"type": "string"}
@@ -88,7 +130,7 @@ def example_api_schema_evolution():
         }
     }
     
-    # API v2 schema - added email field and new endpoint
+    # API v2 schema with breaking changes
     api_v2 = {
         "openapi": "3.0.0",
         "info": {
@@ -100,17 +142,16 @@ def example_api_schema_evolution():
                 "get": {
                     "responses": {
                         "200": {
-                            "description": "List of users",
                             "content": {
                                 "application/json": {
                                     "schema": {
                                         "type": "array",
                                         "items": {
-                                            "type": "object",
                                             "properties": {
                                                 "id": {"type": "integer"},
                                                 "name": {"type": "string"},
-                                                "email": {"type": "string"}
+                                                "email": {"type": "string"},
+                                                "created_at": {"type": "string", "format": "date-time"}
                                             }
                                         }
                                     }
@@ -124,36 +165,187 @@ def example_api_schema_evolution():
                 "get": {
                     "parameters": [
                         {"name": "id", "in": "path", "required": True, "schema": {"type": "integer"}}
-                    ],
-                    "responses": {
-                        "200": {
-                            "description": "User details"
-                        }
-                    }
+                    ]
                 }
             }
         }
     }
     
-    # Get JSON diff for API documentation
-    json_diff = diff_json(api_v1, api_v2)
+    # Compare with JSON output format
+    results = diff(api_v1, api_v2, output_format="json", show_types=True)
+    print_results(results)
+
+def example_file_parsing_and_comparison():
+    """Demonstrate file parsing and comparison"""
+    print_example(
+        "File Parsing and Comparison", 
+        "Users parse files themselves using standard libraries, then use diff()"
+    )
     
-    print("API Schema Changes (JSON format):")
-    print(json.dumps(json.loads(json_diff), indent=2))
-    print()
+    # Create temporary files for demonstration
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f1:
+        json.dump({
+            "version": "1.0.0",
+            "dependencies": {
+                "requests": "^2.28.0",
+                "click": "^8.0.0"
+            },
+            "scripts": {
+                "start": "python main.py",
+                "test": "pytest"
+            }
+        }, f1, indent=2)
+        file1_path = f1.name
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f2:
+        json.dump({
+            "version": "1.1.0",
+            "dependencies": {
+                "requests": "^2.31.0",
+                "click": "^8.1.0",
+                "pydantic": "^2.0.0"
+            },
+            "scripts": {
+                "start": "python main.py",
+                "test": "pytest",
+                "lint": "flake8"
+            }
+        }, f2, indent=2)
+        file2_path = f2.name
+    
+    try:
+        # Users parse files themselves
+        with open(file1_path, 'r') as f:
+            data1 = json.load(f)
+        
+        with open(file2_path, 'r') as f:
+            data2 = json.load(f)
+        
+        # Then use unified diff() API
+        results = diff(data1, data2, epsilon=0.0, show_unchanged=False)
+        print_results(results)
+        
+    finally:
+        # Cleanup
+        os.unlink(file1_path)
+        os.unlink(file2_path)
+
+def example_yaml_configuration():
+    """YAML configuration comparison"""
+    print_example(
+        "YAML Configuration Analysis",
+        "Parse YAML files and compare using diff() with advanced options"
+    )
+    
+    # CI/CD pipeline v1
+    pipeline_v1_yaml = """
+name: CI
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: pip install -r requirements.txt
+      - run: pytest
+"""
+    
+    # CI/CD pipeline v2
+    pipeline_v2_yaml = """
+name: CI
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.txt
+      - run: pytest --cov
+      - run: flake8
+"""
+    
+    # Users parse YAML themselves
+    pipeline_v1 = yaml.safe_load(pipeline_v1_yaml)
+    pipeline_v2 = yaml.safe_load(pipeline_v2_yaml)
+    
+    # Compare with diffx options
+    results = diff(
+        pipeline_v1, 
+        pipeline_v2,
+        ignore_whitespace=True,
+        context_lines=3,
+        show_types=False
+    )
+    print_results(results)
+
+def example_array_comparison_with_id():
+    """Advanced array comparison using ID key"""
+    print_example(
+        "Smart Array Comparison",
+        "Compare arrays by element ID rather than position"
+    )
+    
+    users_before = {
+        "users": [
+            {"id": 1, "name": "Alice", "role": "admin", "active": True},
+            {"id": 2, "name": "Bob", "role": "user", "active": True},
+            {"id": 3, "name": "Charlie", "role": "user", "active": False}
+        ],
+        "metadata": {
+            "total": 3,
+            "active": 2
+        }
+    }
+    
+    users_after = {
+        "users": [
+            {"id": 1, "name": "Alice", "role": "admin", "active": True},
+            {"id": 2, "name": "Bob", "role": "moderator", "active": True},
+            {"id": 4, "name": "David", "role": "user", "active": True}
+        ],
+        "metadata": {
+            "total": 3,
+            "active": 3
+        }
+    }
+    
+    # Compare with array ID key
+    results = diff(
+        users_before,
+        users_after, 
+        array_id_key="id",
+        show_unchanged=False
+    )
+    print_results(results)
 
 def example_configuration_drift_detection():
-    """Configuration drift detection example"""
-    print("Example 3: Configuration Drift Detection")
-    print("-" * 40)
+    """Configuration drift detection for DevOps"""
+    print_example(
+        "Configuration Drift Detection",
+        "Detect when production config drifts from expected baseline"
+    )
     
-    # Expected production configuration
-    expected_prod_config = {
+    expected_config = {
         "environment": "production",
         "debug": False,
         "logging": {
             "level": "INFO",
-            "file": "/var/log/app.log"
+            "handlers": ["file", "syslog"]
         },
         "database": {
             "host": "prod-db.example.com",
@@ -161,371 +353,276 @@ def example_configuration_drift_detection():
             "ssl": True,
             "pool_size": 20
         },
-        "redis": {
-            "host": "redis.example.com",
-            "port": 6379,
-            "db": 0
+        "cache": {
+            "redis_url": "redis://prod-cache:6379",
+            "ttl": 3600
         }
     }
     
-    # Current configuration (with drift)
     current_config = {
-        "environment": "production",
-        "debug": True,  # Accidentally left as True!
+        "environment": "production", 
+        "debug": True,  # DRIFT: Should be False!
         "logging": {
-            "level": "DEBUG",  # Wrong log level
-            "file": "/var/log/app.log"
+            "level": "DEBUG",  # DRIFT: Should be INFO!
+            "handlers": ["file", "syslog"]
         },
         "database": {
             "host": "prod-db.example.com",
             "port": 5432,
             "ssl": True,
-            "pool_size": 10  # Reduced pool size
+            "pool_size": 10  # DRIFT: Should be 20!
         },
-        "redis": {
-            "host": "redis.example.com",
-            "port": 6379,
-            "db": 0
+        "cache": {
+            "redis_url": "redis://prod-cache:6379",
+            "ttl": 3600
         },
-        "temp_feature": True  # Temporary feature flag
+        "temp_feature": True  # DRIFT: Unexpected feature flag!
     }
     
-    # Detect configuration drift
-    drift = diff(expected_prod_config, current_config)
+    results = diff(expected_config, current_config)
     
-    print("Configuration Drift Detected:")
-    if drift:
-        print("WARNING: Your production configuration has drifted from expected state!")
-        for diff_item in drift:
-            print(f"  • {diff_item}")
+    if results:
+        print("   🚨 CONFIGURATION DRIFT DETECTED!")
+        print_results(results)
+        
+        # Analyze criticality
+        critical_drifts = [r for r in results if 'debug' in str(r) or 'level' in str(r)]
+        if critical_drifts:
+            print("\n   ⚠️  CRITICAL SECURITY ISSUE:")
+            print("   Production environment has debug mode enabled!")
     else:
-        print("OK: Configuration is in expected state")
-    
-    print()
+        print("   ✅ Configuration is compliant.")
 
-def example_ci_cd_integration():
-    """CI/CD integration example"""
-    print("Example 4: CI/CD Integration")
-    print("-" * 40)
+def example_performance_monitoring():
+    """Performance metrics comparison"""
+    print_example(
+        "Performance Metrics Monitoring",
+        "Monitor application performance changes over time"
+    )
     
-    # Simulate deployment configuration comparison
-    staging_config = {
-        "app": {
-            "name": "MyApp",
-            "replicas": 2,
-            "resources": {
-                "cpu": "100m",
-                "memory": "128Mi"
-            }
+    baseline_metrics = {
+        "response_times": {
+            "api_users": 120,
+            "api_products": 80,
+            "api_orders": 200
         },
-        "database": {
-            "host": "staging-db",
-            "credentials": "staging-secret"
+        "throughput": {
+            "requests_per_second": 1000,
+            "concurrent_users": 500
+        },
+        "resources": {
+            "cpu_usage": 45.2,
+            "memory_usage": 62.8,
+            "disk_io": 15.3
+        },
+        "errors": {
+            "error_rate": 0.01,
+            "timeout_rate": 0.005
         }
     }
     
-    production_config = {
-        "app": {
-            "name": "MyApp",
-            "replicas": 5,
-            "resources": {
-                "cpu": "500m",
-                "memory": "512Mi"
-            }
+    current_metrics = {
+        "response_times": {
+            "api_users": 180,  # 50% increase!
+            "api_products": 85,
+            "api_orders": 350  # 75% increase!
         },
-        "database": {
-            "host": "prod-db",
-            "credentials": "prod-secret"
+        "throughput": {
+            "requests_per_second": 750,  # 25% decrease!
+            "concurrent_users": 400     # 20% decrease!
+        },
+        "resources": {
+            "cpu_usage": 78.5,  # High!
+            "memory_usage": 89.2,  # Very high!
+            "disk_io": 45.8    # 200% increase!
+        },
+        "errors": {
+            "error_rate": 0.08,    # 8x increase!
+            "timeout_rate": 0.025  # 5x increase!
         }
     }
     
-    # Compare deployment configurations
-    deployment_diff = diff(staging_config, production_config)
+    # Use epsilon for floating point comparison
+    results = diff(baseline_metrics, current_metrics, epsilon=0.01)
     
-    print("Deployment Configuration Differences:")
-    print("(Staging → Production)")
-    for diff_item in deployment_diff:
-        print(f"  • {diff_item}")
-    
-    # Simulate CI/CD decision logic
-    critical_changes = [d for d in deployment_diff if 'credentials' in str(d) or 'host' in str(d)]
-    
-    if critical_changes:
-        print("\nCRITICAL: Critical changes detected! Manual approval required.")
-        for change in critical_changes:
-            print(f"  WARNING: {change}")
-    else:
-        print("\nOK: No critical changes. Safe to deploy.")
-    
-    print()
-
-def example_file_comparison():
-    """File comparison example"""
-    print("Example 5: File Comparison")
-    print("-" * 40)
-    
-    # Create temporary files for demonstration
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f1:
-        json.dump({
-            "version": "1.0.0",
-            "features": ["auth", "logging"],
-            "config": {
-                "timeout": 30,
-                "retries": 3
-            }
-        }, f1, indent=2)
-        file1 = f1.name
-    
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f2:
-        json.dump({
-            "version": "1.1.0",
-            "features": ["auth", "logging", "monitoring"],
-            "config": {
-                "timeout": 60,
-                "retries": 5,
-                "ssl": True
-            }
-        }, f2, indent=2)
-        file2 = f2.name
-    
-    try:
-        print(f"Comparing files:")
-        print(f"  File 1: {file1}")
-        print(f"  File 2: {file2}")
+    if results:
+        print("   📊 PERFORMANCE ALERT TRIGGERED!")
+        print_results(results)
         
-        # Compare files
-        file_diff = diff_files(file1, file2)
+        # Categorize issues
+        response_issues = [r for r in results if 'response_times' in str(r)]
+        resource_issues = [r for r in results if 'resources' in str(r)]
+        error_issues = [r for r in results if 'errors' in str(r)]
         
-        print("\nFile differences:")
-        for diff_item in file_diff:
-            print(f"  • {diff_item}")
-        
-    finally:
-        # Clean up temporary files
-        os.unlink(file1)
-        os.unlink(file2)
-    
-    print()
-
-def example_directory_comparison():
-    """Directory comparison example"""
-    print("Example 6: Directory Comparison")
-    print("-" * 40)
-    
-    # Create temporary directories for demonstration
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Create first directory structure
-        dir1 = Path(tmpdir) / "config_v1"
-        dir1.mkdir()
-        
-        (dir1 / "app.json").write_text(json.dumps({
-            "name": "MyApp",
-            "version": "1.0.0",
-            "debug": True
-        }, indent=2))
-        
-        (dir1 / "database.json").write_text(json.dumps({
-            "host": "localhost",
-            "port": 5432
-        }, indent=2))
-        
-        # Create second directory structure
-        dir2 = Path(tmpdir) / "config_v2"
-        dir2.mkdir()
-        
-        (dir2 / "app.json").write_text(json.dumps({
-            "name": "MyApp",
-            "version": "2.0.0",
-            "debug": False
-        }, indent=2))
-        
-        (dir2 / "database.json").write_text(json.dumps({
-            "host": "prod-db.example.com",
-            "port": 5432,
-            "ssl": True
-        }, indent=2))
-        
-        (dir2 / "redis.json").write_text(json.dumps({
-            "host": "redis.example.com",
-            "port": 6379
-        }, indent=2))
-        
-        print(f"Comparing directories:")
-        print(f"  Directory 1: {dir1}")
-        print(f"  Directory 2: {dir2}")
-        
-        # Compare directories
-        dir_diff = diff_directories(str(dir1), str(dir2))
-        
-        print("\nDirectory differences:")
-        for diff_item in dir_diff:
-            print(f"  • {diff_item}")
-    
-    print()
+        if error_issues:
+            print("\n   🔥 CRITICAL: Error rates have increased significantly!")
+        if resource_issues:
+            print("\n   💾 WARNING: Resource usage is high!")
+        if response_issues:
+            print("\n   🐌 INFO: Response times have degraded!")
 
 def example_data_validation():
-    """Data validation example"""
-    print("Example 7: Data Validation")
-    print("-" * 40)
+    """Data validation and quality check"""
+    print_example(
+        "Data Validation and Quality Check",
+        "Validate data integrity and structure compliance"
+    )
     
-    # Expected data schema
     expected_schema = {
         "users": [
             {
-                "id": 1,
-                "name": "Alice",
-                "email": "alice@example.com",
-                "active": True
-            },
-            {
-                "id": 2,
-                "name": "Bob",
-                "email": "bob@example.com",
-                "active": True
+                "id": int,
+                "username": str,
+                "email": str,
+                "active": bool,
+                "roles": list
             }
         ],
-        "metadata": {
-            "total": 2,
-            "active": 2
+        "pagination": {
+            "page": int,
+            "per_page": int,
+            "total": int
         }
     }
     
-    # Actual data (with validation issues)
+    # Actual data with validation issues
     actual_data = {
         "users": [
             {
                 "id": 1,
-                "name": "Alice",
+                "username": "alice",
                 "email": "alice@example.com",
-                "active": True
+                "active": True,
+                "roles": ["admin"]
             },
             {
-                "id": 2,
-                "name": "Bob",
-                "email": "invalid-email",  # Invalid email format
-                "active": False  # Should be True
-            },
-            {
-                "id": 3,
-                "name": "Charlie",
-                "email": "charlie@example.com",
-                "active": True
+                "id": "2",  # Wrong type: should be int
+                "username": "bob",
+                "email": "invalid-email",  # Invalid format
+                "active": "yes",  # Wrong type: should be bool
+                "roles": ["user"]
             }
         ],
-        "metadata": {
-            "total": 2,  # Should be 3
-            "active": 2
-        }
+        "pagination": {
+            "page": 1,
+            "per_page": 10,
+            "total": 2
+        },
+        "extra_field": "unexpected"  # Schema violation
     }
     
-    # Validate data
-    validation_diff = diff(expected_schema, actual_data)
-    
-    print("Data Validation Results:")
-    if validation_diff:
-        print("ERROR: Data validation failed!")
-        for diff_item in validation_diff:
-            print(f"  • {diff_item}")
-    else:
-        print("OK: Data validation passed!")
-    
-    print()
+    # Note: This is a simplified validation example
+    # In practice, you'd use proper schema validation libraries
+    print("   Note: This demonstrates structural comparison.")
+    print("   For proper validation, use libraries like pydantic or jsonschema.")
 
-def example_monitoring_integration():
-    """Monitoring and alerting integration example"""
-    print("Example 8: Monitoring Integration")
-    print("-" * 40)
+def example_internationalization():
+    """Internationalization and localization comparison"""
+    print_example(
+        "Internationalization Content Management",
+        "Track changes in multilingual content"
+    )
     
-    # Baseline metrics
-    baseline_metrics = {
-        "performance": {
-            "response_time": 150,
-            "throughput": 1000,
-            "error_rate": 0.01
+    translations_v1 = {
+        "en": {
+            "welcome": "Welcome",
+            "login": "Login",
+            "logout": "Logout",
+            "settings": "Settings"
         },
-        "resources": {
-            "cpu_usage": 45,
-            "memory_usage": 60,
-            "disk_usage": 30
+        "ja": {
+            "welcome": "ようこそ",
+            "login": "ログイン", 
+            "logout": "ログアウト",
+            "settings": "設定"
+        },
+        "fr": {
+            "welcome": "Bienvenue",
+            "login": "Connexion",
+            "logout": "Déconnexion"
         }
     }
     
-    # Current metrics
-    current_metrics = {
-        "performance": {
-            "response_time": 300,  # Increased!
-            "throughput": 800,     # Decreased!
-            "error_rate": 0.05     # Increased!
+    translations_v2 = {
+        "en": {
+            "welcome": "Welcome",
+            "login": "Sign In",  # Changed
+            "logout": "Sign Out",  # Changed
+            "settings": "Settings",
+            "profile": "Profile"  # Added
         },
-        "resources": {
-            "cpu_usage": 80,       # High!
-            "memory_usage": 85,    # High!
-            "disk_usage": 30
+        "ja": {
+            "welcome": "ようこそ",
+            "login": "サインイン",  # Changed
+            "logout": "サインアウト",  # Changed
+            "settings": "設定",
+            "profile": "プロフィール"  # Added
+        },
+        "fr": {
+            "welcome": "Bienvenue",
+            "login": "Se connecter",  # Changed
+            "logout": "Se déconnecter",  # Changed
+            "settings": "Paramètres",  # Added missing
+            "profile": "Profil"  # Added
+        },
+        "es": {  # New language
+            "welcome": "Bienvenido",
+            "login": "Iniciar sesión",
+            "logout": "Cerrar sesión",
+            "settings": "Configuración",
+            "profile": "Perfil"
         }
     }
     
-    # Compare metrics
-    metrics_diff = diff(baseline_metrics, current_metrics)
-    
-    print("Performance Monitoring Alert:")
-    if metrics_diff:
-        print("CRITICAL: Performance degradation detected!")
-        for diff_item in metrics_diff:
-            print(f"  • {diff_item}")
-        
-        # Simulate alerting logic
-        performance_changes = [d for d in metrics_diff if 'performance' in str(d)]
-        resource_changes = [d for d in metrics_diff if 'resources' in str(d)]
-        
-        if performance_changes:
-            print("\nPerformance Impact:")
-            for change in performance_changes:
-                print(f"  WARNING: {change}")
-        
-        if resource_changes:
-            print("\n💻 Resource Impact:")
-            for change in resource_changes:
-                print(f"  WARNING: {change}")
-    else:
-        print("OK: All metrics within expected ranges")
-    
-    print()
+    results = diff(translations_v1, translations_v2, show_types=False)
+    print_results(results)
 
 def main():
     """Run all examples"""
-    print("=" * 60)
-    print("diffx-python Usage Examples")
-    print("=" * 60)
-    print()
+    print("=" * 70)
+    print("diffx-python Native API Examples - UNIFIED API DESIGN")
+    print("=" * 70)
+    print("\nAll examples use only the unified diff() function.")
+    print("Users parse files themselves using standard Python libraries.")
     
     examples = [
-        example_basic_comparison,
+        example_basic_configuration,
         example_api_schema_evolution,
+        example_file_parsing_and_comparison,
+        example_yaml_configuration,
+        example_array_comparison_with_id,
         example_configuration_drift_detection,
-        example_ci_cd_integration,
-        example_file_comparison,
-        example_directory_comparison,
+        example_performance_monitoring,
         example_data_validation,
-        example_monitoring_integration,
+        example_internationalization,
     ]
     
-    for example in examples:
+    for example_func in examples:
         try:
-            example()
+            print_header(f"Example: {example_func.__name__.replace('example_', '').replace('_', ' ').title()}")
+            example_func()
         except Exception as e:
-            print(f"ERROR: {example.__name__} failed: {e}")
+            print(f"\n❌ ERROR in {example_func.__name__}: {e}")
             import traceback
             traceback.print_exc()
-            print()
     
-    print("=" * 60)
-    print("Examples completed!")
-    print("=" * 60)
-    print()
-    print("For more information:")
-    print("  • Documentation: https://github.com/diffx-rs/diffx")
+    print_header("Summary")
+    print("✅ All examples use the unified diff() API only")
+    print("📦 Users handle file parsing with standard libraries")  
+    print("🔧 Extensive customization through diff() options")
+    print("🚀 Ready for production CI/CD integration")
+    
+    print("\nUnified API Benefits:")
+    print("  • Single function interface (diff)")
+    print("  • Consistent behavior across languages")
+    print("  • Rich options for customization")
+    print("  • Type safety and error handling")
+    print("  • Memory optimization for large data")
+    
+    print("\nFor more information:")
+    print("  • Documentation: https://github.com/kako-jun/diffx")
     print("  • PyPI Package: https://pypi.org/project/diffx-python/")
-    print("  • Report Issues: https://github.com/diffx-rs/diffx/issues")
+    print("  • Issues: https://github.com/kako-jun/diffx/issues")
 
 if __name__ == "__main__":
     main()

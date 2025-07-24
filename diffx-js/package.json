@@ -21,11 +21,12 @@
     "data-analysis"
   ],
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
     "test": "npm run build && node test.js",
-    "examples": "npm run build && node examples.js",
+    "examples": "npm run build && npx tsx examples.ts",
     "verify": "npm run build && node -e \"console.log(require('./index.js'))\"",
     "prepublish": "npm run build",
     "artifacts": "napi artifacts"
@@ -35,9 +36,10 @@
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "*.node",
     "README.md",
-    "examples.js",
+    "examples.ts",
     "test.js"
   ],
   "os": [

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::{Parser, ValueEnum};
 use diffx_core::{
     diff, parse_csv, parse_ini, parse_json, parse_toml, parse_xml, parse_yaml, 
