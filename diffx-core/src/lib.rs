@@ -11,12 +11,31 @@ use std::fs;
 // UNIFIED API - Core Types
 // ============================================================================
 
-#[derive(Debug, PartialEq, Serialize)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub enum DiffResult {
     Added(String, Value),
     Removed(String, Value),
     Modified(String, Value, Value),
     TypeChanged(String, Value, Value),
+}
+
+impl std::fmt::Display for DiffResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DiffResult::Added(key, value) => {
+                write!(f, "  + {}: {}", key, value)
+            }
+            DiffResult::Removed(key, value) => {
+                write!(f, "  - {}: {}", key, value)
+            }
+            DiffResult::Modified(key, value1, value2) => {
+                write!(f, "  ~ {}: {} -> {}", key, value1, value2)
+            }
+            DiffResult::TypeChanged(key, value1, value2) => {
+                write!(f, "  # {}: {} -> {} (type changed)", key, value1, value2)
+            }
+        }
+    }
 }
 
 // Lightweight diff result for memory-constrained operations
@@ -930,6 +949,39 @@ pub fn format_output<T: Serialize>(
             for result in results {
                 let json = serde_json::to_string(result)?;
                 output.push_str(&format!("~ {}\n", json));
+            }
+            Ok(output)
+        }
+    }
+}
+
+/// Format DiffResult output using proper Display implementation
+pub fn format_diff_output(
+    results: &[DiffResult],
+    format: OutputFormat,
+) -> Result<String> {
+    match format {
+        OutputFormat::Json => {
+            serde_json::to_string_pretty(results)
+                .map_err(|e| anyhow!("JSON serialization error: {}", e))
+        }
+        OutputFormat::Yaml => {
+            serde_yaml::to_string(results)
+                .map_err(|e| anyhow!("YAML serialization error: {}", e))
+        }
+        OutputFormat::Diffx => {
+            let mut output = String::new();
+            for result in results {
+                output.push_str(&result.to_string());
+                output.push('\n');
+            }
+            Ok(output)
+        }
+        OutputFormat::Unified => {
+            // Simple unified diff format  
+            let mut output = String::new();
+            for result in results {
+                output.push_str(&format!("~ {}\n", result));
             }
             Ok(output)
         }

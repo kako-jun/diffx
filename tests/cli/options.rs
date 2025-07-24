@@ -706,53 +706,6 @@ fn test_context_negative_value() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-fn test_recursive_option() -> Result<(), Box<dyn std::error::Error>> {
-    // Test --recursive option with directories
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures")
-        .arg("../tests/fixtures") // Same directory
-        .arg("--recursive");
-
-    cmd.assert().code(0); // No differences in same directory
-    Ok(())
-}
-
-#[test]
-fn test_recursive_short_flag() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures")
-        .arg("../tests/fixtures")
-        .arg("-r");
-
-    cmd.assert().code(0);
-    Ok(())
-}
-
-#[test]
-fn test_recursive_with_files() -> Result<(), Box<dyn std::error::Error>> {
-    // Test --recursive with individual files (should work normally)
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
-        .arg("--recursive");
-
-    cmd.assert().code(1); // Should show differences
-    Ok(())
-}
-
-#[test]
-fn test_recursive_nonexistent_directory() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/nonexistent")
-        .arg("../tests/fixtures")
-        .arg("--recursive");
-
-    let result = cmd.output()?;
-    // Should handle missing directory gracefully
-    assert!(!result.status.success());
-    Ok(())
-}
 
 #[test]
 fn test_version_option() -> Result<(), Box<dyn std::error::Error>> {

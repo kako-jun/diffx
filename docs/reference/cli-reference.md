@@ -24,13 +24,30 @@ diffx [OPTIONS] <INPUT1> <INPUT2>
 - **Required**: Yes
 - **Description**: The second input to compare
 
+**Stdin Support:**
+- **One stdin, one file**: `diffx - file.json` or `diffx file.json -`
+- **Both from stdin**: `diffx - -` (reads two data sets from stdin)
+  - **JSON**: Two JSON objects separated by newlines or concatenated
+  - **YAML**: Two YAML documents separated by `---`
+
 **Examples:**
 ```bash
 # Compare two files
 diffx config.json config.new.json
 
-# Compare with stdin
+# Compare with stdin (one stdin, one file)
 cat config.json | diffx - config.new.json
+
+# Compare two inputs from stdin (pipe both)
+echo '{"old": "data"}
+{"new": "data"}' | diffx - -
+
+# Compare two YAML documents from stdin
+echo 'name: Alice
+age: 25
+---
+name: Bob
+age: 30' | diffx - - --format yaml
 
 # Compare directories (automatic recursive detection)
 diffx config_dir1/ config_dir2/
@@ -630,6 +647,18 @@ diffx config.yaml config.toml --format yaml --format toml
 
 # Compare stdin with file
 curl -s https://api.example.com/config | diffx - local_config.json
+
+# Compare two API responses via stdin
+(curl -s https://api.example.com/v1/config; echo; curl -s https://api.example.com/v2/config) | diffx - -
+
+# Compare two JSON objects from stdin
+echo '{"version": "1.0", "features": ["a", "b"]}
+{"version": "2.0", "features": ["a", "b", "c"]}' | diffx - - --format json
+
+# Compare configuration snapshots from stdin  
+kubectl get configmap app-config -o json > /tmp/config1.json && \
+kubectl get configmap app-config-new -o json > /tmp/config2.json && \
+(cat /tmp/config1.json; echo; cat /tmp/config2.json) | diffx - - --path "data"
 ```
 
 ### Advanced Filtering

@@ -24,16 +24,36 @@ diffx [OPTIONS] <INPUT1> <INPUT2>
 - **必需**: 是
 - **描述**: 要比较的第二个输入
 
+**标准输入支持:**
+- **一个标准输入，一个文件**: `diffx - file.json` 或 `diffx file.json -`
+- **两个都来自标准输入**: `diffx - -` (从标准输入读取两个数据集)
+  - **JSON**: 由换行符分隔或连接的两个 JSON 对象
+  - **YAML**: 由 `---` 分隔的两个 YAML 文档
+
 **示例:**
 ```bash
 # 比较两个文件
 diffx config.json config.new.json
 
-# 与标准输入比较
+# 标准输入和文件
 cat config.json | diffx - config.new.json
+
+# 两者都从标准输入（管道两者）
+echo '{"old": "data"}
+{"new": "data"}' | diffx - -
+
+# 从标准输入读取两个 YAML 文档
+echo 'name: Alice
+age: 25
+---
+name: Bob
+age: 30' | diffx - - --format yaml
 
 # 目录比较（自动递归检测）
 diffx config_dir1/ config_dir2/
+
+# API 响应比较（通过标准输入）
+(curl -s https://api.example.com/v1/config; echo; curl -s https://api.example.com/v2/config) | diffx - -
 ```
 
 ## 选项
