@@ -82,14 +82,12 @@ pub enum OutputFormat {
     Json,
     #[serde(rename = "yaml")]
     Yaml,
-    #[serde(rename = "unified")]
-    Unified,
 }
 
 // Manual ValueEnum implementation since it's not available in core
 impl OutputFormat {
     pub fn value_variants() -> &'static [Self] {
-        &[Self::Diffx, Self::Json, Self::Yaml, Self::Unified]
+        &[Self::Diffx, Self::Json, Self::Yaml]
     }
     
     pub fn from_str(s: &str) -> Result<Self> {
@@ -97,7 +95,6 @@ impl OutputFormat {
             "diffx" => Ok(Self::Diffx),
             "json" => Ok(Self::Json),
             "yaml" | "yml" => Ok(Self::Yaml),
-            "unified" => Ok(Self::Unified),
             _ => Err(anyhow!("Invalid output format: {}", s)),
         }
     }
@@ -111,7 +108,6 @@ impl Default for OutputFormat {
 
 #[derive(Debug, Clone, Default)]
 pub struct DiffxSpecificOptions {
-    pub context_lines: Option<usize>,
     pub ignore_whitespace: Option<bool>,
     pub ignore_case: Option<bool>,
     pub brief_mode: Option<bool>,
@@ -957,15 +953,6 @@ pub fn format_output<T: Serialize>(
             }
             Ok(output)
         }
-        OutputFormat::Unified => {
-            // Simple unified diff format
-            let mut output = String::new();
-            for result in results {
-                let json = serde_json::to_string(result)?;
-                output.push_str(&format!("~ {}\n", json));
-            }
-            Ok(output)
-        }
     }
 }
 
@@ -973,6 +960,7 @@ pub fn format_output<T: Serialize>(
 pub fn format_diff_output(
     results: &[DiffResult],
     format: OutputFormat,
+    options: Option<&DiffOptions>,
 ) -> Result<String> {
     match format {
         OutputFormat::Json => {
@@ -1014,29 +1002,6 @@ pub fn format_diff_output(
             for result in results {
                 output.push_str(&result.to_string());
                 output.push('\n');
-            }
-            Ok(output)
-        }
-        OutputFormat::Unified => {
-            // Standard unified diff format
-            let mut output = String::new();
-            for result in results {
-                match result {
-                    DiffResult::Added(path, value) => {
-                        output.push_str(&format!("+  \"{}\": {},\n", path, serde_json::to_string(value).unwrap_or_default()));
-                    }
-                    DiffResult::Removed(path, value) => {
-                        output.push_str(&format!("-  \"{}\": {},\n", path, serde_json::to_string(value).unwrap_or_default()));
-                    }
-                    DiffResult::Modified(path, old_value, new_value) => {
-                        output.push_str(&format!("-  \"{}\": {},\n", path, serde_json::to_string(old_value).unwrap_or_default()));
-                        output.push_str(&format!("+  \"{}\": {},\n", path, serde_json::to_string(new_value).unwrap_or_default()));
-                    }
-                    DiffResult::TypeChanged(path, old_value, new_value) => {
-                        output.push_str(&format!("-  \"{}\": {},\n", path, serde_json::to_string(old_value).unwrap_or_default()));
-                        output.push_str(&format!("+  \"{}\": {},\n", path, serde_json::to_string(new_value).unwrap_or_default()));
-                    }
-                }
             }
             Ok(output)
         }

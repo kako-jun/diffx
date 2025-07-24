@@ -634,77 +634,10 @@ fn test_output_format_option() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-fn test_context_option() -> Result<(), Box<dyn std::error::Error>> {
-    // Test --context option
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
-        .arg("--context")
-        .arg("3");
 
-    let output = cmd.output()?;
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        assert!(
-            !stderr.contains("unrecognized"),
-            "Context option should be recognized"
-        );
-    }
-    Ok(())
-}
 
-#[test]
-fn test_context_zero_lines() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
-        .arg("--context")
-        .arg("0");
 
-    cmd.assert().code(1); // Should show differences without context
-    Ok(())
-}
 
-#[test]
-fn test_context_large_number() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
-        .arg("--context")
-        .arg("100");
-
-    cmd.assert().code(1); // Should handle large context gracefully
-    Ok(())
-}
-
-#[test]
-fn test_context_invalid_value() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
-        .arg("--context")
-        .arg("invalid");
-
-    let result = cmd.output()?;
-    // Should handle invalid context value gracefully
-    assert!(!result.status.success());
-    Ok(())
-}
-
-#[test]
-fn test_context_negative_value() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
-        .arg("--context")
-        .arg("-5");
-
-    let result = cmd.output()?;
-    // Should handle negative context value appropriately
-    // (either error or treat as zero/absolute value)
-    Ok(())
-}
 
 
 #[test]
