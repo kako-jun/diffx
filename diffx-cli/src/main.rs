@@ -9,6 +9,7 @@ use serde_json::Value;
 use std::path::PathBuf;
 use std::io::{self, Read};
 use std::fs;
+use std::time::Instant;
 
 /// Color helper functions to support --no-color option
 mod color_utils {
@@ -131,8 +132,30 @@ enum Format {
     Xml,
 }
 
-fn main() -> Result<()> {
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("Error: {:#}", e);
+        
+        // Determine appropriate exit code based on error type
+        let exit_code = if e.to_string().contains("No such file") || 
+                           e.to_string().contains("not found") ||
+                           e.to_string().contains("Failed to read file") {
+            3  // File I/O error
+        } else if e.to_string().contains("Cannot compare") ||
+                  e.to_string().contains("invalid") ||
+                  e.to_string().contains("Invalid") {
+            2  // Command-line argument error
+        } else {
+            2  // Default to argument error for other cases
+        };
+        
+        std::process::exit(exit_code);
+    }
+}
+
+fn run() -> Result<()> {
     let args = Args::parse();
+    let start_time = Instant::now();
 
     // Check for stdin usage
     let input1_is_stdin = args.input1.to_str() == Some("-");
@@ -145,13 +168,66 @@ fn main() -> Result<()> {
 
     // Build options from CLI arguments
     let options = build_diff_options(&args)?;
+    
+    // Print verbose configuration information to stderr
+    if args.verbose {
+        // Optimization settings
+        eprintln!("Optimization enabled: {}", args.memory_optimization);
+        eprintln!("Batch size: {}", args.batch_size.unwrap_or(1000));
+        
+        // Input file information
+        if let Ok(metadata1) = fs::metadata(&args.input1) {
+            if let Ok(metadata2) = fs::metadata(&args.input2) {
+                eprintln!("Input file information:");
+                eprintln!("  Input 1 size: {} bytes", metadata1.len());
+                eprintln!("  Input 2 size: {} bytes", metadata2.len());
+            }
+        }
+        
+        if let Some(regex) = &args.ignore_keys_regex {
+            eprintln!("Key filtering configuration:");
+            eprintln!("Regex pattern: {}", regex);
+        }
+        
+        if let Some(epsilon) = &args.epsilon {
+            eprintln!("Numerical tolerance configuration:");
+            eprintln!("Epsilon value: {}", epsilon);
+        }
+        
+        if let Some(id_key) = &args.array_id_key {
+            eprintln!("Array tracking configuration:");
+            eprintln!("ID key for array elements: {}", id_key);
+        }
+        
+        if let Some(path) = &args.path {
+            eprintln!("Path filtering configuration:");
+            eprintln!("Path filter: {}", path);
+        }
+    }
 
     // Perform diff using paths (automatic file/directory detection)
+    let parse_start = Instant::now();
+    
+    // For path filtering verbose output, we need to run diff without filter first
+    let unfiltered_count = if args.verbose && args.path.is_some() {
+        let mut options_no_filter = options.clone();
+        options_no_filter.path_filter = None;
+        let unfiltered_results = diff_paths(
+            &args.input1.to_string_lossy(),
+            &args.input2.to_string_lossy(),
+            Some(&options_no_filter)
+        )?;
+        Some(unfiltered_results.len())
+    } else {
+        None
+    };
+    
     let results = diff_paths(
         &args.input1.to_string_lossy(),
         &args.input2.to_string_lossy(),
         Some(&options)
     )?;
+    let diff_time = parse_start.elapsed();
 
     // Handle quiet mode
     if args.quiet {
@@ -161,10 +237,7 @@ fn main() -> Result<()> {
     // Handle brief mode
     if args.brief {
         if results.is_empty() {
-            if args.verbose {
-                println!("Files {} and {} are identical", 
-                    args.input1.display(), args.input2.display());
-            }
+            // Brief mode: no output when files are identical (unless verbose)
         } else {
             println!("Files {} and {} differ", 
                 args.input1.display(), args.input2.display());
@@ -180,6 +253,7 @@ fn main() -> Result<()> {
     };
     
     let has_differences = !results.is_empty();
+    let result_count = results.len();
     
     match output_format {
         OutputFormat::Diffx => {
@@ -189,10 +263,30 @@ fn main() -> Result<()> {
             let formatted_output = format_diff_output(&results, output_format)?;
             if !formatted_output.trim().is_empty() {
                 println!("{}", formatted_output);
-            } else if args.verbose {
-                println!("No differences found");
             }
         }
+    }
+    
+    // Print verbose summary information to stderr
+    if args.verbose {
+        // Path filtering results
+        if let (Some(path), Some(unfiltered)) = (&args.path, unfiltered_count) {
+            eprintln!("Path filtering results:");
+            eprintln!("Filter path: {}", path);
+            eprintln!("Total differences before filter: {}", unfiltered);
+            eprintln!("Differences after filter: {}", result_count);
+        }
+        
+        // Time measurements
+        eprintln!("Parse time: {:.3?}", diff_time);
+        eprintln!("Diff computation time: {:.3?}", diff_time); // Note: This includes both parse and diff time currently
+        eprintln!("Total differences found: {}", result_count);
+        
+        // Performance summary
+        let total_time = start_time.elapsed();
+        eprintln!("Performance summary:");
+        eprintln!("  Total processing time: {:.3?}", total_time);
+        eprintln!("  Memory optimization: {}", if args.memory_optimization { "enabled" } else { "disabled" });
     }
 
     // Exit with appropriate code (0 = no differences, 1 = differences found)
@@ -503,9 +597,7 @@ fn handle_output_and_exit(differences: &[DiffResult], args: &Args) -> Result<()>
     // Handle brief mode
     if args.brief {
         if differences.is_empty() {
-            if args.verbose {
-                println!("Inputs are identical");
-            }
+            // Brief mode: no output when files are identical
         } else {
             println!("Inputs differ");
         }
@@ -529,10 +621,13 @@ fn handle_output_and_exit(differences: &[DiffResult], args: &Args) -> Result<()>
             let formatted_output = format_diff_output(differences, output_format)?;
             if !formatted_output.trim().is_empty() {
                 println!("{}", formatted_output);
-            } else if args.verbose {
-                println!("No differences found");
             }
         }
+    }
+    
+    // Print verbose summary information to stderr
+    if args.verbose {
+        eprintln!("Total differences found: {}", differences.len());
     }
 
     // Exit with appropriate code (0 = no differences, 1 = differences found)

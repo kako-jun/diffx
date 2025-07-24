@@ -392,6 +392,27 @@ fn parse_content_by_format(content: &str, format: FileFormat) -> Result<Value> {
     }
 }
 
+// Helper function to add result with path filtering
+fn add_diff_result(
+    result: DiffResult,
+    results: &mut Vec<DiffResult>,
+    options: &DiffOptions,
+) {
+    // Apply path filter if specified
+    if let Some(filter) = &options.path_filter {
+        let path = match &result {
+            DiffResult::Added(path, _) => path,
+            DiffResult::Removed(path, _) => path,
+            DiffResult::Modified(path, _, _) => path,
+            DiffResult::TypeChanged(path, _, _) => path,
+        };
+        if !path.contains(filter) {
+            return;
+        }
+    }
+    results.push(result);
+}
+
 fn diff_recursive(
     old: &Value,
     new: &Value,
@@ -399,13 +420,6 @@ fn diff_recursive(
     results: &mut Vec<DiffResult>,
     options: &DiffOptions,
 ) {
-    // Apply path filter if specified
-    if let Some(filter) = &options.path_filter {
-        if !path.contains(filter) {
-            return;
-        }
-    }
-
     match (old, new) {
         (Value::Object(old_obj), Value::Object(new_obj)) => {
             diff_objects(old_obj, new_obj, path, results, options);
@@ -418,18 +432,18 @@ fn diff_recursive(
                 let old_f = old_num.as_f64().unwrap_or(0.0);
                 let new_f = new_num.as_f64().unwrap_or(0.0);
                 if (old_f - new_f).abs() > epsilon {
-                    results.push(DiffResult::Modified(
+                    add_diff_result(DiffResult::Modified(
                         path.to_string(),
                         old.clone(),
                         new.clone(),
-                    ));
+                    ), results, options);
                 }
             } else if old != new {
-                results.push(DiffResult::Modified(
+                add_diff_result(DiffResult::Modified(
                     path.to_string(),
                     old.clone(),
                     new.clone(),
-                ));
+                ), results, options);
             }
         }
         (Value::String(old_str), Value::String(new_str)) => {
@@ -449,28 +463,28 @@ fn diff_recursive(
             }
             
             if old_processed != new_processed {
-                results.push(DiffResult::Modified(
+                add_diff_result(DiffResult::Modified(
                     path.to_string(),
                     old.clone(),
                     new.clone(),
-                ));
+                ), results, options);
             }
         }
         _ => {
             if old != new {
                 if old.type_name() != new.type_name() {
-                    results.push(DiffResult::TypeChanged(
+                    add_diff_result(DiffResult::TypeChanged(
                         path.to_string(),
                         old.clone(),
                         new.clone(),
-                    ));
+                    ), results, options);
                 } else {
                     // For other types, just do regular comparison
-                    results.push(DiffResult::Modified(
+                    add_diff_result(DiffResult::Modified(
                         path.to_string(),
                         old.clone(),
                         new.clone(),
-                    ));
+                    ), results, options);
                 }
             }
         }
@@ -506,7 +520,7 @@ fn diff_objects(
         };
 
         if !new_obj.contains_key(key) {
-            results.push(DiffResult::Removed(new_path, old_value.clone()));
+            add_diff_result(DiffResult::Removed(new_path, old_value.clone()), results, options);
         }
     }
 
@@ -524,7 +538,7 @@ fn diff_objects(
 
         match old_obj.get(key) {
             None => {
-                results.push(DiffResult::Added(new_path, new_value.clone()));
+                add_diff_result(DiffResult::Added(new_path, new_value.clone()), results, options);
             }
             Some(old_value) => {
                 diff_recursive(old_value, new_value, &new_path, results, options);
@@ -564,7 +578,7 @@ fn diff_arrays_with_id(
     for (index, item) in old_arr.iter().enumerate() {
         if let Some(id_value) = item.get(id_key) {
             let id_str = match id_value {
-                Value::String(s) => s.clone(),
+                Value::String(s) => format!("\"{}\"", s), // Add quotes for strings
                 Value::Number(n) => n.to_string(),
                 Value::Bool(b) => b.to_string(),
                 _ => format!("{:?}", id_value),
@@ -578,7 +592,7 @@ fn diff_arrays_with_id(
     for (index, item) in new_arr.iter().enumerate() {
         if let Some(id_value) = item.get(id_key) {
             let id_str = match id_value {
-                Value::String(s) => s.clone(),
+                Value::String(s) => format!("\"{}\"", s), // Add quotes for strings
                 Value::Number(n) => n.to_string(),
                 Value::Bool(b) => b.to_string(),
                 _ => format!("{:?}", id_value),
@@ -966,8 +980,34 @@ pub fn format_diff_output(
                 .map_err(|e| anyhow!("JSON serialization error: {}", e))
         }
         OutputFormat::Yaml => {
-            serde_yaml::to_string(results)
-                .map_err(|e| anyhow!("YAML serialization error: {}", e))
+            let mut output = String::new();
+            for result in results {
+                match result {
+                    DiffResult::Added(path, value) => {
+                        output.push_str("- Added:\n");
+                        output.push_str(&format!("  - {}\n", path));
+                        output.push_str(&format!("  - {}\n", serde_yaml::to_string(value).unwrap_or_default().trim()));
+                    }
+                    DiffResult::Removed(path, value) => {
+                        output.push_str("- Removed:\n");
+                        output.push_str(&format!("  - {}\n", path));
+                        output.push_str(&format!("  - {}\n", serde_yaml::to_string(value).unwrap_or_default().trim()));
+                    }
+                    DiffResult::Modified(path, old_value, new_value) => {
+                        output.push_str("- Modified:\n");
+                        output.push_str(&format!("  - {}\n", path));
+                        output.push_str(&format!("  - {}\n", serde_yaml::to_string(old_value).unwrap_or_default().trim()));
+                        output.push_str(&format!("  - {}\n", serde_yaml::to_string(new_value).unwrap_or_default().trim()));
+                    }
+                    DiffResult::TypeChanged(path, old_value, new_value) => {
+                        output.push_str("- TypeChanged:\n");
+                        output.push_str(&format!("  - {}\n", path));
+                        output.push_str(&format!("  - {}\n", serde_yaml::to_string(old_value).unwrap_or_default().trim()));
+                        output.push_str(&format!("  - {}\n", serde_yaml::to_string(new_value).unwrap_or_default().trim()));
+                    }
+                }
+            }
+            Ok(output)
         }
         OutputFormat::Diffx => {
             let mut output = String::new();
@@ -978,10 +1018,25 @@ pub fn format_diff_output(
             Ok(output)
         }
         OutputFormat::Unified => {
-            // Simple unified diff format  
+            // Standard unified diff format
             let mut output = String::new();
             for result in results {
-                output.push_str(&format!("~ {}\n", result));
+                match result {
+                    DiffResult::Added(path, value) => {
+                        output.push_str(&format!("+  \"{}\": {},\n", path, serde_json::to_string(value).unwrap_or_default()));
+                    }
+                    DiffResult::Removed(path, value) => {
+                        output.push_str(&format!("-  \"{}\": {},\n", path, serde_json::to_string(value).unwrap_or_default()));
+                    }
+                    DiffResult::Modified(path, old_value, new_value) => {
+                        output.push_str(&format!("-  \"{}\": {},\n", path, serde_json::to_string(old_value).unwrap_or_default()));
+                        output.push_str(&format!("+  \"{}\": {},\n", path, serde_json::to_string(new_value).unwrap_or_default()));
+                    }
+                    DiffResult::TypeChanged(path, old_value, new_value) => {
+                        output.push_str(&format!("-  \"{}\": {},\n", path, serde_json::to_string(old_value).unwrap_or_default()));
+                        output.push_str(&format!("+  \"{}\": {},\n", path, serde_json::to_string(new_value).unwrap_or_default()));
+                    }
+                }
             }
             Ok(output)
         }

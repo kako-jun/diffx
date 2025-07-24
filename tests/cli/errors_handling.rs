@@ -12,7 +12,7 @@ fn test_nonexistent_files_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("nonexistent1.json").arg("nonexistent2.json");
     cmd.assert()
-        .code(2) // Error exit code
+        .code(3) // File I/O error exit code
         .stderr(
             predicates::str::contains("No such file").or(predicates::str::contains("not found")),
         );
@@ -24,9 +24,10 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/file1.json");
-    cmd.assert().code(2).stderr(predicates::str::contains(
-        "Cannot compare directory and file",
-    ));
+    cmd.assert().code(2).stderr(
+        predicates::str::contains("Cannot compare directory")
+            .and(predicates::str::contains("with file"))
+    );
     Ok(())
 }
 
