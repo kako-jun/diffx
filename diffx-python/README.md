@@ -53,7 +53,7 @@ string_result = diffx.diff_string(
 
 - **Multiple formats**: JSON, YAML, TOML, XML, INI, CSV
 - **Smart diffing**: Understands structure, not just text
-- **Flexible output**: CLI, JSON, YAML, unified diff formats
+- **Flexible output**: CLI, JSON, YAML formats
 - **Advanced options**: 
   - Regex-based key filtering
   - Floating-point tolerance

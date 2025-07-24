@@ -106,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Floating-point tolerance** - `--epsilon` option for numeric comparison with tolerance
 - **Array element tracking** - `--array-id-key` for intelligent array element identification
 - **Regular expression filtering** - `--ignore-keys-regex` to exclude keys from comparison
-- **Multiple output formats** - JSON, YAML, and unified diff output options
+- **Multiple output formats** - JSON, YAML, and diffx output options
 - **Standard input support** - Compare files with stdin using `-` as filename
 - **Format auto-detection** - Automatic format detection from file extensions
 - **Type change detection** - Explicit reporting of data type changes (e.g., string to number)

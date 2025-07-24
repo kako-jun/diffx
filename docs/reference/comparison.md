@@ -47,7 +47,7 @@ $ diffx config_v1.json config_v2.json
 | **Trailing Commas** | Reports differences | Ignores formatting |
 | **Type Changes** | Shows as text change | Reports type conversion |
 | **Array Handling** | Position-based | ID-based tracking available |
-| **Output Format** | Text diff | CLI/JSON/YAML/Unified |
+| **Output Format** | Text diff | CLI/JSON/YAML/diffx |
 
 **When to use traditional diff:**
 - Generic text files
@@ -242,7 +242,7 @@ git show HEAD~1:config.json | diffx - config.json
 ```bash
 # Add to .gitconfig
 [diff "json"]
-    textconv = diffx --output unified
+    textconv = diffx --output diffx
 
 # In .gitattributes
 *.json diff=json
@@ -387,7 +387,7 @@ diff config1.json config2.json > changes.txt
 
 **New workflow:**
 ```bash
-diffx config1.json config2.json --output unified > changes.txt
+diffx config1.json config2.json --output diffx > changes.txt
 # Or for semantic differences:
 diffx config1.json config2.json > semantic_changes.txt
 ```

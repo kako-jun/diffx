@@ -47,7 +47,7 @@ $ diffx config_v1.json config_v2.json
 | **末尾カンマ** | 差分として報告 | フォーマットを無視 |
 | **型変更** | テキスト変更として表示 | 型変換を報告 |
 | **配列処理** | 位置ベース | IDベース追跡が利用可能 |
-| **出力形式** | テキスト差分 | CLI/JSON/YAML/Unified |
+| **出力形式** | テキスト差分 | CLI/JSON/YAML/diffx |
 
 **従来のdiffを使用すべき場合:**
 - 一般的なテキストファイル
@@ -242,7 +242,7 @@ git show HEAD~1:config.json | diffx - config.json
 ```bash
 # .gitconfigに追加
 [diff "json"]
-    textconv = diffx --output unified
+    textconv = diffx --output diffx
 
 # .gitattributesで
 *.json diff=json
@@ -387,7 +387,7 @@ diff config1.json config2.json > changes.txt
 
 **新ワークフロー:**
 ```bash
-diffx config1.json config2.json --output unified > changes.txt
+diffx config1.json config2.json --output diffx > changes.txt
 # またはセマンティック差分用:
 diffx config1.json config2.json > semantic_changes.txt
 ```

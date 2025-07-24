@@ -87,7 +87,7 @@ Compare Docker Compose files for different environments:
 # Compare base compose with override
 diffx docker-compose.yml docker-compose.override.yml \
   --path "services" \
-  --output unified
+  --output json
 ```
 
 ## DevOps and Infrastructure
@@ -132,7 +132,7 @@ Monitor CI/CD pipeline configuration changes:
 ```bash
 # GitHub Actions workflow comparison
 diffx .github/workflows/ci.yml .github/workflows/ci.new.yml \
-  --output unified
+  --output json
 
 # GitLab CI comparison
 diffx .gitlab-ci.yml .gitlab-ci.backup.yml \
@@ -189,7 +189,7 @@ diffx openapi-v1.yaml openapi-v2.yaml \
 # Validate backwards compatibility
 diffx api-spec.yaml api-spec.new.yaml \
   --ignore-keys-regex "^(info\\.(version|title)|servers)" \
-  --output unified
+  --output json
 ```
 
 ### GraphQL Schema Validation
@@ -347,7 +347,7 @@ diffx health_config_baseline.json health_config_current.json \
 # Validate monitoring rules
 diffx prometheus_rules.yaml prometheus_rules.new.yaml \
   --path "groups" \
-  --output unified
+  --output json
 ```
 
 ### Alert Configuration Management
@@ -395,7 +395,7 @@ Monitor build configuration changes:
 # Compare webpack configurations
 diffx webpack.config.js webpack.config.new.js \
   --format json \
-  --output unified
+  --output json
 
 # Compare Cargo.toml files
 diffx Cargo.toml Cargo.toml.backup \
@@ -450,7 +450,7 @@ diffx gdpr_config.json gdpr_config.new.json \
 # Validate SOX compliance
 diffx sox_controls.yaml sox_controls.updated.yaml \
   --array-id-key "control_id" \
-  --output unified
+  --output json
 ```
 
 ### Access Control Validation
@@ -555,23 +555,21 @@ diffx data_export.json data_import_processed.json \
   --epsilon 0.001
 ```
 
-### `diff -C3` Equivalent: Context Lines in Unified Output
+### YAML Output for Human-Readable Diffs
 
 ```bash
-# Show 3 lines of context around changes
+# Show differences in YAML format for better readability
 diffx large_config.json large_config_new.json \
-  --output unified \
-  --context 3
+  --output yaml
 
-# Minimal context for focused diffs
+# Focus on specific sections with YAML output
 diffx api_schema.json api_schema_v2.json \
-  --output unified \
-  --context 1
+  --path \"definitions\" \
+  --output yaml
 
-# No context for change-only view
+# JSON output for programmatic processing
 diffx database_config.json database_config_updated.json \
-  --output unified \
-  --context 0
+  --output json
 ```
 
 ### Combined UNIX-Style Patterns
@@ -599,8 +597,7 @@ diffx user_data.json user_data_migrated.json \
 git show HEAD:config.json > /tmp/old_config.json
 diffx /tmp/old_config.json config.json \
   --ignore-whitespace \
-  --context 2 \
-  --output unified
+  --output json
 ```
 
 ### Shell Integration Examples

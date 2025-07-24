@@ -332,7 +332,7 @@ monitor_config_drift:
           --ignore-keys-regex "^(hostname|instance_id|last_.*)" \
           --ignore-case \
           --context 2 \
-          --output unified | \
+          --output diffx | \
           send_alert.sh "Configuration Drift Detected"
       fi
 
@@ -361,7 +361,7 @@ validate_all_configs:
         diffx "$baseline" "$file" \
           --ignore-whitespace \
           --context 1 \
-          --output unified
+          --output diffx
       done
 ```
 

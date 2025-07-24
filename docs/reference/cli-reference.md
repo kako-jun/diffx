@@ -85,7 +85,7 @@ diffx -f yaml config1 config2
 #### `-o, --output <FORMAT>`
 - **Type**: String
 - **Default**: `diffx` (human-readable diffx format)
-- **Values**: `diffx`, `json`, `yaml`, `unified`
+- **Values**: `diffx`, `json`, `yaml`
 - **Description**: Output format for differences
 
 **diffx Format (default):**
@@ -121,11 +121,6 @@ diffx config.json config.new.json --output yaml
 #   - "1.1"
 ```
 
-**Unified Output:**
-```bash
-diffx config.json config.new.json --output unified
-# Output: Traditional diff-style format
-```
 
 ### Filtering Options
 
@@ -303,37 +298,6 @@ diffx data.yaml data.updated.yaml \
 
 ### Output Control Options
 
-#### `--context <N>`
-- **Type**: Integer
-- **Default**: None (show all context)
-- **Description**: Show N lines of context around differences in unified output format
-
-**Examples:**
-```bash
-# Show 2 lines of context around changes
-diffx config.json config.new.json --output unified --context 2
-
-# Show only changed lines (no context)
-diffx config.json config.new.json --output unified --context 0
-
-# Default behavior (all context)
-diffx config.json config.new.json --output unified
-```
-
-**Sample Output with Context:**
-```diff
-# --context 2
-   "database": {
-     "host": "localhost",
--    "port": 5432
-+    "port": 5433
-   },
-   "cache": {
-
-# --context 0  
--    "port": 5432
-+    "port": 5433
-```
 
 #### `-q, --quiet`
 - **Type**: Boolean flag
@@ -697,7 +661,7 @@ diffx env/dev/ env/prod/ \
 ```bash
 # Git integration
 git show HEAD~1:config.json > old_config.json
-diffx old_config.json config.json --output unified
+diffx old_config.json config.json
 
 # CI/CD pipeline
 diffx expected_config.json actual_config.json \

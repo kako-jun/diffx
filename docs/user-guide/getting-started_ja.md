@@ -196,8 +196,6 @@ diffx file1.json file2.json -o json
 # YAML出力
 diffx file1.json file2.json --output yaml
 
-# 統一diff形式
-diffx file1.json file2.json --output unified
 ```
 
 #### 出力例の比較
@@ -636,7 +634,7 @@ diffx terraform.tfstate terraform.tfstate.backup \
 # 環境固有設定の比較
 diffx docker-compose.yml docker-compose.override.yml \
   --path "services" \
-  --output unified
+  --output json
 ```
 
 ## 次のステップ

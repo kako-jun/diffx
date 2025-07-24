@@ -162,7 +162,7 @@ diffx file1.json file2.json
 diffx file1.json file2.json --output json
 
 # For legacy tool integration - slowest
-diffx file1.json file2.json --output unified
+diffx file1.json file2.json --output diffx
 ```
 
 ### 4. Batch Processing Optimization

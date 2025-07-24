@@ -88,7 +88,7 @@ diffx -f yaml config1 config2
 #### `-o, --output <FORMAT>`
 - **型**: 文字列
 - **デフォルト**: `diffx`（人間が読みやすいdiffx形式）
-- **値**: `diffx`, `json`, `yaml`, `unified`
+- **値**: `diffx`, `json`, `yaml`
 - **説明**: 差分の出力形式
 
 **diffx形式（デフォルト）:**
@@ -124,11 +124,6 @@ diffx config.json config.new.json --output yaml
 #   - "1.1"
 ```
 
-**Unified出力:**
-```bash
-diffx config.json config.new.json --output unified
-# 出力: 従来のdiffスタイル形式
-```
 
 ### フィルタリングオプション
 
@@ -306,37 +301,6 @@ diffx data.yaml data.updated.yaml \
 
 ### 出力制御オプション
 
-#### `--context <N>`
-- **型**: 整数
-- **デフォルト**: なし（すべてのコンテキストを表示）
-- **説明**: unified出力形式で差分の周りにN行のコンテキストを表示
-
-**例:**
-```bash
-# 変更周辺に2行のコンテキストを表示
-diffx config.json config.new.json --output unified --context 2
-
-# 変更行のみを表示（コンテキストなし）
-diffx config.json config.new.json --output unified --context 0
-
-# デフォルト動作（すべてのコンテキスト）
-diffx config.json config.new.json --output unified
-```
-
-**コンテキスト付きサンプル出力:**
-```diff
-# --context 2
-  "database": {
-    "host": "localhost",
--   "port": 5432
-+   "port": 5433
-  },
-  "cache": {
-
-# --context 0  
--   "port": 5432
-+   "port": 5433
-```
 
 #### `-q, --quiet`
 - **型**: ブールフラグ
@@ -692,7 +656,7 @@ diffx env/dev/ env/prod/ \
 ```bash
 # Git統合
 git show HEAD~1:config.json > old_config.json
-diffx old_config.json config.json --output unified
+diffx old_config.json config.json
 
 # CI/CDパイプライン
 diffx expected_config.json actual_config.json \

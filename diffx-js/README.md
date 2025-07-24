@@ -70,11 +70,10 @@ main();
 - **input1, input2**: File paths or directory paths to compare
 - **options**: Optional configuration object
   - `format`: Input format ('json', 'yaml', 'toml', 'xml', 'ini', 'csv')
-  - `output`: Output format ('cli', 'json', 'yaml', 'unified')  
+  - `output`: Output format ('diffx', 'json', 'yaml')  
   - `recursive`: Compare directories recursively
   - `ignoreKeysRegex`: Ignore keys matching regex pattern
   - `epsilon`: Tolerance for floating-point comparisons
-  - `context`: Number of context lines in unified output
 
 #### `diffString(content1, content2, format, options?)`
 - **content1, content2**: String content to compare

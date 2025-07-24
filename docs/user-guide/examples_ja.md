@@ -87,7 +87,7 @@ diffx desired-deployment.json current-deployment.json \
 # ベースcomposeとオーバーライドを比較
 diffx docker-compose.yml docker-compose.override.yml \
   --path "services" \
-  --output unified
+  --output json
 ```
 
 ## DevOpsとインフラストラクチャ
@@ -132,7 +132,7 @@ CI/CDパイプライン設定変更の監視：
 ```bash
 # GitHub Actionsワークフロー比較
 diffx .github/workflows/ci.yml .github/workflows/ci.new.yml \
-  --output unified
+  --output json
 
 # GitLab CI比較
 diffx .gitlab-ci.yml .gitlab-ci.backup.yml \
@@ -189,7 +189,7 @@ diffx openapi-v1.yaml openapi-v2.yaml \
 # 後方互換性検証
 diffx api-spec.yaml api-spec.new.yaml \
   --ignore-keys-regex "^(info\\.(version|title)|servers)" \
-  --output unified
+  --output json
 ```
 
 ### GraphQLスキーマ検証
@@ -347,7 +347,7 @@ diffx health_config_baseline.json health_config_current.json \
 # 監視ルール検証
 diffx prometheus_rules.yaml prometheus_rules.new.yaml \
   --path "groups" \
-  --output unified
+  --output json
 ```
 
 ### アラート設定管理
@@ -395,7 +395,7 @@ diffx requirements.txt requirements.new.txt \
 # webpack設定比較
 diffx webpack.config.js webpack.config.new.js \
   --format json \
-  --output unified
+  --output json
 
 # Cargo.tomlファイル比較
 diffx Cargo.toml Cargo.toml.backup \
@@ -450,7 +450,7 @@ diffx gdpr_config.json gdpr_config.new.json \
 # SOX準拠検証
 diffx sox_controls.yaml sox_controls.updated.yaml \
   --array-id-key "control_id" \
-  --output unified
+  --output json
 ```
 
 ### アクセス制御検証
@@ -555,23 +555,21 @@ diffx data_export.json data_import_processed.json \
   --epsilon 0.001
 ```
 
-### `diff -C3` 同等: 統一出力でのコンテキスト行
+### YAML出力による可読性の向上
 
 ```bash
-# 変更周辺の3行のコンテキストを表示
+# 可読性の向上のためのYAML形式での差分表示
 diffx large_config.json large_config_new.json \
-  --output unified \
-  --context 3
+  --output yaml
 
-# 焦点を絞った差分のための最小コンテキスト
+# 特定セクションにフォーカスしたYAML出力
 diffx api_schema.json api_schema_v2.json \
-  --output unified \
-  --context 1
+  --path \"definitions\" \
+  --output yaml
 
-# 変更のみビューのためのコンテキストなし
+# プログラム処理のためのJSON出力
 diffx database_config.json database_config_updated.json \
-  --output unified \
-  --context 0
+  --output json
 ```
 
 ### 組み合わせUNIXスタイルパターン
@@ -599,8 +597,7 @@ diffx user_data.json user_data_migrated.json \
 git show HEAD:config.json > /tmp/old_config.json
 diffx /tmp/old_config.json config.json \
   --ignore-whitespace \
-  --context 2 \
-  --output unified
+  --output json
 ```
 
 ### シェル統合例

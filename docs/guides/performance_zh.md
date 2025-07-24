@@ -162,7 +162,7 @@ diffx file1.json file2.json
 diffx file1.json file2.json --output json
 
 # 遗留工具集成 - 最慢
-diffx file1.json file2.json --output unified
+diffx file1.json file2.json --output diffx
 ```
 
 ### 4. 批处理优化

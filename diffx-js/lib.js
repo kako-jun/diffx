@@ -13,13 +13,13 @@ const { diffJs } = require('./index.js');
  * @property {string} [arrayIdKey] - Key to use for array element identification
  * @property {string} [ignoreKeysRegex] - Ignore keys matching regex
  * @property {string} [pathFilter] - Filter differences by path
- * @property {string} [outputFormat] - Output format ('diffx', 'json', 'yaml', 'unified')
+ * @property {string} [outputFormat] - Output format ('diffx', 'json', 'yaml')
  * @property {boolean} [showUnchanged] - Include unchanged values in output
  * @property {boolean} [showTypes] - Include type information in output
  * @property {boolean} [useMemoryOptimization] - Enable memory-efficient processing
  * @property {number} [batchSize] - Batch size for memory optimization
  * @property {Object} [diffxOptions] - diffx-specific options
- * @property {number} [diffxOptions.contextLines] - Number of context lines
+ * @property {number} [diffxOptions.contextLines] - Number of context lines for diff output
  * @property {boolean} [diffxOptions.ignoreWhitespace] - Ignore whitespace differences
  * @property {boolean} [diffxOptions.ignoreCase] - Ignore case differences
  * @property {boolean} [diffxOptions.briefMode] - Show only whether files differ

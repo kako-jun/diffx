@@ -100,10 +100,6 @@ diffx:      ~0.005秒（クリーンな意味的出力）
     *   機械可読な形式です。JSONと同様にプログラムとの連携に利用します。
     *   `diffx` の検出した差分がYAML配列として出力されます。
 
-- **diff互換形式 (Unified Format)**
-    *   `--output unified` オプションで提供されます。
-    *   `git` や既存のマージツールとの連携を目的としています。
-    *   **注意点**: この形式は、`diffx` が検出した意味的な差分のみを従来のdiff形式で表現します。意味的な差分ではない変更（キーの順序変更、空白の変更など）は表示されません。あくまで既存ツールとの互換性のための補助的な位置づけです。
 
 ## 🏗️ アーキテクチャ
 
@@ -132,7 +128,6 @@ graph TB
     D --> N[CLI表示]
     D --> O[JSON出力]
     D --> P[YAML出力]
-    D --> Q[Unified Diff]
 ```
 
 ### プロジェクト構造
@@ -156,7 +151,6 @@ diffx/
 - `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` パーサー
 - `clap`（CLI引数解析）
 - `colored`（CLI出力の色付け）
-- `similar`（Unified Format出力）
 
 ## 🔗 メタチェイン
 
@@ -228,7 +222,7 @@ diffx metrics.json metrics_v2.json --epsilon 0.001
 # 高需要な実用的オプション
 diffx config.yaml config_new.yaml --ignore-case          # 大文字小文字の違いを無視
 diffx api.json api_formatted.json --ignore-whitespace    # 空白の変更を無視
-diffx large.json large_v2.json --context 3 --output unified  # 3行のコンテキストを表示
+diffx large.json large_v2.json --output json              # 自動化用のJSON出力
 diffx file1.json file2.json --quiet && echo "ファイルが同じ"  # スクリプト自動化
 diffx dir1/ dir2/ --brief                              # 高速ディレクトリ変更チェック（自動再帰処理）
 

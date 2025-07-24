@@ -40,7 +40,6 @@ class OutputFormat(Enum):
     CLI = "cli"
     JSON = "json"
     YAML = "yaml"
-    UNIFIED = "unified"
 
 @dataclass
 class DiffOptions:

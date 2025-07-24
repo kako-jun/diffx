@@ -162,7 +162,7 @@ diffx file1.json file2.json
 diffx file1.json file2.json --output json
 
 # レガシーツール統合用 - 最遅
-diffx file1.json file2.json --output unified
+diffx file1.json file2.json --output diffx
 ```
 
 ### 4. バッチ処理最適化

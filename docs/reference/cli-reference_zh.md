@@ -88,7 +88,7 @@ diffx -f yaml config1 config2
 #### `-o, --output <FORMAT>`
 - **类型**: 字符串
 - **默认**: `diffx`（人类可读的 diffx 格式）
-- **值**: `diffx`, `json`, `yaml`, `unified`
+- **值**: `diffx`, `json`, `yaml`
 - **描述**: 差异的输出格式
 
 **diffx 格式（默认）:**
@@ -124,11 +124,6 @@ diffx config.json config.new.json --output yaml
 #   - "1.1"
 ```
 
-**Unified 输出:**
-```bash
-diffx config.json config.new.json --output unified
-# 输出: 传统 diff 样式格式
-```
 
 ### 过滤选项
 
@@ -306,37 +301,6 @@ diffx data.yaml data.updated.yaml \
 
 ### 输出控制选项
 
-#### `--context <N>`
-- **类型**: 整数
-- **默认**: 无（显示所有上下文）
-- **描述**: 在 unified 输出格式中显示差异周围的 N 行上下文
-
-**示例:**
-```bash
-# 在变更周围显示 2 行上下文
-diffx config.json config.new.json --output unified --context 2
-
-# 仅显示变更行（无上下文）
-diffx config.json config.new.json --output unified --context 0
-
-# 默认行为（所有上下文）
-diffx config.json config.new.json --output unified
-```
-
-**带上下文的示例输出:**
-```diff
-# --context 2
-  "database": {
-    "host": "localhost",
--   "port": 5432
-+   "port": 5433
-  },
-  "cache": {
-
-# --context 0  
--   "port": 5432
-+   "port": 5433
-```
 
 #### `-q, --quiet`
 - **类型**: 布尔标志
@@ -691,7 +655,7 @@ diffx env/dev/ env/prod/ \
 ```bash
 # Git 集成
 git show HEAD~1:config.json > old_config.json
-diffx old_config.json config.json --output unified
+diffx old_config.json config.json
 
 # CI/CD 流水线
 diffx expected_config.json actual_config.json \

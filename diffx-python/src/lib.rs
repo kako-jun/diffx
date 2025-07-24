@@ -16,7 +16,7 @@ use serde_json::Value;
 ///         array_id_key: str - Key to use for array element identification
 ///         ignore_keys_regex: str - Regex pattern for keys to ignore
 ///         path_filter: str - Only show differences in paths containing this string
-///         output_format: str - Output format ("diffx", "json", "yaml", "unified")
+///         output_format: str - Output format ("diffx", "json", "yaml")
 ///         show_unchanged: bool - Show unchanged values as well
 ///         show_types: bool - Show type information in output
 ///         use_memory_optimization: bool - Enable memory optimization for large files

@@ -87,7 +87,7 @@ diffx desired-deployment.json current-deployment.json \
 # 比较基础compose与覆盖文件
 diffx docker-compose.yml docker-compose.override.yml \
   --path "services" \
-  --output unified
+  --output json
 ```
 
 ## DevOps和基础设施
@@ -132,7 +132,7 @@ diffx playbook-v1.yml playbook-v2.yml \
 ```bash
 # GitHub Actions工作流比较
 diffx .github/workflows/ci.yml .github/workflows/ci.new.yml \
-  --output unified
+  --output json
 
 # GitLab CI比较
 diffx .gitlab-ci.yml .gitlab-ci.backup.yml \
@@ -189,7 +189,7 @@ diffx openapi-v1.yaml openapi-v2.yaml \
 # 验证向后兼容性
 diffx api-spec.yaml api-spec.new.yaml \
   --ignore-keys-regex "^(info\\.(version|title)|servers)" \
-  --output unified
+  --output json
 ```
 
 ### GraphQL模式验证
@@ -347,7 +347,7 @@ diffx health_config_baseline.json health_config_current.json \
 # 验证监控规则
 diffx prometheus_rules.yaml prometheus_rules.new.yaml \
   --path "groups" \
-  --output unified
+  --output json
 ```
 
 ### 报警配置管理
@@ -395,7 +395,7 @@ diffx requirements.txt requirements.new.txt \
 # 比较webpack配置
 diffx webpack.config.js webpack.config.new.js \
   --format json \
-  --output unified
+  --output json
 
 # 比较Cargo.toml文件
 diffx Cargo.toml Cargo.toml.backup \
@@ -450,7 +450,7 @@ diffx gdpr_config.json gdpr_config.new.json \
 # 验证SOX合规性
 diffx sox_controls.yaml sox_controls.updated.yaml \
   --array-id-key "control_id" \
-  --output unified
+  --output json
 ```
 
 ### 访问控制验证
@@ -555,23 +555,21 @@ diffx data_export.json data_import_processed.json \
   --epsilon 0.001
 ```
 
-### `diff -C3` 等效：统一输出中的上下文行
+### YAML输出增强可读性
 
 ```bash
-# 在更改周围显示3行上下文
+# 使用YAML格式显示差异以提高可读性
 diffx large_config.json large_config_new.json \
-  --output unified \
-  --context 3
+  --output yaml
 
-# 针对性差异的最小上下文
+# 针对特定部分使用YAML输出
 diffx api_schema.json api_schema_v2.json \
-  --output unified \
-  --context 1
+  --path \"definitions\" \
+  --output yaml
 
-# 仅更改视图的无上下文
+# 用于程序化处理的JSON输出
 diffx database_config.json database_config_updated.json \
-  --output unified \
-  --context 0
+  --output json
 ```
 
 ### 组合UNIX风格模式
@@ -599,8 +597,7 @@ diffx user_data.json user_data_migrated.json \
 git show HEAD:config.json > /tmp/old_config.json
 diffx /tmp/old_config.json config.json \
   --ignore-whitespace \
-  --context 2 \
-  --output unified
+  --output json
 ```
 
 ### Shell集成示例

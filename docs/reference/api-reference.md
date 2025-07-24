@@ -47,7 +47,7 @@ pub enum DiffResult {
     Added(String, Value),           // New key/value added
     Removed(String, Value),         // Key/value removed
     Modified(String, Value, Value), // Value changed (old, new)
-    TypeChanged(String, Value, Value), // Type changed (old, new)
+    TypeChanged(String, String, String), // Type changed (path, old_type, new_type)
 }
 ```
 
@@ -76,8 +76,8 @@ let modified = DiffResult::Modified(
 // Type change
 let type_changed = DiffResult::TypeChanged(
     "debug".to_string(),
-    Value::String("true".to_string()),
-    Value::Bool(true)
+    "string".to_string(),
+    "boolean".to_string()
 );
 ```
 
@@ -342,8 +342,8 @@ impl DiffProcessor {
                     self.modifications.push((path, old, new));
                 }
                 DiffResult::TypeChanged(path, old_type, new_type) => {
-                    // Note: TypeChanged now contains type strings, not values
-                    self.type_changes.push((path, old_type.into(), new_type.into()));
+                    // Note: TypeChanged contains type strings, not values
+                    self.type_changes.push((path, old_type, new_type));
                 }
             }
         }
