@@ -341,18 +341,22 @@ $ diffx file1.json file2.json --epsilon 0.001
 
 ### ディレクトリ比較
 
-#### 再帰比較
+#### 自動ディレクトリ検出
+
+diffx はディレクトリを比較する際、自動的に再帰処理を行います：
+
 ```bash
 # ディレクトリ全体の比較
-diffx config_dir1/ config_dir2/ --recursive
-diffx config_dir1/ config_dir2/ -r
+diffx config_dir1/ config_dir2/
 
 # フィルタリングと組み合わせ
-diffx configs/ configs_backup/ -r --ignore-keys-regex "^(timestamp|version)$"
+diffx configs/ configs_backup/ --ignore-keys-regex "^(timestamp|version)$"
 
 # 特定出力形式で
-diffx env/dev/ env/prod/ -r --output json > env_diff.json
+diffx env/dev/ env/prod/ --output json > env_diff.json
 ```
+
+> **注意**: ディレクトリ比較は自動的に行われます - --recursive フラグは不要です。diffx はディレクトリを自動的に検出し、その中のすべてのファイルを処理します。
 
 ## パフォーマンス最適化
 

@@ -230,12 +230,12 @@ diffx config.yaml config_new.yaml --ignore-case          # 大文字小文字の
 diffx api.json api_formatted.json --ignore-whitespace    # 空白の変更を無視
 diffx large.json large_v2.json --context 3 --output unified  # 3行のコンテキストを表示
 diffx file1.json file2.json --quiet && echo "ファイルが同じ"  # スクリプト自動化
-diffx dir1/ dir2/ --recursive --brief                    # 高速ファイル変更チェック
+diffx dir1/ dir2/ --brief                              # 高速ディレクトリ変更チェック（自動再帰処理）
 
 # 大きなファイルの性能最適化
 diffx huge_dataset.json huge_dataset_v2.json
-# ディレクトリ比較
-diffx config_dir1/ config_dir2/ --recursive
+# ディレクトリ比較（自動再帰検出）
+diffx config_dir1/ config_dir2/
 
 # 変更追跡のメタチェイニング
 diffx config_v1.json config_v2.json --output json > diff1.json

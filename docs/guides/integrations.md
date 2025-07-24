@@ -285,6 +285,8 @@ validate_terraform:
 
 The new high-demand options provide powerful automation capabilities:
 
+**Automatic Directory Detection**: When comparing directories, diffx automatically detects and processes all supported file types recursively without requiring explicit flags. This simplifies CI/CD pipeline configuration and ensures comprehensive coverage.
+
 ```yaml
 # Quick deployment validation
 validate_deployment:
@@ -295,8 +297,8 @@ validate_deployment:
       if ! diffx baseline_config.json deployment_config.json --quiet; then
         echo "Configuration changes detected, running full validation"
         
-        # Show only filenames for quick overview  
-        diffx configs/ updated_configs/ --recursive --brief
+        # Show only filenames for quick overview (automatic directory detection)
+        diffx configs/ updated_configs/ --brief
         
         # Detailed analysis with ignore options
         diffx baseline_config.json deployment_config.json \

@@ -497,10 +497,12 @@ watch -n 30 'diffx live_config.json baseline_config.json --quiet || echo "Config
 
 ```bash
 # Quick directory scan for changed files
-diffx config_dir/ backup_dir/ --recursive --brief
+# diffx automatically detects directories and compares recursively
+diffx config_dir/ backup_dir/ --brief
 
 # Use in CI pipelines for change detection
-changed_files=$(diffx current_configs/ previous_configs/ --recursive --brief)
+# diffx automatically detects directories and compares recursively
+changed_files=$(diffx current_configs/ previous_configs/ --brief)
 if [ -n "$changed_files" ]; then
   echo "Configuration changes detected:"
   echo "$changed_files"
@@ -582,8 +584,8 @@ diffx config.json config.backup.json \
   --ignore-whitespace
 
 # Equivalent to: diff -r --brief dir1/ dir2/
+# diffx automatically detects directories and compares recursively
 diffx config_dir/ backup_dir/ \
-  --recursive \
   --brief
 
 # Advanced pattern: Case-insensitive with selective field ignoring

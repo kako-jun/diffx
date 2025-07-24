@@ -285,6 +285,8 @@ validate_terraform:
 
 新的高需求选项提供强大的自动化功能：
 
+**自动目录检测**: 在比较目录时，diffx 会自动检测和递归处理所有支持的文件类型，无需显式标志。这简化了 CI/CD 管道配置，并确保了全面覆盖。
+
 ```yaml
 # Quick deployment validation
 validate_deployment:
@@ -295,8 +297,8 @@ validate_deployment:
       if ! diffx baseline_config.json deployment_config.json --quiet; then
         echo "Configuration changes detected, running full validation"
         
-        # Show only filenames for quick overview  
-        diffx configs/ updated_configs/ --recursive --brief
+        # Show only filenames for quick overview (automatic directory detection)
+        diffx configs/ updated_configs/ --brief
         
         # Detailed analysis with ignore options
         diffx baseline_config.json deployment_config.json \
