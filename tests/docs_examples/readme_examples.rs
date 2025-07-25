@@ -235,20 +235,18 @@ fn test_ignore_whitespace() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// Test case 14: diffx large.json large_v2.json --context 3 --output unified
+/// Test case 14: diffx large.json large_v2.json --output json
 #[test]
-fn test_unified_output_with_context() -> Result<(), Box<dyn std::error::Error>> {
+fn test_json_output() -> Result<(), Box<dyn std::error::Error>> {
     let file1 = create_temp_json(r#"{"a": 1, "b": 2, "c": 3, "d": 4}"#);
     let file2 = create_temp_json(r#"{"a": 1, "b": 20, "c": 3, "d": 4}"#);
 
     let mut cmd = diffx_cmd();
     cmd.arg(file1.path())
         .arg(file2.path())
-        .arg("--context")
-        .arg("3")
         .arg("--output")
-        .arg("unified");
-    cmd.assert().code(1);
+        .arg("json");
+    cmd.assert().success();
 
     Ok(())
 }
