@@ -1,0 +1,28 @@
+[package]
+name = "diffx-js"
+version = "0.5.8"
+edition = "2021"
+description = "JavaScript bindings for diffx - high-performance structured data comparison"
+license = "MIT"
+repository = "https://github.com/kako-jun/diffx"
+authors = ["kako-jun"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Core diffx functionality
+diffx-core = { path = "../diffx-core" }
+
+# NAPI-RS for Node.js bindings
+napi = { version = "2.2", default-features = false, features = ["napi8", "serde-json"] }
+napi-derive = "2.2"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+regex = "1.0"
+
+[build-dependencies]
+napi-build = "2.2"
