@@ -14,3 +14,11 @@ jobs:
     with:
       project-name: diffx
     secrets: inherit
+    
+  test-published:
+    needs: release
+    if: success()
+    uses: kako-jun/.github/.github/workflows/rust-cli-kiln-test-published-multiplatform.yml@main
+    with:
+      project: diffx
+    secrets: inherit
