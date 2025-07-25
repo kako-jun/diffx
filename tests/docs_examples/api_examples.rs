@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use assert_cmd::prelude::*;
 use diffx_core::*;
 use serde_json::json;
 
@@ -26,7 +28,7 @@ fn test_array_id_key_api_example_from_docs() {
         {"id": 2, "name": "Robert"},
         {"id": 1, "name": "Alice"}
     ]);
-    
+
     let options = DiffOptions {
         array_id_key: Some("id".to_string()),
         ..Default::default()
@@ -46,7 +48,7 @@ fn test_epsilon_api_example_from_docs() {
     // This should match epsilon examples in documentation
     let v1 = json!({ "temperature": 23.0001 });
     let v2 = json!({ "temperature": 23.0002 });
-    
+
     let options = DiffOptions {
         epsilon: Some(0.001),
         ..Default::default()

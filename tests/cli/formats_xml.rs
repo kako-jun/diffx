@@ -1,6 +1,6 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
 use assert_cmd::Command;
-use predicates::prelude::*;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -15,9 +15,9 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
-            "~ item[1].text: \"value2\" -> \"new_value2\"",
+            "~ root.item[1].text: \"value2\" -> \"new_value2\"",
         ))
-        .stdout(predicates::str::contains("+ item[2]:"));
+        .stdout(predicates::str::contains("+ root.item[2]:"));
     Ok(())
 }
 
@@ -31,9 +31,9 @@ fn test_format_xml_explicit() -> Result<(), Box<dyn std::error::Error>> {
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
-            "~ item[1].text: \"value2\" -> \"new_value2\"",
+            "~ root.item[1].text: \"value2\" -> \"new_value2\"",
         ))
-        .stdout(predicates::str::contains("+ item[2]:"));
+        .stdout(predicates::str::contains("+ root.item[2]:"));
     Ok(())
 }
 
@@ -59,9 +59,9 @@ fn test_xml_attributes_and_text() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ person.id:"))
-        .stdout(predicates::str::contains("~ person.name:"))
-        .stdout(predicates::str::contains("~ person.text:"));
+        .stdout(predicates::str::contains("~ root.person.id:"))
+        .stdout(predicates::str::contains("~ root.person.name:"))
+        .stdout(predicates::str::contains("~ root.person.text:"));
     Ok(())
 }
 
@@ -87,8 +87,8 @@ fn test_xml_nested_elements() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ database.host:"))
-        .stdout(predicates::str::contains("~ database.port:"));
+        .stdout(predicates::str::contains("~ config.database.host:"))
+        .stdout(predicates::str::contains("~ config.database.port:"));
     Ok(())
 }
 
@@ -114,7 +114,7 @@ fn test_xml_arrays_and_lists() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ item[1]: \"B\" -> \"X\""));
+        .stdout(predicates::str::contains("~ items.item[1]: \"B\" -> \"X\""));
     Ok(())
 }
 
@@ -164,7 +164,7 @@ fn test_xml_cdata_sections() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ :"));
+        .stdout(predicates::str::contains("~ data:"));
     Ok(())
 }
 
@@ -189,7 +189,7 @@ fn test_xml_mixed_content() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert().code(1).stdout(predicates::str::contains(
-        "~ em: \"important\" -> \"critical\"",
+        "~ paragraph.em: \"important\" -> \"critical\"",
     ));
     Ok(())
 }
@@ -216,7 +216,7 @@ fn test_xml_empty_elements() -> Result<(), Box<dyn std::error::Error>> {
     cmd.arg(&file1_path).arg(&file2_path);
     cmd.assert()
         .code(1)
-        .stdout(predicates::str::contains("~ self-closing.attr:"));
+        .stdout(predicates::str::contains("~ root.self-closing.attr:"));
     Ok(())
 }
 

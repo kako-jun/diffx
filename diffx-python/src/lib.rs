@@ -1,13 +1,13 @@
+#![allow(clippy::useless_conversion)]
+
+use diffx_core::{diff, DiffOptions, DiffResult, DiffxSpecificOptions, OutputFormat};
 use pyo3::prelude::*;
-use pyo3::types::{PyDict, PyList, PyAny};
-use diffx_core::{
-    diff, DiffOptions, DiffxSpecificOptions, OutputFormat, DiffResult
-};
+use pyo3::types::{PyAny, PyDict, PyList};
 use regex::Regex;
 use serde_json::Value;
 
 /// Unified diff function for Python
-/// 
+///
 /// Args:
 ///     old: Dict - The old JSON-like structure
 ///     new: Dict - The new JSON-like structure
@@ -26,30 +26,37 @@ use serde_json::Value;
 ///         ignore_case: bool - Ignore case differences
 ///         brief_mode: bool - Report only whether files differ
 ///         quiet_mode: bool - Suppress normal output; return only exit status
-/// 
+///
 /// Returns:
 ///     List[Dict] - List of differences found
 #[pyfunction]
 #[pyo3(signature = (old, new, **kwargs))]
-fn diff_py(py: Python, old: &Bound<'_, PyAny>, new: &Bound<'_, PyAny>, kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<PyObject> {
+#[allow(clippy::useless_conversion)]
+fn diff_py(
+    py: Python,
+    old: &Bound<'_, PyAny>,
+    new: &Bound<'_, PyAny>,
+    kwargs: Option<&Bound<'_, PyDict>>,
+) -> PyResult<PyObject> {
     // Convert Python objects to JSON Values
     let old_json = python_to_json_value(old)?;
     let new_json = python_to_json_value(new)?;
-    
+
     // Build options from kwargs
     let options = build_options_from_kwargs(kwargs)?;
-    
+
     // Perform diff
-    let results = diff(&old_json, &new_json, Some(&options))
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Diff error: {}", e)))?;
-    
+    let results = diff(&old_json, &new_json, Some(&options)).map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Diff error: {e}"))
+    })?;
+
     // Convert results to Python objects
     let py_results = PyList::empty_bound(py);
     for result in results {
         let py_result = diff_result_to_python(py, &result)?;
         py_results.append(py_result)?;
     }
-    
+
     Ok(py_results.into())
 }
 
@@ -58,7 +65,7 @@ fn diff_py(py: Python, old: &Bound<'_, PyAny>, new: &Bound<'_, PyAny>, kwargs: O
 // ============================================================================
 // Individual parser functions have been removed to comply with unified API design.
 // Users should read files themselves and use the main diff() function.
-// 
+//
 // Example usage:
 //   import json
 //   old_data = json.load(open('old.json'))
@@ -75,7 +82,9 @@ fn python_to_json_value(py_obj: &Bound<'_, PyAny>) -> PyResult<Value> {
     } else if let Ok(i) = py_obj.extract::<i64>() {
         Ok(Value::Number(i.into()))
     } else if let Ok(f) = py_obj.extract::<f64>() {
-        Ok(Value::Number(serde_json::Number::from_f64(f).unwrap_or(0.into())))
+        Ok(Value::Number(
+            serde_json::Number::from_f64(f).unwrap_or(0.into()),
+        ))
     } else if let Ok(s) = py_obj.extract::<String>() {
         Ok(Value::String(s))
     } else if let Ok(list) = py_obj.downcast::<PyList>() {
@@ -93,10 +102,13 @@ fn python_to_json_value(py_obj: &Bound<'_, PyAny>) -> PyResult<Value> {
         }
         Ok(Value::Object(map))
     } else {
-        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Unsupported Python type"))
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "Unsupported Python type",
+        ))
     }
 }
 
+#[allow(clippy::useless_conversion)]
 fn json_value_to_python(py: Python, value: &Value) -> PyResult<PyObject> {
     match value {
         Value::Null => Ok(py.None()),
@@ -130,9 +142,10 @@ fn json_value_to_python(py: Python, value: &Value) -> PyResult<PyObject> {
     }
 }
 
+#[allow(clippy::useless_conversion)]
 fn diff_result_to_python(py: Python, result: &DiffResult) -> PyResult<PyObject> {
     let py_dict = PyDict::new_bound(py);
-    
+
     match result {
         DiffResult::Added(path, value) => {
             py_dict.set_item("type", "Added")?;
@@ -157,115 +170,90 @@ fn diff_result_to_python(py: Python, result: &DiffResult) -> PyResult<PyObject> 
             py_dict.set_item("new_value", json_value_to_python(py, new_val)?)?;
         }
     }
-    
-    Ok(py_dict.into())
-}
 
-fn python_to_diff_result(py_obj: &Bound<'_, PyAny>) -> PyResult<DiffResult> {
-    let dict = py_obj.downcast::<PyDict>()?;
-    let result_type: String = dict.get_item("type")?.unwrap().extract()?;
-    let path: String = dict.get_item("path")?.unwrap().extract()?;
-    
-    match result_type.as_str() {
-        "Added" => {
-            let value = python_to_json_value(&dict.get_item("value")?.unwrap())?;
-            Ok(DiffResult::Added(path, value))
-        }
-        "Removed" => {
-            let value = python_to_json_value(&dict.get_item("value")?.unwrap())?;
-            Ok(DiffResult::Removed(path, value))
-        }
-        "Modified" => {
-            let old_value = python_to_json_value(&dict.get_item("old_value")?.unwrap())?;
-            let new_value = python_to_json_value(&dict.get_item("new_value")?.unwrap())?;
-            Ok(DiffResult::Modified(path, old_value, new_value))
-        }
-        "TypeChanged" => {
-            let old_value = python_to_json_value(&dict.get_item("old_value")?.unwrap())?;
-            let new_value = python_to_json_value(&dict.get_item("new_value")?.unwrap())?;
-            Ok(DiffResult::TypeChanged(path, old_value, new_value))
-        }
-        _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid diff result type"))
-    }
+    Ok(py_dict.into())
 }
 
 fn build_options_from_kwargs(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<DiffOptions> {
     let mut options = DiffOptions::default();
-    
+
     if let Some(kwargs) = kwargs {
         // Core options
         if let Some(epsilon) = kwargs.get_item("epsilon")? {
             options.epsilon = Some(epsilon.extract::<f64>()?);
         }
-        
+
         if let Some(array_id_key) = kwargs.get_item("array_id_key")? {
             options.array_id_key = Some(array_id_key.extract::<String>()?);
         }
-        
+
         if let Some(ignore_keys_regex) = kwargs.get_item("ignore_keys_regex")? {
             let pattern: String = ignore_keys_regex.extract()?;
-            let regex = Regex::new(&pattern)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid regex: {}", e)))?;
+            let regex = Regex::new(&pattern).map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid regex: {e}"))
+            })?;
             options.ignore_keys_regex = Some(regex);
         }
-        
+
         if let Some(path_filter) = kwargs.get_item("path_filter")? {
             options.path_filter = Some(path_filter.extract::<String>()?);
         }
-        
+
         if let Some(output_format) = kwargs.get_item("output_format")? {
             let format_str: String = output_format.extract()?;
-            let format = OutputFormat::from_str(&format_str)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Invalid output format: {}", e)))?;
+            let format = OutputFormat::parse_format(&format_str).map_err(|e| {
+                PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "Invalid output format: {e}"
+                ))
+            })?;
             options.output_format = Some(format);
         }
-        
+
         if let Some(show_unchanged) = kwargs.get_item("show_unchanged")? {
             options.show_unchanged = Some(show_unchanged.extract::<bool>()?);
         }
-        
+
         if let Some(show_types) = kwargs.get_item("show_types")? {
             options.show_types = Some(show_types.extract::<bool>()?);
         }
-        
+
         if let Some(use_memory_optimization) = kwargs.get_item("use_memory_optimization")? {
             options.use_memory_optimization = Some(use_memory_optimization.extract::<bool>()?);
         }
-        
+
         if let Some(batch_size) = kwargs.get_item("batch_size")? {
             options.batch_size = Some(batch_size.extract::<usize>()?);
         }
-        
+
         // diffx-specific options
         let mut diffx_options = DiffxSpecificOptions::default();
         let mut has_diffx_options = false;
-        
-        
+
         if let Some(ignore_whitespace) = kwargs.get_item("ignore_whitespace")? {
             diffx_options.ignore_whitespace = Some(ignore_whitespace.extract::<bool>()?);
             has_diffx_options = true;
         }
-        
+
         if let Some(ignore_case) = kwargs.get_item("ignore_case")? {
             diffx_options.ignore_case = Some(ignore_case.extract::<bool>()?);
             has_diffx_options = true;
         }
-        
+
         if let Some(brief_mode) = kwargs.get_item("brief_mode")? {
             diffx_options.brief_mode = Some(brief_mode.extract::<bool>()?);
             has_diffx_options = true;
         }
-        
+
         if let Some(quiet_mode) = kwargs.get_item("quiet_mode")? {
             diffx_options.quiet_mode = Some(quiet_mode.extract::<bool>()?);
             has_diffx_options = true;
         }
-        
+
         if has_diffx_options {
             options.diffx_options = Some(diffx_options);
         }
     }
-    
+
     Ok(options)
 }
 
@@ -274,9 +262,9 @@ fn build_options_from_kwargs(kwargs: Option<&Bound<'_, PyDict>>) -> PyResult<Dif
 fn diffx_python(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Only expose the main diff function - unified API design
     m.add_function(wrap_pyfunction!(diff_py, m)?)?;
-    
+
     // Add version
     m.add("__version__", "0.5.7")?;
-    
+
     Ok(())
 }

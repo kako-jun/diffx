@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
 use assert_cmd::Command;
 use predicates::prelude::*;
@@ -243,7 +244,7 @@ fn test_epsilon_negative_value() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file2.json")
         .arg("--epsilon")
         .arg("-0.1");
-    let result = cmd.output()?;
+    let _result = cmd.output()?;
     // Should handle negative epsilon appropriately (either error or absolute value)
     // The exact behavior depends on implementation
     Ok(())
@@ -603,8 +604,7 @@ fn test_format_option() -> Result<(), Box<dyn std::error::Error>> {
             // Should recognize format option
             assert!(
                 !stderr.contains("unrecognized"),
-                "Format {} should be recognized",
-                format
+                "Format {format} should be recognized"
             );
         }
     }
@@ -626,19 +626,12 @@ fn test_output_format_option() -> Result<(), Box<dyn std::error::Error>> {
             let stderr = String::from_utf8_lossy(&output.stderr);
             assert!(
                 !stderr.contains("unrecognized"),
-                "Output format {} should be recognized",
-                output_format
+                "Output format {output_format} should be recognized"
             );
         }
     }
     Ok(())
 }
-
-
-
-
-
-
 
 #[test]
 fn test_version_option() -> Result<(), Box<dyn std::error::Error>> {

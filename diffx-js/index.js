@@ -310,13 +310,6 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { diff, parseJson, parseCsv, parseYaml, parseToml, parseIni, parseXml, formatOutput } = nativeBinding
+const { diffJs } = nativeBinding
 
-module.exports.diff = diff
-module.exports.parseJson = parseJson
-module.exports.parseCsv = parseCsv
-module.exports.parseYaml = parseYaml
-module.exports.parseToml = parseToml
-module.exports.parseIni = parseIni
-module.exports.parseXml = parseXml
-module.exports.formatOutput = formatOutput
+module.exports.diffJs = diffJs

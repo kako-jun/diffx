@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
 use std::fs;
 use std::process::Command;
@@ -107,8 +108,7 @@ fn test_memory_efficient_processing() -> Result<(), Box<dyn std::error::Error>> 
     // Should complete within reasonable time despite size
     assert!(
         duration.as_secs() < 30,
-        "Processing took too long: {:?}",
-        duration
+        "Processing took too long: {duration:?}"
     );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -132,20 +132,20 @@ fn test_deep_nesting_optimization() -> Result<(), Box<dyn std::error::Error>> {
     let mut json2 = String::from("{");
 
     for i in 0..50 {
-        json1.push_str(&format!("\"level{}\": {{", i));
-        json2.push_str(&format!("\"level{}\": {{", i));
+        json1.push_str(&format!("\"level{i}\": {{"));
+        json2.push_str(&format!("\"level{i}\": {{"));
     }
 
     json1.push_str("\"deep_value\": \"original\"");
     json2.push_str("\"deep_value\": \"modified\""); // Change at deepest level
 
     for _ in 0..50 {
-        json1.push_str("}");
-        json2.push_str("}");
+        json1.push('}');
+        json2.push('}');
     }
 
-    json1.push_str("}");
-    json2.push_str("}");
+    json1.push('}');
+    json2.push('}');
 
     fs::write(&deep_file1, json1)?;
     fs::write(&deep_file2, json2)?;
@@ -165,8 +165,7 @@ fn test_deep_nesting_optimization() -> Result<(), Box<dyn std::error::Error>> {
     // Should handle deep nesting efficiently
     assert!(
         duration.as_secs() < 10,
-        "Deep nesting took too long: {:?}",
-        duration
+        "Deep nesting took too long: {duration:?}"
     );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -305,8 +304,7 @@ fn test_streaming_large_files() -> Result<(), Box<dyn std::error::Error>> {
     // Should complete streaming processing within reasonable time
     assert!(
         duration.as_secs() < 60,
-        "Streaming took too long: {:?}",
-        duration
+        "Streaming took too long: {duration:?}"
     );
 
     Ok(())
@@ -326,8 +324,8 @@ fn test_concurrent_optimization() -> Result<(), Box<dyn std::error::Error>> {
     // Create test files
     let temp_dir = tempdir()?;
     for i in 0..3 {
-        let file1 = temp_dir.path().join(format!("concurrent{}a.json", i));
-        let file2 = temp_dir.path().join(format!("concurrent{}b.json", i));
+        let file1 = temp_dir.path().join(format!("concurrent{i}a.json"));
+        let file2 = temp_dir.path().join(format!("concurrent{i}b.json"));
 
         let json_content = serde_json::json!({
             "data": (0..1000).map(|j| serde_json::json!({
@@ -349,8 +347,8 @@ fn test_concurrent_optimization() -> Result<(), Box<dyn std::error::Error>> {
         let temp_path = temp_dir.path().to_path_buf();
 
         let handle = thread::spawn(move || {
-            let file1 = temp_path.join(format!("concurrent{}a.json", i));
-            let file2 = temp_path.join(format!("concurrent{}b.json", i));
+            let file1 = temp_path.join(format!("concurrent{i}a.json"));
+            let file2 = temp_path.join(format!("concurrent{i}b.json"));
 
             let mut cmd = diffx_cmd();
             cmd.arg(&file1).arg(&file2).arg("--output").arg("json");
@@ -376,8 +374,7 @@ fn test_concurrent_optimization() -> Result<(), Box<dyn std::error::Error>> {
     // All concurrent operations should succeed
     assert_eq!(
         final_count, 3,
-        "Concurrent optimization failed: only {} of 3 succeeded",
-        final_count
+        "Concurrent optimization failed: only {final_count} of 3 succeeded"
     );
 
     Ok(())
@@ -399,8 +396,7 @@ fn test_performance_regression() -> Result<(), Box<dyn std::error::Error>> {
     assert!(output.status.code() == Some(1)); // Differences found
     assert!(
         small_duration.as_millis() < 1000,
-        "Small file comparison too slow: {:?}",
-        small_duration
+        "Small file comparison too slow: {small_duration:?}"
     );
 
     // Medium files should scale reasonably
@@ -434,8 +430,7 @@ fn test_performance_regression() -> Result<(), Box<dyn std::error::Error>> {
     let ratio = medium_duration.as_millis() as f64 / small_duration.as_millis() as f64;
     assert!(
         ratio < 100.0,
-        "Performance scaling poor: {}x slower for medium files",
-        ratio
+        "Performance scaling poor: {ratio}x slower for medium files"
     );
 
     Ok(())
@@ -487,8 +482,7 @@ fn test_optimization_effectiveness() -> Result<(), Box<dyn std::error::Error>> {
     // Should complete within reasonable time due to optimization
     assert!(
         optimized_duration.as_secs() < 20,
-        "Optimized processing too slow: {:?}",
-        optimized_duration
+        "Optimized processing too slow: {optimized_duration:?}"
     );
 
     let stdout = String::from_utf8_lossy(&output.stdout);
