@@ -1,0 +1,16 @@
+name: Release - diffx
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    uses: kako-jun/.github/.github/workflows/rust-cli-kiln-release.yml@main
+    with:
+      project-name: diffx
+    secrets: inherit
