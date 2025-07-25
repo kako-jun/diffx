@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use diffx_core::{diff, diff_large_files, estimate_memory_usage, would_exceed_memory_limit};
+use diffx_core::{diff, diff_paths, estimate_memory_usage, would_exceed_memory_limit};
 use serde_json::{json, Value};
 use std::io::Write;
 use tempfile::NamedTempFile;
@@ -93,7 +93,7 @@ fn benchmark_different_sizes(c: &mut Criterion) {
         group.throughput(Throughput::Bytes(data_size as u64));
 
         group.bench_with_input(BenchmarkId::new("objects", size), &size, |b, _| {
-            b.iter(|| diff(black_box(&v1), black_box(&v2), None, None, None))
+            b.iter(|| diff(black_box(&v1), black_box(&v2), None))
         });
     }
     group.finish();
@@ -110,7 +110,7 @@ fn benchmark_array_sizes(c: &mut Criterion) {
         group.throughput(Throughput::Bytes(data_size as u64));
 
         group.bench_with_input(BenchmarkId::new("arrays", size), &size, |b, _| {
-            b.iter(|| diff(black_box(&v1), black_box(&v2), None, None, None))
+            b.iter(|| diff(black_box(&v1), black_box(&v2), None))
         });
     }
     group.finish();
@@ -124,7 +124,7 @@ fn benchmark_deep_nesting(c: &mut Criterion) {
         let (v1, v2) = create_test_data(50, depth); // Reduced size for deep nesting tests
 
         group.bench_with_input(BenchmarkId::new("depth", depth), &depth, |b, _| {
-            b.iter(|| diff(black_box(&v1), black_box(&v2), None, None, None))
+            b.iter(|| diff(black_box(&v1), black_box(&v2), None))
         });
     }
     group.finish();
@@ -138,18 +138,30 @@ fn benchmark_with_options(c: &mut Criterion) {
     // Benchmark with regex
     let regex = regex::Regex::new(r"^key_[0-9]*[05]$").unwrap();
     group.bench_function("with_regex", |b| {
-        b.iter(|| diff(black_box(&v1), black_box(&v2), Some(&regex), None, None))
+        let options = diffx_core::DiffOptions {
+            ignore_keys_regex: Some(regex.clone()),
+            ..Default::default()
+        };
+        b.iter(|| diff(black_box(&v1), black_box(&v2), Some(&options)))
     });
 
     // Benchmark with epsilon
     group.bench_function("with_epsilon", |b| {
-        b.iter(|| diff(black_box(&v1), black_box(&v2), None, Some(0.001), None))
+        let options = diffx_core::DiffOptions {
+            epsilon: Some(0.001),
+            ..Default::default()
+        };
+        b.iter(|| diff(black_box(&v1), black_box(&v2), Some(&options)))
     });
 
     // Benchmark with array ID key
     let (arr1, arr2) = create_large_array(1000);
     group.bench_function("with_array_id", |b| {
-        b.iter(|| diff(black_box(&arr1), black_box(&arr2), None, None, Some("id")))
+        let options = diffx_core::DiffOptions {
+            array_id_key: Some("id".to_string()),
+            ..Default::default()
+        };
+        b.iter(|| diff(black_box(&arr1), black_box(&arr2), Some(&options)))
     });
 
     group.finish();
@@ -173,9 +185,9 @@ fn benchmark_memory_usage(c: &mut Criterion) {
                 b.iter(|| {
                     if would_exceed {
                         // This would normally use streaming diff
-                        diff(black_box(&v1), black_box(&v2), None, None, None)
+                        diff(black_box(&v1), black_box(&v2), None)
                     } else {
-                        diff(black_box(&v1), black_box(&v2), None, None, None)
+                        diff(black_box(&v1), black_box(&v2), None)
                     }
                 })
             },
@@ -206,11 +218,9 @@ fn benchmark_large_file_processing(c: &mut Criterion) {
 
     group.bench_function("large_file_diff", |b| {
         b.iter(|| {
-            diff_large_files(
-                black_box(temp_file1.path()),
-                black_box(temp_file2.path()),
-                None,
-                None,
+            diff_paths(
+                &black_box(temp_file1.path().to_string_lossy()),
+                &black_box(temp_file2.path().to_string_lossy()),
                 None,
             )
             .unwrap()
@@ -238,7 +248,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     c.bench_function("diff_small_json", |b| {
-        b.iter(|| diff(black_box(&v1), black_box(&v2), None, None, None))
+        b.iter(|| diff(black_box(&v1), black_box(&v2), None))
     });
 }
 

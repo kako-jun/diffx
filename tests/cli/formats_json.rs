@@ -1,6 +1,6 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
 use assert_cmd::Command;
-use predicates::prelude::*;
 
 // Helper function to get the diffx command
 fn diffx_cmd() -> Command {
@@ -78,7 +78,7 @@ fn test_format_json_invalid_file() -> Result<(), Box<dyn std::error::Error>> {
         .arg("--format")
         .arg("json");
     // Should handle format mismatch gracefully
-    let result = cmd.output()?;
+    let _result = cmd.output()?;
     // Either succeeds with conversion or fails with meaningful error
     Ok(())
 }

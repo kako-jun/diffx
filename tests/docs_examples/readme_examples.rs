@@ -1,5 +1,5 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
-use predicates::prelude::*;
 use std::io::Write;
 use std::process::Command;
 use tempfile::NamedTempFile;
@@ -12,7 +12,7 @@ fn diffx_cmd() -> Command {
 // Helper function to create temporary JSON files for testing
 fn create_temp_json(content: &str) -> NamedTempFile {
     let mut file = NamedTempFile::with_suffix(".json").expect("Failed to create temp file");
-    writeln!(file, "{}", content).expect("Failed to write to temp file");
+    writeln!(file, "{content}").expect("Failed to write to temp file");
     file
 }
 

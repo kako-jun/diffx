@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use assert_cmd::prelude::*;
 // Original CLI tests
 pub mod basic_commands;
 pub mod no_color_option;

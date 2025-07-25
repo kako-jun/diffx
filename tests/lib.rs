@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use assert_cmd::prelude::*;
 // Main test module for diffx
 // Organized into logical test categories for better maintainability
 

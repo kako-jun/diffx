@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use assert_cmd::prelude::*;
 /// Tests for --no-color option in diffx
 /// Ensures color output is properly disabled when flag is specified
 use assert_cmd::Command;
@@ -45,8 +47,8 @@ fn test_diffx_no_color_option_basic() -> Result<(), Box<dyn std::error::Error>> 
 
     // Debug output for troubleshooting
     eprintln!("Exit status: {:?}", output.status);
-    eprintln!("Stdout: '{}'", stdout);
-    eprintln!("Stderr: '{}'", stderr);
+    eprintln!("Stdout: '{stdout}'");
+    eprintln!("Stderr: '{stderr}'");
 
     assert!(
         !stdout.contains("\x1b["),
@@ -91,13 +93,28 @@ fn test_diffx_no_color_option_with_verbose() -> Result<(), Box<dyn std::error::E
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
+    // Filter out cargo build messages which may contain ANSI codes
+    let filtered_stderr: String = stderr
+        .lines()
+        .filter(|line| {
+            // Skip cargo build/compilation messages and proxychains output
+            !line.contains("Compiling")
+                && !line.contains("Finished")
+                && !line.contains("Running")
+                && !line.contains("Blocking")
+                && !line.contains("[proxychains]")
+                && !line.trim().is_empty()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
     assert!(
         !stdout.contains("\x1b["),
         "Verbose stdout should not contain ANSI color codes when --no-color is specified"
     );
     assert!(
-        !stderr.contains("\x1b["),
-        "Verbose stderr should not contain ANSI color codes when --no-color is specified"
+        !filtered_stderr.contains("\x1b["),
+        "Verbose stderr should not contain ANSI color codes when --no-color is specified. Stderr: {filtered_stderr:?}"
     );
 
     Ok(())
@@ -181,16 +198,14 @@ fn test_diffx_no_color_with_format_options() -> Result<(), Box<dyn std::error::E
             ])
             .current_dir(env!("CARGO_MANIFEST_DIR"))
             .output()
-            .expect(&format!(
-                "Failed to execute diffx with --no-color and --format {}",
-                format
-            ));
+            .unwrap_or_else(|_| {
+                panic!("Failed to execute diffx with --no-color and --format {format}")
+            });
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(
             !stdout.contains("\x1b["),
-            "Output format {} should not contain ANSI color codes when --no-color is specified",
-            format
+            "Output format {format} should not contain ANSI color codes when --no-color is specified"
         );
     }
 

@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
 use std::process::Command;
 
@@ -11,8 +12,7 @@ fn test_directory_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/dir2");
-    cmd.assert()
-        .code(1);
+    cmd.assert().code(1);
     Ok(())
 }
 
@@ -22,8 +22,7 @@ fn test_directory_comparison_verbose_non_recursive() -> Result<(), Box<dyn std::
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/dir2")
         .arg("--verbose");
-    cmd.assert()
-        .code(1);
+    cmd.assert().code(1);
     Ok(())
 }
 
@@ -33,8 +32,7 @@ fn test_directory_comparison_verbose_recursive() -> Result<(), Box<dyn std::erro
     cmd.arg("../tests/fixtures/dir1")
         .arg("../tests/fixtures/dir2")
         .arg("--verbose");
-    cmd.assert()
-        .code(1);
+    cmd.assert().code(1);
     Ok(())
 }
 

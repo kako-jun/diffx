@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
@@ -26,7 +27,7 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
         .arg("../tests/fixtures/file1.json");
     cmd.assert().code(2).stderr(
         predicates::str::contains("Cannot compare directory")
-            .and(predicates::str::contains("with file"))
+            .and(predicates::str::contains("with file")),
     );
     Ok(())
 }

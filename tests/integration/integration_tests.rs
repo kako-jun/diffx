@@ -1,3 +1,5 @@
+#[allow(unused_imports)]
+use assert_cmd::prelude::*;
 // Integration tests for diffx components
 // Test the interaction between different parts of the system
 
@@ -7,7 +9,7 @@ use tempfile::NamedTempFile;
 
 fn run_diffx_command(args: &[&str]) -> std::process::Output {
     let mut command = Command::new("cargo");
-    command.args(&["run", "--bin", "diffx", "--"]);
+    command.args(["run", "--bin", "diffx", "--"]);
     command.args(args);
     command.output().expect("Failed to execute diffx command")
 }
@@ -20,6 +22,7 @@ fn create_temp_file_with_content(content: &str) -> NamedTempFile {
 }
 
 #[cfg(test)]
+#[allow(clippy::module_inception)]
 mod integration_tests {
     use super::*;
 
@@ -179,7 +182,7 @@ mod integration_tests {
         assert!(output.status.success());
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("dir") || stdout.contains("file") || stdout.len() > 0);
+        assert!(stdout.contains("dir") || stdout.contains("file") || !stdout.is_empty());
     }
 
     #[test]
