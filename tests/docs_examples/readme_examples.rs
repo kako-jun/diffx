@@ -246,7 +246,7 @@ fn test_json_output() -> Result<(), Box<dyn std::error::Error>> {
         .arg(file2.path())
         .arg("--output")
         .arg("json");
-    cmd.assert().success();
+    cmd.assert().code(1);
 
     Ok(())
 }
