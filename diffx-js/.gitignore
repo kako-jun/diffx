@@ -1,0 +1,9 @@
+# NAPI build artifacts
+*.node
+target/
+node_modules/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
