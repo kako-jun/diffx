@@ -44,7 +44,6 @@ Session.vim
 .env.staging
 
 # === Test files and outputs ===
-test_*
 *.test
 test_output/
 test_manual/
