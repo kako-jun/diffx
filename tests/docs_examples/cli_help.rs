@@ -18,8 +18,7 @@ fn test_help_output_matches_docs() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicates::str::contains("--ignore-case"))
         .stdout(predicates::str::contains("--ignore-whitespace"))
         .stdout(predicates::str::contains("--quiet"))
-        .stdout(predicates::str::contains("--brief"))
-        .stdout(predicates::str::contains("--context"));
+        .stdout(predicates::str::contains("--brief"));
     Ok(())
 }
 

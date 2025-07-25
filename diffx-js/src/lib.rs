@@ -38,8 +38,6 @@ pub struct JsDiffOptions {
     pub batch_size: Option<u32>,
     
     // diffx-specific options
-    /// Number of context lines for diff output
-    pub context_lines: Option<u32>,
     
     /// Ignore whitespace differences
     pub ignore_whitespace: Option<bool>,
@@ -220,7 +218,7 @@ pub fn format_output(results: Vec<JsDiffResult>, format: String) -> Result<Strin
         .map(|js_result| convert_js_diff_result(js_result))
         .collect::<Result<Vec<_>>>()?;
     
-    let output_format = OutputFormat::from_str(&format)
+    let output_format = OutputFormat::parse_format(&format)
         .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid format: {}", e)))?;
     
     core_format_output(&rust_results, output_format)
@@ -252,7 +250,7 @@ fn build_diff_options(js_options: JsDiffOptions) -> Result<DiffOptions> {
     }
     
     if let Some(output_format) = js_options.output_format {
-        let format = OutputFormat::from_str(&output_format)
+        let format = OutputFormat::parse_format(&output_format)
             .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid output format: {}", e)))?;
         options.output_format = Some(format);
     }
@@ -277,10 +275,7 @@ fn build_diff_options(js_options: JsDiffOptions) -> Result<DiffOptions> {
     let mut diffx_options = DiffxSpecificOptions::default();
     let mut has_diffx_options = false;
     
-    if let Some(context_lines) = js_options.context_lines {
-        diffx_options.context_lines = Some(context_lines as usize);
-        has_diffx_options = true;
-    }
+    // context_lines field has been removed from DiffxSpecificOptions
     
     if let Some(ignore_whitespace) = js_options.ignore_whitespace {
         diffx_options.ignore_whitespace = Some(ignore_whitespace);
