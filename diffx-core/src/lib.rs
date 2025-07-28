@@ -128,7 +128,6 @@ pub struct DiffOptions {
     pub diffx_options: Option<DiffxSpecificOptions>,
 }
 
-
 // ============================================================================
 // UNIFIED API - Main Function
 // ============================================================================

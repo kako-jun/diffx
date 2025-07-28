@@ -104,7 +104,7 @@ pub fn diff(
 
     // Perform diff
     let results = core_diff(&old, &new, rust_options.as_ref())
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Diff error: {}", e)))?;
+        .map_err(|e| Error::new(Status::GenericFailure, format!("Diff error: {e}")))?;
 
     // Convert results to JavaScript objects
     let js_results = results
@@ -127,7 +127,7 @@ pub fn diff(
 #[napi]
 pub fn parse_json(content: String) -> Result<serde_json::Value> {
     core_parse_json(&content)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("JSON parse error: {}", e)))
+        .map_err(|e| Error::new(Status::InvalidArg, format!("JSON parse error: {e}")))
 }
 
 /// Parse CSV string to JavaScript array of objects
@@ -142,7 +142,7 @@ pub fn parse_json(content: String) -> Result<serde_json::Value> {
 #[napi]
 pub fn parse_csv(content: String) -> Result<serde_json::Value> {
     core_parse_csv(&content)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("CSV parse error: {}", e)))
+        .map_err(|e| Error::new(Status::InvalidArg, format!("CSV parse error: {e}")))
 }
 
 /// Parse YAML string to JavaScript object
@@ -157,7 +157,7 @@ pub fn parse_csv(content: String) -> Result<serde_json::Value> {
 #[napi]
 pub fn parse_yaml(content: String) -> Result<serde_json::Value> {
     core_parse_yaml(&content)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("YAML parse error: {}", e)))
+        .map_err(|e| Error::new(Status::InvalidArg, format!("YAML parse error: {e}")))
 }
 
 /// Parse TOML string to JavaScript object
@@ -172,7 +172,7 @@ pub fn parse_yaml(content: String) -> Result<serde_json::Value> {
 #[napi]
 pub fn parse_toml(content: String) -> Result<serde_json::Value> {
     core_parse_toml(&content)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("TOML parse error: {}", e)))
+        .map_err(|e| Error::new(Status::InvalidArg, format!("TOML parse error: {e}")))
 }
 
 /// Parse INI string to JavaScript object
@@ -187,7 +187,7 @@ pub fn parse_toml(content: String) -> Result<serde_json::Value> {
 #[napi]
 pub fn parse_ini(content: String) -> Result<serde_json::Value> {
     core_parse_ini(&content)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("INI parse error: {}", e)))
+        .map_err(|e| Error::new(Status::InvalidArg, format!("INI parse error: {e}")))
 }
 
 /// Parse XML string to JavaScript object
@@ -202,7 +202,7 @@ pub fn parse_ini(content: String) -> Result<serde_json::Value> {
 #[napi]
 pub fn parse_xml(content: String) -> Result<serde_json::Value> {
     core_parse_xml(&content)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("XML parse error: {}", e)))
+        .map_err(|e| Error::new(Status::InvalidArg, format!("XML parse error: {e}")))
 }
 
 /// Format diff results as string
@@ -224,10 +224,10 @@ pub fn format_output(results: Vec<JsDiffResult>, format: String) -> Result<Strin
         .collect::<Result<Vec<_>>>()?;
 
     let output_format = OutputFormat::parse_format(&format)
-        .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid format: {}", e)))?;
+        .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid format: {e}")))?;
 
     core_format_output(&rust_results, output_format)
-        .map_err(|e| Error::new(Status::GenericFailure, format!("Format error: {}", e)))
+        .map_err(|e| Error::new(Status::GenericFailure, format!("Format error: {e}")))
 }
 
 // Helper functions
@@ -246,7 +246,7 @@ fn build_diff_options(js_options: JsDiffOptions) -> Result<DiffOptions> {
 
     if let Some(ignore_keys_regex) = js_options.ignore_keys_regex {
         let regex = Regex::new(&ignore_keys_regex)
-            .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid regex: {}", e)))?;
+            .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid regex: {e}")))?;
         options.ignore_keys_regex = Some(regex);
     }
 
@@ -256,7 +256,7 @@ fn build_diff_options(js_options: JsDiffOptions) -> Result<DiffOptions> {
 
     if let Some(output_format) = js_options.output_format {
         let format = OutputFormat::parse_format(&output_format)
-            .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid output format: {}", e)))?;
+            .map_err(|e| Error::new(Status::InvalidArg, format!("Invalid output format: {e}")))?;
         options.output_format = Some(format);
     }
 

@@ -69,7 +69,7 @@ export interface JsDiffResult {
  * console.log(result); // [{ type: 'Modified', path: 'b', oldValue: 2, newValue: 3 }]
  * ```
  */
-export declare function diff(oldValue: any, newValue: any, options?: JsDiffOptions | undefined | null): Array<JsDiffResult>
+export declare function diff(old: any, new: any, options?: JsDiffOptions | undefined | null): Array<JsDiffResult>
 /**
  * Parse JSON string to JavaScript object
  *
