@@ -128,51 +128,6 @@ pub struct DiffOptions {
     pub diffx_options: Option<DiffxSpecificOptions>,
 }
 
-// Backward compatibility - legacy DiffConfig structure
-#[derive(Debug, Clone, Default)]
-pub struct DiffConfig {
-    pub ignore_keys_regex: Option<Regex>,
-    pub epsilon: Option<f64>,
-    pub array_id_key: Option<String>,
-    pub use_memory_optimization: bool,
-    pub batch_size: usize,
-    pub ignore_whitespace: bool,
-    pub ignore_case: bool,
-}
-
-impl DiffConfig {
-    pub fn new() -> Self {
-        Self {
-            ignore_keys_regex: None,
-            epsilon: None,
-            array_id_key: None,
-            use_memory_optimization: false,
-            batch_size: 1000,
-            ignore_whitespace: false,
-            ignore_case: false,
-        }
-    }
-}
-
-impl From<&DiffConfig> for DiffOptions {
-    fn from(config: &DiffConfig) -> Self {
-        let diffx_options = DiffxSpecificOptions {
-            ignore_whitespace: Some(config.ignore_whitespace),
-            ignore_case: Some(config.ignore_case),
-            ..Default::default()
-        };
-
-        DiffOptions {
-            epsilon: config.epsilon,
-            array_id_key: config.array_id_key.clone(),
-            ignore_keys_regex: config.ignore_keys_regex.clone(),
-            use_memory_optimization: Some(config.use_memory_optimization),
-            batch_size: Some(config.batch_size),
-            diffx_options: Some(diffx_options),
-            ..Default::default()
-        }
-    }
-}
 
 // ============================================================================
 // UNIFIED API - Main Function
