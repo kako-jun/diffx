@@ -80,7 +80,7 @@ async function runExamples(): Promise<void> {
             'Compare two versions of app configuration using native API'
         );
         
-        const results1 = await diff(config1, config2);
+        const results1 = diff(config1, config2);
         log('API Results:', 'green');
         console.log(JSON.stringify(results1, null, 2));
 
@@ -137,7 +137,7 @@ jobs:
             'Parse YAML yourself and use diffx options for customized output'
         );
 
-        const results2 = await diff(oldData, newData, options);
+        const results2 = diff(oldData, newData, options);
         log('Filtered Results:', 'green');
         console.log(JSON.stringify(results2, null, 2));
 
@@ -170,7 +170,7 @@ jobs:
             'Track user changes by ID rather than array position'
         );
 
-        const results3 = await diff(oldUsers, newUsers, arrayOptions);
+        const results3 = diff(oldUsers, newUsers, arrayOptions);
         log('User Changes:', 'green');
         results3.forEach((result: DiffResult) => {
             console.log(`${result.type}: ${result.path}`);
@@ -191,7 +191,7 @@ jobs:
             const circularObj: any = { name: "test" };
             circularObj.self = circularObj;
             
-            await diff({ valid: "data" }, circularObj);
+            diff({ valid: "data" }, circularObj);
         } catch (error) {
             log(`Caught expected error: ${error}`, 'red');
         }
@@ -228,7 +228,7 @@ jobs:
         );
 
         const startTime = Date.now();
-        const results5 = await diff(largeData1, largeData2, perfOptions);
+        const results5 = diff(largeData1, largeData2, perfOptions);
         const endTime = Date.now();
 
         log(`Processed ${results5.length} differences in ${endTime - startTime}ms`, 'green');
@@ -260,7 +260,7 @@ jobs:
             'Use TypeScript interfaces for better development experience'
         );
 
-        const results6 = await diff(typedConfig1, typedConfig2);
+        const results6 = diff(typedConfig1, typedConfig2);
         
         // Type-safe result processing
         results6.forEach((result: DiffResult) => {
