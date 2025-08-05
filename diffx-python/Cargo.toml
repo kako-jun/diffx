@@ -1,6 +1,6 @@
 [package]
 name = "diffx-python"
-version = "0.5.10"
+version = "0.5.11"
 edition = "2021"
 authors = ["kako-jun"]
 license = "MIT"
