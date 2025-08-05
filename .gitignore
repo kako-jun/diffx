@@ -137,7 +137,7 @@ secrets.json
 # === Project specific ===
 .github-shared/
 github-shared/
-diffx/
+/diffx/
 test-packages/
 scripts_old/
 
