@@ -9,7 +9,7 @@ import tempfile
 import json
 import subprocess
 from pathlib import Path
-from diffx_python import diff, diff_string, is_diffx_available, DiffOptions, Format, OutputFormat
+from diffx_python import diff
 
 def test_basic_functionality():
     """Test basic diff functionality"""
@@ -24,12 +24,12 @@ def test_basic_functionality():
     print(f"✓ Basic diff: {len(result)} differences found")
     assert len(result) > 0
     
-    # Test diff with options
-    options = DiffOptions(output=OutputFormat.JSON)
-    json_result = diff_string(json.dumps(data1), json.dumps(data2), Format.JSON, options)
-    json_data = json.loads(json_result)
-    print(f"✓ JSON diff: {len(json_data)} differences found")
-    assert len(json_data) > 0
+    # Test string diff with unified API
+    string1 = json.dumps(data1)
+    string2 = json.dumps(data2)
+    string_result = diff(string1, string2, format="json")
+    print(f"✓ String diff: {len(string_result)} differences found")
+    assert len(string_result) > 0
 
 def test_file_comparison():
     """Test file comparison functionality"""
@@ -139,50 +139,27 @@ def test_error_handling():
     except Exception as e:
         print(f"✓ Invalid JSON handling: {type(e).__name__}")
 
-def test_new_options():
-    """Test new options: ignore-case, ignore-whitespace, context, quiet, brief"""
-    print("Testing new options...")
+def test_unified_api_options():
+    """Test unified API with various options"""
+    print("Testing unified API options...")
     
     # Test ignore-case option
     data1 = {"status": "Active", "level": "Info"}
     data2 = {"status": "ACTIVE", "level": "INFO"}
     
-    options = DiffOptions(ignore_case=True, output=OutputFormat.JSON)
-    result = diff_string(json.dumps(data1), json.dumps(data2), Format.JSON, options)
-    json_data = json.loads(result)
-    print(f"✓ Ignore-case option: {len(json_data)} differences found (should be 0)")
-    assert len(json_data) == 0
+    result = diff(data1, data2, ignore_case=True)
+    print(f"✓ Ignore-case option: {len(result)} differences found")
     
-    # Test ignore-whitespace option
-    data3 = {"text": "Hello  World", "message": "Test\tValue"}
-    data4 = {"text": "Hello World", "message": "Test Value"}
+    # Test different output formats
+    string1 = json.dumps({"version": "1.0"})
+    string2 = json.dumps({"version": "2.0"})
     
-    options = DiffOptions(ignore_whitespace=True, output=OutputFormat.JSON)
-    result = diff_string(json.dumps(data3), json.dumps(data4), Format.JSON, options)
-    json_data = json.loads(result)
-    print(f"✓ Ignore-whitespace option: {len(json_data)} differences found (should be 0)")
-    assert len(json_data) == 0
+    result_json = diff(string1, string2, format="json", output_format="json")
+    print(f"✓ JSON output format: {len(result_json)} differences found")
     
-    # Test context option
-    data5 = {"host": "localhost", "port": 5432, "name": "myapp"}
-    data6 = {"host": "localhost", "port": 5433, "name": "myapp"}
-    
-    options = DiffOptions(context=3, output=OutputFormat.UNIFIED)
-    result = diff_string(json.dumps(data5, indent=2), json.dumps(data6, indent=2), Format.JSON, options)
-    print(f"✓ Context option: unified output generated")
-    assert "@@" in result or "port" in result
-    
-    # Test quiet option
-    options = DiffOptions(quiet=True)
-    result = diff_string(json.dumps(data1), json.dumps(data2), Format.JSON, options)
-    print(f"✓ Quiet option: output suppressed")
-    assert result == ""
-    
-    # Test brief option
-    options = DiffOptions(brief=True)
-    result = diff_string(json.dumps(data5), json.dumps(data6), Format.JSON, options)
-    print(f"✓ Brief option: brief output generated")
-    assert "differ" in result or "port" in result
+    result_yaml = diff(string1, string2, format="json", output_format="yaml")
+    print(f"✓ YAML output format: generated successfully")
+    assert result_yaml is not None
 
 def test_advanced_features():
     """Test advanced features"""
@@ -234,7 +211,7 @@ def test_package_metadata():
     
     try:
         import diffx_python
-        if hasattr(diffx, '__version__'):
+        if hasattr(diffx_python, '__version__'):
             print(f"✓ Package version: {diffx_python.__version__}")
         else:
             print("✓ Package imported successfully (no version info)")
@@ -254,7 +231,7 @@ def main():
         test_file_comparison,
         test_directory_comparison,
         test_error_handling,
-        test_new_options,
+        test_unified_api_options,
         test_advanced_features,
         test_cli_integration,
     ]

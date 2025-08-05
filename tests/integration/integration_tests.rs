@@ -194,10 +194,7 @@ mod integration_tests {
             .unwrap()
             .join("tests/fixtures/dir2");
 
-        let output = run_diffx_command(&[
-            dir1.to_str().unwrap(),
-            dir2.to_str().unwrap(),
-        ]);
+        let output = run_diffx_command(&[dir1.to_str().unwrap(), dir2.to_str().unwrap()]);
 
         // Exit code 1 when differences found
         assert_eq!(output.status.code(), Some(1));
@@ -213,9 +210,13 @@ mod integration_tests {
         let yaml2 = "name: John\nage: 26\nactive: true";
 
         let mut file1 = NamedTempFile::with_suffix(".yaml").expect("Failed to create temp file");
-        file1.write_all(yaml1.as_bytes()).expect("Failed to write to temp file");
+        file1
+            .write_all(yaml1.as_bytes())
+            .expect("Failed to write to temp file");
         let mut file2 = NamedTempFile::with_suffix(".yaml").expect("Failed to create temp file");
-        file2.write_all(yaml2.as_bytes()).expect("Failed to write to temp file");
+        file2
+            .write_all(yaml2.as_bytes())
+            .expect("Failed to write to temp file");
 
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
@@ -229,10 +230,16 @@ mod integration_tests {
         let toml1 = "[server]\nport = 8080\nhost = \"localhost\"";
         let toml2 = "[server]\nport = 8081\nhost = \"localhost\"";
 
-        let mut toml_file1 = NamedTempFile::with_suffix(".toml").expect("Failed to create temp file");
-        toml_file1.write_all(toml1.as_bytes()).expect("Failed to write to temp file");
-        let mut toml_file2 = NamedTempFile::with_suffix(".toml").expect("Failed to create temp file");
-        toml_file2.write_all(toml2.as_bytes()).expect("Failed to write to temp file");
+        let mut toml_file1 =
+            NamedTempFile::with_suffix(".toml").expect("Failed to create temp file");
+        toml_file1
+            .write_all(toml1.as_bytes())
+            .expect("Failed to write to temp file");
+        let mut toml_file2 =
+            NamedTempFile::with_suffix(".toml").expect("Failed to create temp file");
+        toml_file2
+            .write_all(toml2.as_bytes())
+            .expect("Failed to write to temp file");
 
         let toml_output = run_diffx_command(&[
             toml_file1.path().to_str().unwrap(),
