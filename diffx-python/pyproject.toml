@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "diffx-python"
-version = "0.5.13"
+version = "0.5.14"
 description = "Python wrapper for diffx - semantic diffing of JSON, YAML, TOML, XML, INI, and CSV files. Focuses on structural meaning rather than formatting."
 readme = "README.md"
 license = "MIT"
