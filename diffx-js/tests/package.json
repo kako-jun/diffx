@@ -31,6 +31,8 @@
   "jest": {
     "testEnvironment": "node",
     "testMatch": ["**/*.test.js"],
-    "setupFilesAfterEnv": ["<rootDir>/setup.js"]
+    "bail": true,
+    "forceExit": true,
+    "detectOpenHandles": true
   }
 }

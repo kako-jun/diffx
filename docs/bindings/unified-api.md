@@ -182,7 +182,7 @@ import * as fs from 'fs';
 // Basic usage - users parse files themselves
 const oldData = JSON.parse(fs.readFileSync('old.json', 'utf8'));
 const newData = JSON.parse(fs.readFileSync('new.json', 'utf8'));
-const results = await diff(oldData, newData);
+const results = diff(oldData, newData);
 
 // With options
 const options: DiffOptions = {
@@ -192,7 +192,7 @@ const options: DiffOptions = {
     outputFormat: 'json',
     showUnchanged: false
 };
-const results = await diff(oldData, newData, options);
+const results = diff(oldData, newData, options);
 ```
 
 ## Error Handling

@@ -24,61 +24,73 @@ The appropriate binary is automatically selected at runtime based on your system
 ## Usage
 
 ```javascript
-const { diff, diffString } = require('diffx-js');
+const { diff } = require('diffx-js');
 
-async function main() {
-  // Compare two files
-  const result = await diff('file1.json', 'file2.json');
-  
-  if (result.length === 0) {
-    console.log("No differences found.");
-  } else {
-    console.log("Differences found:");
-    for (const change of result) {
-      console.log(`${change.type}: ${change.path} = ${change.new_value}`);
+// Compare two JavaScript objects
+const old = { name: "Alice", age: 30, city: "Tokyo" };
+const newObj = { name: "Alice", age: 31, country: "Japan" };
+
+const result = diff(old, newObj);
+
+if (result.length === 0) {
+  console.log("No differences found.");
+} else {
+  console.log("Differences found:");
+  for (const change of result) {
+    console.log(`${change.diffType}: ${change.path}`);
+    if (change.oldValue !== undefined) {
+      console.log(`  Old: ${change.oldValue}`);
+    }
+    if (change.newValue !== undefined) {
+      console.log(`  New: ${change.newValue}`);
     }
   }
-
-  // Compare with options
-  const jsonResult = await diff('config1.yaml', 'config2.yaml', {
-    output: 'json',
-    ignoreKeysRegex: 'timestamp'
-  });
-
-  // Compare directory structures
-  const dirResult = await diff('dir1/', 'dir2/', {
-    recursive: true,
-    output: 'json'
-  });
-
-  // Compare strings directly
-  const stringResult = await diffString(
-    '{"a": 1}', 
-    '{"a": 2}', 
-    'json',
-    { output: 'json' }
-  );
 }
 
-main();
+// Compare with options
+const data1 = { 
+  values: [1.0001, 2.0002, 3.0003],
+  metadata: { timestamp: "2024-01-01" }
+};
+const data2 = { 
+  values: [1.0002, 2.0003, 3.0004],
+  metadata: { timestamp: "2024-01-02" }
+};
+
+const preciseResult = diff(data1, data2, {
+  epsilon: 0.001,
+  ignoreKeysRegex: "timestamp"
+});
+
+console.log(`Found ${preciseResult.length} significant differences`);
 ```
 
 
 ### API Reference
 
-#### `diff(input1, input2, options?)`
-- **input1, input2**: File paths or directory paths to compare
+#### `diff(old, new, options?)`
+- **old**: The old JavaScript object, array, or primitive value
+- **new**: The new JavaScript object, array, or primitive value  
 - **options**: Optional configuration object
-  - `format`: Input format ('json', 'yaml', 'toml', 'xml', 'ini', 'csv')
-  - `output`: Output format ('diffx', 'json', 'yaml')  
-  - `recursive`: Compare directories recursively
-  - `ignoreKeysRegex`: Ignore keys matching regex pattern
-  - `epsilon`: Tolerance for floating-point comparisons
+  - `epsilon`: Tolerance for floating-point comparisons (default: 0.0)
+  - `arrayIdKey`: Key to use for array element identification
+  - `ignoreKeysRegex`: Regex pattern for keys to ignore
+  - `pathFilter`: Only show differences in paths containing this string
+  - `outputFormat`: Output format ("diffx", "json", "yaml")
+  - `showUnchanged`: Show unchanged values as well
+  - `showTypes`: Show type information in output
+  - `ignoreWhitespace`: Ignore whitespace differences
+  - `ignoreCase`: Ignore case differences
+  - `briefMode`: Report only whether objects differ
+  - `quietMode`: Suppress normal output; return only results
 
-#### `diffString(content1, content2, format, options?)`
-- **content1, content2**: String content to compare
-- **format**: Data format ('json', 'yaml', 'toml', etc.)
-- **options**: Same as `diff()` options
+#### Return Value
+Returns an array of `JsDiffResult` objects, each containing:
+- `diffType`: Type of difference ('Added', 'Removed', 'Modified', 'TypeChanged')  
+- `path`: Path to the changed element
+- `oldValue`: Old value (for Modified/TypeChanged/Removed)
+- `newValue`: New value (for Modified/TypeChanged/Added)
+- `value`: Value (for Removed differences)
 
 ## Development
 

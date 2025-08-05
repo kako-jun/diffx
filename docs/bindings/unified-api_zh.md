@@ -181,7 +181,7 @@ import * as fs from 'fs';
 // 基本用法 - 用户自己解析文件
 const oldData = JSON.parse(fs.readFileSync('old.json', 'utf8'));
 const newData = JSON.parse(fs.readFileSync('new.json', 'utf8'));
-const results = await diff(oldData, newData);
+const results = diff(oldData, newData);
 
 // 带选项
 const options: DiffOptions = {
@@ -191,7 +191,7 @@ const options: DiffOptions = {
     outputFormat: 'json',
     showUnchanged: false
 };
-const results = await diff(oldData, newData, options);
+const results = diff(oldData, newData, options);
 ```
 
 ## 错误处理

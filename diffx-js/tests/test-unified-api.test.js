@@ -194,24 +194,26 @@ function expectDifferences(old, newObj, expectedCount, options = {}) {
 // ============================================================================
 
 describe('Unified API - Core Functionality', () => {
-    test('diff basic modification', async () => {
+    test('diff basic modification', () => {
         const old = { name: "Alice", age: 30 };
         const newObj = { name: "Alice", age: 31 };
         
-        const results = await diffx.diff(old, newObj);
+        const results = diffx.diff(old, newObj);
         
         expect(results).toHaveLength(1);
-        expectDiffResult(results[0], 'modified', 'age', {
-            oldValue: expect.stringContaining('30'),
-            newValue: expect.stringContaining('31')
+        expect(results[0]).toMatchObject({
+            diffType: 'Modified',
+            path: 'age',
+            oldValue: 30,
+            newValue: 31
         });
     });
     
-    test('diff added field', async () => {
+    test('diff added field', () => {
         const old = { name: "Alice" };
         const newObj = { name: "Alice", age: 30 };
         
-        const results = await diffx.diff(old, newObj);
+        const results = diffx.diff(old, newObj);
         
         expect(results).toHaveLength(1);
         expectDiffResult(results[0], 'added', 'age', {
@@ -219,11 +221,11 @@ describe('Unified API - Core Functionality', () => {
         });
     });
     
-    test('diff removed field', async () => {
+    test('diff removed field', () => {
         const old = { name: "Alice", age: 30 };
         const newObj = { name: "Alice" };
         
-        const results = await diffx.diff(old, newObj);
+        const results = diffx.diff(old, newObj);
         
         expect(results).toHaveLength(1);
         expectDiffResult(results[0], 'removed', 'age', {
@@ -231,11 +233,11 @@ describe('Unified API - Core Functionality', () => {
         });
     });
     
-    test('diff type changed', async () => {
+    test('diff type changed', () => {
         const old = { value: 123 };
         const newObj = { value: "123" };
         
-        const results = await diffx.diff(old, newObj);
+        const results = diffx.diff(old, newObj);
         
         expect(results).toHaveLength(1);
         expectDiffResult(results[0], 'typeChanged', 'value', {
@@ -244,7 +246,7 @@ describe('Unified API - Core Functionality', () => {
         });
     });
     
-    test('diff no changes', async () => {
+    test('diff no changes', () => {
         const old = { name: "Alice", age: 30 };
         const newObj = { name: "Alice", age: 30 };
         
@@ -257,7 +259,7 @@ describe('Unified API - Core Functionality', () => {
 // ============================================================================
 
 describe('Options Handling', () => {
-    test('diff with epsilon', async () => {
+    test('diff with epsilon', () => {
         const old = { value: 1.0 };
         const newObj = { value: 1.001 };
         
@@ -268,7 +270,7 @@ describe('Options Handling', () => {
         expectDifferences(old, newObj, 1, { epsilon: 0.0001 });
     });
     
-    test('diff with array_id_key', async () => {
+    test('diff with array_id_key', () => {
         const old = {
             users: [
                 { id: 1, name: "Alice" },
@@ -292,7 +294,7 @@ describe('Options Handling', () => {
         expect(result.newValue).toContain('Alice Updated');
     });
     
-    test('diff with ignore_keys_regex', async () => {
+    test('diff with ignore_keys_regex', () => {
         const old = {
             data: "important",
             timestamp: "2023-01-01",
@@ -307,7 +309,7 @@ describe('Options Handling', () => {
         expectNoDifferences(old, newObj, { ignoreKeysRegex: "^(timestamp|debug_)" });
     });
     
-    test('diff with path_filter', async () => {
+    test('diff with path_filter', () => {
         const old = {
             config: { value: 1 },
             metadata: { value: 2 }
@@ -322,7 +324,7 @@ describe('Options Handling', () => {
         expect(results[0].path).toMatch(/config/);
     });
     
-    test('diff with output_format', async () => {
+    test('diff with output_format', () => {
         const old = { name: "Alice" };
         const newObj = { name: "Bob" };
         
@@ -330,12 +332,12 @@ describe('Options Handling', () => {
         const formats = ["diffx", "json", "yaml", "unified"];
         
         for (const outputFormat of formats) {
-            const results = await diffx.diff(old, newObj, { outputFormat });
+            const results = diffx.diff(old, newObj, { outputFormat });
             expect(results).toHaveLength(1);
         }
     });
     
-    test('diff with memory_optimization', async () => {
+    test('diff with memory_optimization', () => {
         const old = { data: [1, 2, 3] };
         const newObj = { data: [1, 2, 4] };
         
@@ -345,7 +347,7 @@ describe('Options Handling', () => {
         });
     });
     
-    test('diff with diffx_specific_options', async () => {
+    test('diff with diffx_specific_options', () => {
         const old = { text: "Hello World" };
         const newObj = { text: "HELLO WORLD" };
         
@@ -356,7 +358,7 @@ describe('Options Handling', () => {
         expectDifferences(old, newObj, 1, { ignoreCase: false });
     });
     
-    test('diff with ignore_whitespace', async () => {
+    test('diff with ignore_whitespace', () => {
         const old = { text: "Hello World" };
         const newObj = { text: "HelloWorld" };
         
@@ -373,7 +375,7 @@ describe('Options Handling', () => {
 // ============================================================================
 
 describe('JavaScript Type Handling', () => {
-    test('javascript primitive types', async () => {
+    test('javascript primitive types', () => {
         const testData = {
             null_value: null,
             undefined_value: undefined, // Should be converted to null
@@ -392,7 +394,7 @@ describe('JavaScript Type Handling', () => {
         expectNoDifferences(testData, testData);
     });
     
-    test('javascript container types', async () => {
+    test('javascript container types', () => {
         const testData = {
             empty_array: [],
             array_mixed: [1, "two", 3.0, true, null, undefined],
@@ -414,7 +416,7 @@ describe('JavaScript Type Handling', () => {
         expectNoDifferences(testData, testData);
     });
     
-    test('javascript large numbers', async () => {
+    test('javascript large numbers', () => {
         const old = { 
             big_int: Number.MAX_SAFE_INTEGER, 
             big_float: Number.MAX_VALUE,
@@ -430,7 +432,7 @@ describe('JavaScript Type Handling', () => {
         expect(results).toHaveLength(3); // All should be detected as changes
     });
     
-    test('javascript special values', async () => {
+    test('javascript special values', () => {
         const old = { 
             infinity: Infinity, 
             neg_infinity: -Infinity,
@@ -438,7 +440,7 @@ describe('JavaScript Type Handling', () => {
         };
         
         // These should be handled gracefully
-        const results = await diffx.diff(old, old);
+        const results = diffx.diff(old, old);
         // NaN !== NaN in JavaScript, so it might show as different
         expect(results.length).toBeGreaterThanOrEqual(0);
     });
@@ -449,7 +451,7 @@ describe('JavaScript Type Handling', () => {
 // ============================================================================
 
 describe('Array Handling', () => {
-    test('diff arrays by index', async () => {
+    test('diff arrays by index', () => {
         const old = [1, 2, 3];
         const newObj = [1, 3, 4];
         
@@ -457,7 +459,7 @@ describe('Array Handling', () => {
         // Changes at indices 1 and 2
     });
     
-    test('diff arrays with id key', async () => {
+    test('diff arrays with id key', () => {
         const old = [
             { id: "a", value: 1 },
             { id: "b", value: 2 }
@@ -473,7 +475,7 @@ describe('Array Handling', () => {
         expect(results).toHaveLength(3);
     });
     
-    test('diff arrays mixed id and index', async () => {
+    test('diff arrays mixed id and index', () => {
         const old = [
             { id: "a", value: 1 },
             { value: 2 }, // No ID
@@ -485,7 +487,7 @@ describe('Array Handling', () => {
             { id: "c", value: 4 }
         ];
         
-        const results = await diffx.diff(old, newObj, { arrayIdKey: "id" });
+        const results = diffx.diff(old, newObj, { arrayIdKey: "id" });
         
         // Should handle both ID-based and index-based comparisons
         expect(results.length).toBeGreaterThan(0);
@@ -497,12 +499,12 @@ describe('Array Handling', () => {
 // ============================================================================
 
 describe('Complex Structures with Fixtures', () => {
-    test('diff with cli fixtures', async () => {
+    test('diff with cli fixtures', () => {
         try {
             const old = TestFixtures.configV1();
             const newObj = TestFixtures.configV2();
             
-            const results = await diffx.diff(old, newObj);
+            const results = diffx.diff(old, newObj);
             expect(results.length).toBeGreaterThan(0); // Should find differences
             
         } catch (error) {
@@ -511,11 +513,11 @@ describe('Complex Structures with Fixtures', () => {
         }
     });
     
-    test('diff nested objects', async () => {
+    test('diff nested objects', () => {
         const old = TestFixtures.nestedObjectOld();
         const newObj = TestFixtures.nestedObjectNew();
         
-        const results = await diffx.diff(old, newObj);
+        const results = diffx.diff(old, newObj);
         
         // Should find multiple changes in nested structure
         expect(results.length).toBeGreaterThan(1);
@@ -526,7 +528,7 @@ describe('Complex Structures with Fixtures', () => {
         expect(paths.some(path => path.includes('monitoring'))).toBe(true);
     });
     
-    test('diff large dataset', async () => {
+    test('diff large dataset', () => {
         // Create large dataset (smaller than Rust version to avoid timeout)
         const oldData = {};
         const newData = {};
@@ -545,32 +547,32 @@ describe('Complex Structures with Fixtures', () => {
 // ============================================================================
 
 describe('Error Handling', () => {
-    test('invalid regex pattern', async () => {
+    test('invalid regex pattern', () => {
         const old = { test: "value" };
         const newObj = { test: "value2" };
         
-        await expect(async () => {
-            await diffx.diff(old, newObj, { ignoreKeysRegex: "[invalid_regex" });
-        }).rejects.toThrow();
+        expect(() => {
+            diffx.diff(old, newObj, { ignoreKeysRegex: "[invalid_regex" });
+        }).toThrow();
     });
     
-    test('invalid output format', async () => {
+    test('invalid output format', () => {
         const old = { test: "value" };
         const newObj = { test: "value2" };
         
-        await expect(async () => {
-            await diffx.diff(old, newObj, { outputFormat: "invalid_format" });
-        }).rejects.toThrow();
+        expect(() => {
+            diffx.diff(old, newObj, { outputFormat: "invalid_format" });
+        }).toThrow();
     });
     
-    test('circular references', async () => {
+    test('circular references', () => {
         const old = { name: "test" };
         const circular = { name: "test" };
         circular.self = circular; // Create circular reference
         
         // Should either handle gracefully or throw descriptive error
         try {
-            await diffx.diff(old, circular);
+            diffx.diff(old, circular);
         } catch (error) {
             expect(error.message).toMatch(/circular|serialize|convert/i);
         }
@@ -582,26 +584,23 @@ describe('Error Handling', () => {
 // ============================================================================
 
 describe('Async/Promise Handling', () => {
-    test('diff returns promise', async () => {
+    test('diff returns array', () => {
         const old = { name: "Alice" };
         const newObj = { name: "Bob" };
         
-        const promise = diffx.diff(old, newObj);
-        expect(promise).toBeInstanceOf(Promise);
-        
-        const results = await promise;
+        const results = diffx.diff(old, newObj);
+        expect(Array.isArray(results)).toBe(true);
         expect(results).toHaveLength(1);
     });
     
-    test('concurrent diff operations', async () => {
+    test('multiple diff operations', () => {
         const testCases = [
             [{ a: 1 }, { a: 2 }],
             [{ b: 3 }, { b: 4 }],
             [{ c: 5 }, { c: 6 }]
         ];
         
-        const promises = testCases.map(([old, newObj]) => diffx.diff(old, newObj));
-        const results = await Promise.all(promises);
+        const results = testCases.map(([old, newObj]) => diffx.diff(old, newObj));
         
         expect(results).toHaveLength(3);
         results.forEach(result => {
@@ -615,11 +614,11 @@ describe('Async/Promise Handling', () => {
 // ============================================================================
 
 describe('Integration Tests', () => {
-    test('unified api comprehensive', async () => {
+    test('unified api comprehensive', () => {
         const old = TestFixtures.arrayWithIdsOld();
         const newObj = TestFixtures.arrayWithIdsNew();
         
-        const results = await diffx.diff(old, newObj, {
+        const results = diffx.diff(old, newObj, {
             arrayIdKey: "id",
             outputFormat: "json",
             showUnchanged: false,
@@ -637,7 +636,7 @@ describe('Integration Tests', () => {
         });
     });
     
-    test('type conversion fidelity', async () => {
+    test('type conversion fidelity', () => {
         const testCases = [
             TestFixtures.simpleObjectOld(),
             TestFixtures.numericPrecisionOld(),
@@ -646,12 +645,12 @@ describe('Integration Tests', () => {
         
         for (const testData of testCases) {
             // Diff with itself should produce no changes
-            const results = await diffx.diff(testData, testData);
+            const results = diffx.diff(testData, testData);
             expect(results).toHaveLength(0);
         }
     });
     
-    test('common usage patterns', async () => {
+    test('common usage patterns', () => {
         // Simulate common usage: parse JSON, compare, get results
         const oldJsonStr = '{"name": "old", "version": 1}';
         const newJsonStr = '{"name": "new", "version": 2}';
@@ -659,7 +658,7 @@ describe('Integration Tests', () => {
         const oldData = JSON.parse(oldJsonStr);
         const newData = JSON.parse(newJsonStr);
         
-        const results = await diffx.diff(oldData, newData);
+        const results = diffx.diff(oldData, newData);
         
         expect(results).toHaveLength(2); // name and version changed
         
@@ -674,7 +673,7 @@ describe('Integration Tests', () => {
 // ============================================================================
 
 describe('Performance Tests', () => {
-    test('large array performance', async () => {
+    test('large array performance', () => {
         const old = Array.from({ length: 1000 }, (_, i) => ({ 
             id: i, 
             value: `item_${i}` 
@@ -685,14 +684,14 @@ describe('Performance Tests', () => {
         }));
         
         const startTime = Date.now();
-        const results = await diffx.diff(old, newObj, { arrayIdKey: "id" });
+        const results = diffx.diff(old, newObj, { arrayIdKey: "id" });
         const endTime = Date.now();
         
         expect(results).toHaveLength(1000); // All items should be modified
         expect(endTime - startTime).toBeLessThan(5000); // Should complete within 5 seconds
     }, 10000); // 10 second timeout for this test
     
-    test('deep nesting performance', async () => {
+    test('deep nesting performance', () => {
         function createNested(depth) {
             if (depth === 0) {
                 return { value: "leaf" };
@@ -705,7 +704,7 @@ describe('Performance Tests', () => {
         newObj.nested.nested.value = "modified_leaf"; // Change deep value
         
         const startTime = Date.now();
-        const results = await diffx.diff(old, newObj);
+        const results = diffx.diff(old, newObj);
         const endTime = Date.now();
         
         expect(results).toHaveLength(1); // Should find the single deep change
