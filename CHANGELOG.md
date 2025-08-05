@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.21] - 2025-08-05
+
+### Added
+- **Automated manylinux wheel building**: Docker-based Python wheel compilation for maximum Linux compatibility
+- **Complete JavaScript/npm package**: Full NAPI bindings with platform-specific native binaries
+- **Unified API implementation**: Consistent interface across Rust, Python, and JavaScript packages
+- **Automatic directory detection**: Removes need for manual --recursive flag specification
+- **Comprehensive stdin support**: Enhanced pipeline-friendly operations for all input methods
+- **Multilingual documentation**: Complete Japanese and Chinese translations added
+- **Enhanced CLI options**: --no-color support and improved error messaging
+
+### Changed
+- **Release infrastructure overhaul**: Atomic publishing across all package registries with rollback capability
+- **Testing infrastructure**: 1,000+ automated tests with multi-platform CI/CD validation
+- **Package ecosystem**: Standardized naming and API consistency across all language bindings
+- **Performance optimizations**: Core algorithm improvements and memory usage reduction
+
+### Fixed
+- **manylinux compatibility**: Resolved GLIBC version conflicts in Python wheel distribution
+- **GitHub Actions reliability**: Enhanced CI/CD pipeline with proper artifact management
+- **Cross-platform binary distribution**: Fixed platform-specific binary paths and dependencies
+- **Test suite stability**: Comprehensive test restructuring with 100% success rate
+- **Documentation consistency**: Unified examples and API references across all languages
+
+### Breaking Changes
+- **Removed --unified format option**: Simplified output format for better consistency
+- **Removed --recursive flag**: Directory detection is now automatic
+- **Python import changes**: Module now uses `diffx_python` namespace for better isolation
+
+### Infrastructure
+- **Enhanced release automation**: Complete CI/CD pipeline with maturin-action integration
+- **Cross-registry publishing**: Simultaneous deployment to crates.io, PyPI, and npmjs.com
+- **Comprehensive quality gates**: Multi-stage testing before any public release
+- **Package installation verification**: Real-world testing from all package registries
+
 ## [0.5.6] - 2025-07-16
 
 ### Added
