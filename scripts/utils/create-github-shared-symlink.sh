@@ -20,7 +20,12 @@ elif [ -e github-shared ]; then
 fi
 
 # プロジェクトルート直下にシンボリックリンクを作成
-ln -s ../.github github-shared
-
-echo "✅ シンボリックリンク作成完了: github-shared -> ../.github"
+# GitHub Actionsでは .github はプロジェクトルートに配置される
+if [ -d ".github" ]; then
+    ln -s .github github-shared
+    echo "✅ シンボリックリンク作成完了: github-shared -> .github"
+else
+    ln -s ../.github github-shared
+    echo "✅ シンボリックリンク作成完了: github-shared -> ../.github"
+fi
 echo "📝 GitHub Actionsと同じパス名で統一されました"
