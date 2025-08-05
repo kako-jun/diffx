@@ -7,7 +7,7 @@ pub struct TestFixtures;
 impl TestFixtures {
     /// Get path to shared CLI fixtures directory
     pub fn cli_fixtures_dir() -> &'static str {
-        "../../tests/fixtures"
+        "../tests/fixtures"
     }
 
     /// Load JSON file from CLI fixtures
@@ -285,6 +285,7 @@ mod tests {
         }
 
         let nested = generators::generate_deep_nested_object(3);
-        assert!(nested["nested"]["nested"]["value"].is_number());
+        // The structure is {"level": 0, "nested": {"level": 1, "nested": {"level": 2, "nested": {"value": 3}}}}
+        assert!(nested["nested"]["nested"]["nested"]["value"].is_number());
     }
 }

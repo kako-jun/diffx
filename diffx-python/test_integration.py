@@ -9,7 +9,7 @@ import tempfile
 import json
 import subprocess
 from pathlib import Path
-from diffx import diff, diff_string, is_diffx_available, DiffOptions, Format, OutputFormat
+from diffx_python import diff, diff_string, is_diffx_available, DiffOptions, Format, OutputFormat
 
 def test_basic_functionality():
     """Test basic diff functionality"""

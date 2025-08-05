@@ -29,7 +29,7 @@ use serde_json::Value;
 ///
 /// Returns:
 ///     List[Dict] - List of differences found
-#[pyfunction]
+#[pyfunction(name = "diff")]
 #[pyo3(signature = (old, new, **kwargs))]
 #[allow(clippy::useless_conversion)]
 fn diff_py(

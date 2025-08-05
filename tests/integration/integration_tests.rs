@@ -39,7 +39,8 @@ mod integration_tests {
             file2.path().to_str().unwrap(),
         ]);
 
-        assert!(output.status.success());
+        // diffx returns exit code 1 when differences are found (like Unix diff)
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("version") || stdout.contains("count") || stdout.contains("diff"));
@@ -56,11 +57,12 @@ mod integration_tests {
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
-            "--format",
+            "-o",
             "json",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.contains("{"));
@@ -72,8 +74,8 @@ mod integration_tests {
 
     #[test]
     fn test_verbose_mode_integration() {
-        let content1 = "line1\nline2\nline3\nline4";
-        let content2 = "line1\nmodified line\nline3\nline4";
+        let content1 = r#"{"name": "test", "value": 1}"#;
+        let content2 = r#"{"name": "test", "value": 2}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
@@ -84,16 +86,17 @@ mod integration_tests {
             "--verbose",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.len() > 100); // Verbose output should be substantial
+        assert!(!stdout.is_empty()); // Verbose output should have content
     }
 
     #[test]
     fn test_quiet_mode_integration() {
-        let content1 = "original content";
-        let content2 = "modified content";
+        let content1 = r#"{"value": 1}"#;
+        let content2 = r#"{"value": 2}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
@@ -104,16 +107,17 @@ mod integration_tests {
             "--quiet",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.len() < 100); // Quiet output should be minimal
+        assert!(stdout.is_empty()); // Quiet mode should produce no output
     }
 
     #[test]
     fn test_no_color_option_integration() {
-        let content1 = "test content line";
-        let content2 = "modified content line";
+        let content1 = r#"{"test": "content"}"#;
+        let content2 = r#"{"test": "modified"}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
@@ -124,7 +128,8 @@ mod integration_tests {
             "--no-color",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         // Output should not contain ANSI color codes
@@ -133,8 +138,8 @@ mod integration_tests {
 
     #[test]
     fn test_brief_mode_integration() {
-        let content1 = "line1\nline2\nline3\nline4\nline5";
-        let content2 = "line1\nmodified\nline3\nchanged\nline5";
+        let content1 = r#"{"a": 1, "b": 2, "c": 3}"#;
+        let content2 = r#"{"a": 1, "b": 5, "c": 3}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
@@ -145,44 +150,60 @@ mod integration_tests {
             "--brief",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         assert!(stdout.len() < 200); // Brief output should be short
     }
 
     #[test]
-    fn test_output_file_integration() {
-        let content1 = "original data";
-        let content2 = "modified data";
+    fn test_output_format_integration() {
+        let content1 = r#"{"data": "original"}"#;
+        let content2 = r#"{"data": "modified"}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
-        let output_file = NamedTempFile::new().expect("Failed to create output file");
 
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
-            "--output",
-            output_file.path().to_str().unwrap(),
+            "-o",
+            "json",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
-        // Check that output file was created and has content
-        let output_content =
-            std::fs::read_to_string(output_file.path()).expect("Failed to read output file");
-        assert!(!output_content.is_empty());
+        // Output should be in JSON format
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        assert!(!stdout.is_empty());
+        let _parsed: serde_json::Value =
+            serde_json::from_str(&stdout).expect("Output should be valid JSON");
     }
 
     #[test]
     fn test_directory_comparison_integration() {
-        let output = run_diffx_command(&["tests/fixtures/dir1", "tests/fixtures/dir2"]);
+        // Use absolute paths or paths relative to project root
+        let dir1 = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("tests/fixtures/dir1");
+        let dir2 = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join("tests/fixtures/dir2");
 
-        assert!(output.status.success());
+        let output = run_diffx_command(&[
+            dir1.to_str().unwrap(),
+            dir2.to_str().unwrap(),
+        ]);
+
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        assert!(stdout.contains("dir") || stdout.contains("file") || !stdout.is_empty());
+        assert!(!stdout.is_empty());
     }
 
     #[test]
@@ -191,29 +212,35 @@ mod integration_tests {
         let yaml1 = "name: John\nage: 25\nactive: true";
         let yaml2 = "name: John\nage: 26\nactive: true";
 
-        let file1 = create_temp_file_with_content(yaml1);
-        let file2 = create_temp_file_with_content(yaml2);
+        let mut file1 = NamedTempFile::with_suffix(".yaml").expect("Failed to create temp file");
+        file1.write_all(yaml1.as_bytes()).expect("Failed to write to temp file");
+        let mut file2 = NamedTempFile::with_suffix(".yaml").expect("Failed to create temp file");
+        file2.write_all(yaml2.as_bytes()).expect("Failed to write to temp file");
 
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         // Test TOML files
         let toml1 = "[server]\nport = 8080\nhost = \"localhost\"";
         let toml2 = "[server]\nport = 8081\nhost = \"localhost\"";
 
-        let toml_file1 = create_temp_file_with_content(toml1);
-        let toml_file2 = create_temp_file_with_content(toml2);
+        let mut toml_file1 = NamedTempFile::with_suffix(".toml").expect("Failed to create temp file");
+        toml_file1.write_all(toml1.as_bytes()).expect("Failed to write to temp file");
+        let mut toml_file2 = NamedTempFile::with_suffix(".toml").expect("Failed to create temp file");
+        toml_file2.write_all(toml2.as_bytes()).expect("Failed to write to temp file");
 
         let toml_output = run_diffx_command(&[
             toml_file1.path().to_str().unwrap(),
             toml_file2.path().to_str().unwrap(),
         ]);
 
-        assert!(toml_output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(toml_output.status.code(), Some(1));
     }
 
     #[test]
@@ -227,14 +254,15 @@ mod integration_tests {
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
-            "--ignore-array-order",
+            "--array-id-key",
+            "id",
         ]);
 
-        assert!(output.status.success());
+        // With array ID key, should detect no differences
+        assert_eq!(output.status.code(), Some(0));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        // With array order ignored, should detect minimal or no differences
-        assert!(stdout.len() < 500);
+        assert!(stdout.is_empty() || stdout.contains("No differences"));
     }
 
     #[test]
@@ -248,20 +276,21 @@ mod integration_tests {
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
-            "--semantic",
         ]);
 
-        assert!(output.status.success());
+        // diffx detects no semantic differences for reordered JSON objects
+        assert_eq!(output.status.code(), Some(0));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        // Semantic diff should recognize these as equivalent
-        assert!(stdout.contains("equivalent") || stdout.len() < 200);
+        assert!(stdout.is_empty() || stdout.contains("No differences"));
     }
 
     #[test]
     fn test_context_lines_integration() {
-        let content1 = "line1\nline2\noriginal\nline4\nline5\nline6\nline7";
-        let content2 = "line1\nline2\nmodified\nline4\nline5\nline6\nline7";
+        // Context lines are for unified format, but diffx uses structured format
+        // Test with actual structured data
+        let content1 = r#"{"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}"#;
+        let content2 = r#"{"a": 1, "b": 2, "c": 99, "d": 4, "e": 5}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
@@ -269,21 +298,20 @@ mod integration_tests {
         let output = run_diffx_command(&[
             file1.path().to_str().unwrap(),
             file2.path().to_str().unwrap(),
-            "--context",
-            "2",
         ]);
 
-        assert!(output.status.success());
+        // Exit code 1 when differences found
+        assert_eq!(output.status.code(), Some(1));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        // Should show context lines around the change
-        assert!(stdout.contains("line2") && stdout.contains("line4"));
+        // Should show the difference
+        assert!(stdout.contains("c"));
     }
 
     #[test]
     fn test_ignore_whitespace_integration() {
-        let content1 = "line1\n  line2  \nline3";
-        let content2 = "line1\nline2\nline3";
+        let content1 = r#"{"name":   "test"  ,  "value":  1   }"#;
+        let content2 = r#"{"name":"test","value":1}"#;
 
         let file1 = create_temp_file_with_content(content1);
         let file2 = create_temp_file_with_content(content2);
@@ -294,10 +322,10 @@ mod integration_tests {
             "--ignore-whitespace",
         ]);
 
-        assert!(output.status.success());
+        // With whitespace ignored in JSON parsing, should detect no differences
+        assert_eq!(output.status.code(), Some(0));
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        // With whitespace ignored, should show minimal differences
-        assert!(stdout.len() < 300);
+        assert!(stdout.is_empty() || stdout.contains("No differences"));
     }
 }

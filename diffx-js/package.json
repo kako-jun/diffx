@@ -25,7 +25,7 @@
   "scripts": {
     "build": "napi build --platform --release",
     "build:debug": "napi build --platform",
-    "test": "npm run build && node test.js",
+    "test": "npm run build && cd tests && npm test",
     "examples": "npm run build && npx tsx examples.ts",
     "verify": "npm run build && node -e \"console.log(require('./index.js'))\"",
     "prepublish": "npm run build",

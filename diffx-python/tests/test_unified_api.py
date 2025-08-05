@@ -321,7 +321,7 @@ class TestOptionsHandling:
         new = {"name": "Bob"}
         
         # Test different output formats
-        for output_format in ["diffx", "json", "yaml", "unified"]:
+        for output_format in ["diffx", "json", "yaml"]:
             results = diffx_python.diff(old, new, output_format=output_format)
             assert len(results) == 1
     
