@@ -264,7 +264,7 @@ fn diffx_python(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(diff_py, m)?)?;
 
     // Add version
-    m.add("__version__", "0.5.7")?;
+    m.add("__version__", "0.6.0")?;
 
     Ok(())
 }
