@@ -55,33 +55,33 @@
    - lib.rs は 1153行 → 738行（36%削減、415行削除）
    - コンパイル成功、警告なし
 
-### 4. diff/ モジュールの作成 ⏸️
-**状態**: 未着手
+### 4. diff/ モジュールの作成 🔄
+**状態**: 構造作成完了、関数移動は未着手
 
-**予定構造**:
+**作成したファイル**:
 ```
 diff/
-├── mod.rs          # モジュール宣言
-├── core.rs         # diff()、diff_paths()
-├── arrays.rs       # diff_arrays、diff_arrays_with_id、diff_arrays_by_index
-├── objects.rs      # diff_objects
-└── recursive.rs    # diff_recursive
+├── mod.rs          # モジュール宣言 ✅
+├── core.rs         # diff()、diff_paths() 等（TODOコメント付き）
+├── arrays.rs       # diff_arrays系（TODOコメント付き）
+├── objects.rs      # diff_objects（TODOコメント付き）
+└── recursive.rs    # diff_recursive（TODOコメント付き）
 ```
 
-**抽出元**: lib.rs の 差分検出関数
+**次のステップ**: lib.rsから各関数を抽出して移動
 
-### 5. io/ モジュールの作成 ⏸️
-**状態**: 未着手
+### 5. io/ モジュールの作成 🔄
+**状態**: 構造作成完了、関数移動は未着手
 
-**予定構造**:
+**作成したファイル**:
 ```
 io/
-├── mod.rs          # モジュール宣言
-├── files.rs        # diff_files、ファイル読み込み
-└── directories.rs  # diff_directories、get_all_files_recursive
+├── mod.rs          # モジュール宣言 ✅
+├── files.rs        # ファイル操作（TODOコメント付き）
+└── directories.rs  # get_all_files_recursive（TODOコメント付き）
 ```
 
-**抽出元**: lib.rs のファイル・ディレクトリ操作関数
+**次のステップ**: lib.rsから各関数を抽出して移動
 
 ### 6. diffx-cli のリファクタリング ⏸️
 **状態**: 未着手
@@ -103,11 +103,11 @@ diffx-cli/src/
 **diffx-core**:
 - types.rs: ✅ 100%
 - parser/: ✅ 100%
-- diff/: ⏸️ 0%
-- io/: ⏸️ 0%
-- lib.rs更新: ⏸️ 0%
+- lib.rs更新: ✅ 100% (型定義・パーサー削除、モジュールインポート完了)
+- diff/: 🔄 20% (構造作成完了、関数移動は未着手)
+- io/: 🔄 20% (構造作成完了、関数移動は未着手)
 
-**全体**: 約30% 完了
+**全体**: 約55% 完了
 
 **diffx-cli**: ⏸️ 0%
 
@@ -115,32 +115,31 @@ diffx-cli/src/
 
 ### 即座に実行すべき作業
 
-1. **lib.rs の更新**
-   - モジュール宣言追加
-   - 型定義削除（1-129行）
-   - パーサーコード削除（330-947行）
-   - 公開APIの再エクスポート
+1. **diff/ モジュールへの関数移動**
+   - diff_recursive → diff/recursive.rs
+   - add_diff_result → diff/recursive.rs
+   - diff_objects → diff/objects.rs
+   - diff_arrays系 → diff/arrays.rs
+   - diff_paths、diff、diff_files、diff_directories → diff/core.rs
+   - lib.rsに `mod diff;` と `pub use diff::*;` を追加
    - コンパイル確認
 
-2. **diff/ モジュールの作成**
-   - diff/mod.rs 作成
-   - 差分検出関数を抽出
-   - lib.rs から削除
+2. **io/ モジュールへの関数移動**
+   - get_all_files_recursive → io/directories.rs
+   - lib.rsに `mod io;` と `pub use io::*;` を追加
+   - コンパイル確認
 
-3. **io/ モジュールの作成**
-   - io/mod.rs 作成
-   - ファイル操作関数を抽出
-   - lib.rs から削除
-
-4. **lib.rs の最終整理**
-   - 公開APIのみ残す
+3. **lib.rs の最終整理**
+   - 公開APIのみ残す（diff_paths, diff など）
    - ドキュメントコメント整備
+   - 最終行数: 50-100行程度の予定
 
-5. **コンパイルとテスト**
+4. **コンパイルとテスト**
    - `cargo build --release`
    - 基本動作確認（6フォーマット）
+   - テスト実行
 
-6. **diffx-cli のリファクタリング**
+5. **diffx-cli のリファクタリング**（後で）
    - モジュール分割
    - 同様のアプローチ
 
