@@ -1,9 +1,0 @@
-# diffx Demo Output: version-info
-# Description: Version information
-# Command: diffx --version
-# Generated: Mon Jul 14 03:49:15 PM JST 2025
-# Version: 0.5.3
-
-## Command Output:
-
-diffx 0.5.3
