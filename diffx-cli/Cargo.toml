@@ -35,12 +35,12 @@ tempfile = { workspace = true }
 
 [[test]]
 name = "cli"
-path = "../tests/cli/mod.rs"
+path = "tests/cli/mod.rs"
 
 [[test]]
 name = "docs_examples"
-path = "../tests/docs_examples/mod.rs"
+path = "tests/docs_examples/mod.rs"
 
 [[test]]
 name = "integration"
-path = "../tests/integration/mod.rs"
+path = "tests/integration/mod.rs"
