@@ -1,0 +1,41 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "node",
+      "args": ["${HOME}/.config/mcp-servers/playwright/index.js"],
+      "env": {}
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ]
+    },
+    "ghe": {
+      "command": "node",
+      "args": ["${HOME}/.config/mcp-servers/ghe/index.js"],
+      "env": {
+        "GHE_URL": "http://ghe.nanao.co.jp",
+        "GHE_TOKEN": "${GHE_TOKEN}",
+        "GHE_API_VERSION": "2022-11-28",
+        "NO_PROXY": "localhost,127.0.0.1,ghe.nanao.co.jp",
+        "no_proxy": "localhost,127.0.0.1,ghe.nanao.co.jp"
+      }
+    },
+    "serena": {
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/oraios/serena",
+        "serena", "start-mcp-server",
+        "--context", "ide-assistant",
+        "--project", "."
+      ]
+    }
+  }
+}
