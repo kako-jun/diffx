@@ -170,3 +170,5 @@ github-shared
 tmp/
 temp-*/
 tmp-*/
+# Old/deprecated files
+_*
