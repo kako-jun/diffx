@@ -27,10 +27,4 @@ toml = { workspace = true }
 regex = { workspace = true }
 
 [dev-dependencies]
-criterion = { workspace = true }
 tempfile = { workspace = true }
-
-
-[[bench]]
-name = "diff_benchmark"
-harness = false

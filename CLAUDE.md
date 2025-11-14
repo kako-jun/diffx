@@ -12,28 +12,13 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 - **小出し回答の禁止**: 「確認が必要」「追加質問待ち」の姿勢を取らない
 - **具体例を複数提示**: 動作例・制限例・エラー例を網羅
 - **背景情報も同時提供**: なぜその仕様なのか、他の選択肢との違い
-- **例**: `--context`なら「unified形式専用、CLI/JSON/YAML無効、前後N行表示、具体例3パターン」を一度に報告
-
-## プッシュ前の必須チェック (Pre-Push Requirements)
-**必ずプッシュ前に以下を実行すること:**
-```bash
-./github-shared/rust-cli-kiln/scripts/testing/quick-check.sh
-```
-
-- このスクリプトはGitHub Actions CIと完全に同じ環境・パラメータで実行される
-- 1つでもエラーが発生したら即座に停止する（`set -e`）
-- フォーマット・Clippy・ビルド・テスト・CLI動作確認をすべて実行
-- ローカルで成功 → GitHub CIでも成功が保証される
-- CI失敗によるプッシュのやり直しを防げる
 
 ## コンテキスト効率化ルール (Context Efficiency Rules)
 **CLAUDE.mdは目次として使用し、詳細情報は以下の専用ファイルを参照:**
 
 - **📋 タスクリスト**: `.claude/tasks.md` を参照
-- **🚀 リリース手順**: `github-shared/rust-cli-kiln/release-guide.md` を参照
-- **📊 プロジェクト状況**: `.claude/project-status.md` を参照  
-- **🏗️ アーキテクチャ**: `.claude/architecture.md` を参照
-- **🎯 ロードマップ**: `.claude/roadmap.md` を参照
+- **🔄 リブート計画**: `.claude/reboot/` ディレクトリを参照
+- **📢 マーケティング**: `.claude/marketing/` ディレクトリを参照
 
 **重要**: 詳細が必要な時のみ該当ファイルを読むこと。CLAUDE.md自体は最小限に保つ。
 
@@ -41,50 +26,20 @@ diffx は JSON/YAML/TOMLなどの構造化データに特化した差分抽出�
 
 # 📦 現在の状況 (Current Status)
 
-## 🎯 プロジェクト完成度
-**diffx は設計・実装・テスト・ドキュメント化・マルチプラットフォーム公開が完了**
+## 🎯 リブート中（Phase 2: 真実の特定）
 
-- **✅ 全6フォーマット対応**: JSON/YAML/TOML/XML/INI/CSV
-- **✅ 高度な差分機能**: 構造認識、配列追跡、正規表現フィルタ
-- **✅ UNIX互換CLI**: --context, --ignore-case, --quiet等の標準オプション
-- **✅ 3言語エコシステム**: Rust(crates.io), JavaScript(npm), Python(PyPI)
-- **✅ 2幕リリースワークフロー**: 安定したCI/CD自動公開システム
+**現在の優先順位**: 「仕切り直してからテストが通ること」
 
-## 📦 最新リリース: v0.5.6 (2025-07-16)
-- **🚀 共有CI/CDシステム完成**: workflow_call方式で3プロジェクト統一
-- **📦 プラットフォーム統一**: 全パッケージで5プラットフォーム対応（Linux x86_64/ARM64, Windows x86_64, macOS x86_64/ARM64）
-- **🔧 npmパスエラー修正**: ダウンロードスクリプトのパス問題解決
-- **⚡ CI/CD最適化**: テスト重複削除、ベンチマーク簡素化、信頼性向上
+詳細は `.claude/tasks.md` と `.claude/reboot/` を参照。
 
-## 💻 提供形態
-- **🦀 Rust (crates.io)**: ソースベースコンパイルで最高性能
-- **📦 npm (diffx-js)**: 全プラットフォームバイナリ同梱のユニバーサルパッケージ
-- **🐍 Python (diffx-python)**: maturin製の自己完結型wheel
+## 🚫 信頼できないもの
+- 既存のテスト（29 passed ≠ 正しい仕様）
+- 既存の実装（動く ≠ 正しく動く）
+- 既存のドキュメント（書いてある ≠ 本当にできる）
+
+**合言葉**: 「疑って、確認して、記録する」
 
 ---
-
-# 🚀 開発ガイド (Development Guide)
-
-## リリース手順
-```bash
-# 詳細手順は以下を参照
-cat github-shared/rust-cli-kiln/release-guide.md
-```
-
-## Python環境管理
-```bash
-# 必ずuvでvenv作成
-uv venv && source .venv/bin/activate
-```
-
-## 共有スクリプト利用
-```bash
-# GitHub設定セットアップ（ラベル・ブランチ保護など）
-./github-shared/rust-cli-kiln/scripts/setup/setup-github-workflow.sh
-
-# 3言語ドキュメント整合性チェック
-./github-shared/rust-cli-kiln/scripts/docs/check-docs-consistency.sh
-```
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
