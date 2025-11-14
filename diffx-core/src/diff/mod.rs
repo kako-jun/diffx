@@ -5,7 +5,7 @@ mod arrays;
 mod objects;
 mod recursive;
 
-pub use core::*;
-pub use arrays::*;
-pub use objects::*;
-pub use recursive::*;
+// Re-export for internal use within diffx-core
+pub(crate) use arrays::diff_arrays;
+pub(crate) use objects::diff_objects;
+pub(crate) use recursive::{diff_recursive, add_diff_result};
