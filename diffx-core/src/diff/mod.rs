@@ -5,6 +5,9 @@ mod arrays;
 mod objects;
 mod recursive;
 
+// Re-export public API
+pub use core::{diff_paths, diff};
+
 // Re-export for internal use within diffx-core
 pub(crate) use arrays::diff_arrays;
 pub(crate) use objects::diff_objects;
