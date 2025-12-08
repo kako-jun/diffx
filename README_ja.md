@@ -196,8 +196,37 @@ pip install diffx-python
 
 詳細な使い方とサンプルは [ドキュメント](docs/index_ja.md) をご確認ください。
 
+### シェル補完
+
+Tab補完を有効にしてコマンド入力を快適に：
+
+```bash
+# Bash
+diffx --completions bash > ~/.local/share/bash-completion/completions/diffx
+
+# Zsh
+diffx --completions zsh > ~/.zfunc/_diffx
+
+# Fish
+diffx --completions fish > ~/.config/fish/completions/diffx.fish
+
+# PowerShell
+diffx --completions powershell >> $PROFILE
+```
+
+### マニュアルページ
+
+`man diffx` でマニュアルを参照できます。ビルド時に自動生成されます：
+
+```bash
+# ビルド後、man pageをシステムにインストール
+sudo cp target/release/build/diffx-*/out/man/diffx.1 /usr/local/share/man/man1/
+man diffx
+```
+
 ### クイックドキュメントリンク
 
+- **[実行例（テスト検証済み）](docs/examples/)** - 実際の入出力例
 - **[はじめに](docs/user-guide/getting-started_ja.md)** - 基本を学ぶ
 - **[インストールガイド](docs/user-guide/installation_ja.md)** - プラットフォーム別セットアップ
 - **[CLIリファレンス](docs/reference/cli-reference_ja.md)** - 完全なコマンドリファレンス
