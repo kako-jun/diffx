@@ -4,12 +4,12 @@
 //! 1. Automated regression testing
 //! 2. Living documentation that shows real input/output examples
 //!
-//! The Markdown files in `tests/examples/` can be directly used
-//! in user documentation (like mdBook).
+//! The Markdown files in `docs/examples/` are the source of truth
+//! for user documentation and are verified by these tests.
 
 #[test]
 fn cli_examples() {
     trycmd::TestCases::new()
-        .case("tests/examples/*.md")
+        .case("../docs/examples/*.md")
         .run();
 }
