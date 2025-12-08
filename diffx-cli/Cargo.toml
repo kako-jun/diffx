@@ -32,6 +32,7 @@ regex = { workspace = true }
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
 tempfile = { workspace = true }
+trycmd = "0.15"
 
 [[test]]
 name = "cli"
@@ -44,3 +45,7 @@ path = "tests/docs_examples/mod.rs"
 [[test]]
 name = "integration"
 path = "tests/integration/mod.rs"
+
+[[test]]
+name = "examples"
+path = "tests/examples.rs"
