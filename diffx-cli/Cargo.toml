@@ -18,6 +18,7 @@ rust-version.workspace = true
 diffx-core = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
+clap_complete = "4.5"
 colored = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -27,6 +28,11 @@ toml = { workspace = true }
 walkdir = { workspace = true }
 dirs = { workspace = true }
 regex = { workspace = true }
+
+[build-dependencies]
+clap = { workspace = true }
+clap_mangen = "0.2"
+clap_complete = "4.5"
 
 [dev-dependencies]
 assert_cmd = { workspace = true }

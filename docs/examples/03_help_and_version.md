@@ -14,13 +14,15 @@ diffx 0.6.0
 $ diffx --help
 A diff tool for structured data
 
-Usage: diffx [OPTIONS] <FILE1> <FILE2>
+Usage: diffx [OPTIONS] [FILE1] [FILE2]
 
 Arguments:
-  <FILE1>  The first input file
-  <FILE2>  The second input file
+  [FILE1]  The first input file
+  [FILE2]  The second input file
 
 Options:
+      --completions <SHELL>
+          Generate shell completions for the specified shell [possible values: bash, elvish, fish, powershell, zsh]
   -f, --format <FORMAT>
           Input file format (auto-detected if not specified) [possible values: json, yaml, csv, toml, ini, xml]
   -o, --output <OUTPUT>
