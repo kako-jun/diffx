@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
-use clap::{Parser, ValueEnum};
+use clap::{CommandFactory, Parser, ValueEnum};
+use clap_complete::{generate, Shell};
 use diffx_core::{
     diff, diff_paths, format_diff_output, parse_csv, parse_ini, parse_xml, value_type_name,
     DiffOptions, DiffResult, DiffxSpecificOptions, OutputFormat,
@@ -55,12 +56,16 @@ mod color_utils {
 #[command(version)]
 struct Args {
     /// The first input file
-    #[arg(value_name = "FILE1")]
-    input1: PathBuf,
+    #[arg(value_name = "FILE1", required_unless_present = "completions")]
+    input1: Option<PathBuf>,
 
-    /// The second input file  
-    #[arg(value_name = "FILE2")]
-    input2: PathBuf,
+    /// The second input file
+    #[arg(value_name = "FILE2", required_unless_present = "completions")]
+    input2: Option<PathBuf>,
+
+    /// Generate shell completions for the specified shell
+    #[arg(long, value_enum, value_name = "SHELL")]
+    completions: Option<Shell>,
 
     /// Input file format (auto-detected if not specified)
     #[arg(short, long, value_enum)]
@@ -157,15 +162,28 @@ fn main() {
 
 fn run() -> Result<()> {
     let args = Args::parse();
+
+    // Handle shell completions
+    if let Some(shell) = args.completions {
+        let mut cmd = Args::command();
+        let name = cmd.get_name().to_string();
+        generate(shell, &mut cmd, name, &mut io::stdout());
+        return Ok(());
+    }
+
+    // At this point, input1 and input2 are guaranteed to be present
+    let input1 = args.input1.as_ref().unwrap();
+    let input2 = args.input2.as_ref().unwrap();
+
     let start_time = Instant::now();
 
     // Check for stdin usage
-    let input1_is_stdin = args.input1.to_str() == Some("-");
-    let input2_is_stdin = args.input2.to_str() == Some("-");
+    let input1_is_stdin = input1.to_str() == Some("-");
+    let input2_is_stdin = input2.to_str() == Some("-");
 
     if input1_is_stdin || input2_is_stdin {
         // Handle stdin cases
-        return handle_stdin_input(&args, input1_is_stdin, input2_is_stdin);
+        return handle_stdin_input(&args, input1, input2, input1_is_stdin, input2_is_stdin);
     }
 
     // Build options from CLI arguments
@@ -178,8 +196,8 @@ fn run() -> Result<()> {
         eprintln!("Batch size: {}", args.batch_size.unwrap_or(1000));
 
         // Input file information
-        if let Ok(metadata1) = fs::metadata(&args.input1) {
-            if let Ok(metadata2) = fs::metadata(&args.input2) {
+        if let Ok(metadata1) = fs::metadata(input1) {
+            if let Ok(metadata2) = fs::metadata(input2) {
                 eprintln!("Input file information:");
                 eprintln!("  Input 1 size: {} bytes", metadata1.len());
                 eprintln!("  Input 2 size: {} bytes", metadata2.len());
@@ -215,8 +233,8 @@ fn run() -> Result<()> {
         let mut options_no_filter = options.clone();
         options_no_filter.path_filter = None;
         let unfiltered_results = diff_paths(
-            &args.input1.to_string_lossy(),
-            &args.input2.to_string_lossy(),
+            &input1.to_string_lossy(),
+            &input2.to_string_lossy(),
             Some(&options_no_filter),
         )?;
         Some(unfiltered_results.len())
@@ -225,8 +243,8 @@ fn run() -> Result<()> {
     };
 
     let results = diff_paths(
-        &args.input1.to_string_lossy(),
-        &args.input2.to_string_lossy(),
+        &input1.to_string_lossy(),
+        &input2.to_string_lossy(),
         Some(&options),
     )?;
     let diff_time = parse_start.elapsed();
@@ -243,8 +261,8 @@ fn run() -> Result<()> {
         } else {
             println!(
                 "Files {} and {} differ",
-                args.input1.display(),
-                args.input2.display()
+                input1.display(),
+                input2.display()
             );
         }
         std::process::exit(if results.is_empty() { 0 } else { 1 });
@@ -431,22 +449,28 @@ fn parse_content(content: &str, format: Format) -> Result<Value> {
     }
 }
 
-fn handle_stdin_input(args: &Args, input1_is_stdin: bool, input2_is_stdin: bool) -> Result<()> {
+fn handle_stdin_input(
+    args: &Args,
+    input1: &PathBuf,
+    input2: &PathBuf,
+    input1_is_stdin: bool,
+    input2_is_stdin: bool,
+) -> Result<()> {
     if input1_is_stdin && input2_is_stdin {
         // Case 2 & 3: Both inputs from stdin - read two data sets from stdin
         return handle_both_stdin(args);
     }
 
     // Case 1: One stdin, one file
-    let content1 = read_input(&args.input1)?;
-    let content2 = read_input(&args.input2)?;
+    let content1 = read_input(input1)?;
+    let content2 = read_input(input2)?;
 
     // Determine input format
     let input_format = if let Some(fmt) = args.format {
         fmt
     } else {
-        infer_format_from_path(&args.input1)
-            .or_else(|| infer_format_from_path(&args.input2))
+        infer_format_from_path(input1)
+            .or_else(|| infer_format_from_path(input2))
             .context("Could not infer format from file extensions. Please specify --format.")?
     };
 

@@ -18,6 +18,7 @@ rust-version.workspace = true
 diffx-core = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
+clap_complete = "4.5"
 colored = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -28,10 +29,16 @@ walkdir = { workspace = true }
 dirs = { workspace = true }
 regex = { workspace = true }
 
+[build-dependencies]
+clap = { workspace = true }
+clap_mangen = "0.2"
+clap_complete = "4.5"
+
 [dev-dependencies]
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
 tempfile = { workspace = true }
+trycmd = "0.15"
 
 [[test]]
 name = "cli"
@@ -44,3 +51,7 @@ path = "tests/docs_examples/mod.rs"
 [[test]]
 name = "integration"
 path = "tests/integration/mod.rs"
+
+[[test]]
+name = "examples"
+path = "tests/examples.rs"
