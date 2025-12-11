@@ -2,92 +2,37 @@
 
 最終更新: 2025-12-11
 
-## 🎯 現在の優先順位
+## 🎯 現在の状態
 
-**「仕切り直してからテストが通ること」** → 達成！
+**diffx-core / diffx-cli リブート完了**
 
-次: 仕様の精査とテストの信頼性向上
+- 仕様書作成済み（docs/specs/cli.md, docs/specs/core.md）
+- spec-based テスト作成済み（tests/spec/ - 69テスト）
+- trycmd ドキュメントテスト作成済み（tests/cmd/ - 19テスト）
+- 不要ファイルクリーンアップ済み
 
-## 📋 Phase 2.6: テスト正常化（完了）
+## 📋 残タスク
 
-### 完了項目
-- [x] ハリボテオプション削除（--memory-optimization, --batch-size, --show-unchanged, --show-types）
-- [x] --recursive (-r) 復活
-- [x] テストのfixtureパス修正（../tests/fixtures/ → tests/fixtures/）
-- [x] 全469テスト通過
+### diffx-cli
+- [ ] main.rs 分割（cli/, input/, output/, run.rs）- 任意
 
-### 課題（未解決）
-- [ ] テスト自体が正しい仕様を反映しているか未検証
-- [ ] 7月作成・11月移動のテストの信頼性
-
-## 📋 Phase 2.5: リファクタリング（完了）
-
-### diffx-core のリファクタリング
-- [x] types.rs を抽出（DiffResult, DiffOptions など）
-- [x] parser/ モジュールを作成（6フォーマット + format.rs）
-- [x] lib.rs を更新（モジュールインポート、既存コード削除）
-- [x] diff/ モジュールを作成（差分検出ロジック）
-- [x] io/ モジュールを作成（ファイル・ディレクトリ操作）
-- [x] コンパイル確認
-- [x] 基本動作確認（6フォーマット）
-
-### diffx-cli のリファクタリング（後）
-- [ ] main.rs を分割（cli/, input/, output/, run.rs）
-
-## 📋 Phase 2: 真実の特定（完了）
-
-### 検証済みオプション
-- [x] `--format` ✅
-- [x] `--output json/yaml` ✅
-- [x] `--recursive` ✅（復活）
-- [x] `--path` ✅
-- [x] `--ignore-keys-regex` ✅
-- [x] `--epsilon` ✅
-- [x] `--array-id-key` ✅
-- [x] `--ignore-whitespace` ✅
-- [x] `--ignore-case` ✅
-- [x] `--quiet` ✅
-- [x] `--brief` ✅
-- [x] `--verbose` ✅
-- [x] `--no-color` ✅
-- [x] `--completions` ✅
-
-### 削除済み（ハリボテだった）
-- ~~--memory-optimization~~
-- ~~--batch-size~~
-- ~~--show-unchanged~~
-- ~~--show-types~~
-- ~~--context~~
-
-## 🔧 Phase 3: 仕様精査（次）
-
-### 目標
-- [ ] 各オプションの正確な動作を文書化
-- [ ] テストが仕様を正しく反映しているか検証
-- [ ] 不正確なテストの修正
-
-## ⏳ 後回し
-
-### GitHub Actions簡素化
-- [ ] Rust専用のCI/CD
-- [ ] `rust-ci.yml` 作成
-
-### 新しいREADME
-- [ ] README_ja.md のみ（英語は後）
-- [ ] 確認済み機能のみ記載
-
-### マーケティング
-- [ ] Product Hunt投稿
-- [ ] Hacker News投稿
-（`.claude/marketing/plan.md` 参照）
+### npm/pip パッケージ
+- [ ] diffx-js リブート
+- [ ] diffx-python リブート
 
 ## 📊 完了済み
 
-### 2025-12-11
-- [x] ハリボテオプション4つ削除
-- [x] --recursive 復活
-- [x] テストパス修正
-- [x] 全テスト通過（469 passed, 2 ignored）
+### 2025-12-11（リブート完了）
+- [x] 仕様書作成（docs/specs/cli.md, docs/specs/core.md）
+- [x] 古いテスト削除（436テスト、8022行）
+- [x] spec-based テスト作成（69テスト）
+- [x] trycmd ドキュメントテスト作成（19テスト）
+- [x] docs/examples/ 削除（嘘だらけ）
+- [x] README_ja.md 修正
+- [x] Cargo.lock をバージョン管理に追加
+- [x] .claude/reboot/ 削除
+- [x] .claude/marketing/ 削除
+- [x] リブートノウハウ記録（.claude/reboot-knowhow.md）
 
 ### 2025-11-14
 - [x] Phase 2.5 リファクタリング完了
@@ -95,5 +40,5 @@
 
 ---
 
-**合言葉**: 「疑って、確認して、記録する」
-**次のステップ**: 仕様精査、テストの信頼性向上
+**次のプロジェクト**: diffx-js, diffx-python, lawkit, diffai
+**参考**: `.claude/reboot-knowhow.md`
