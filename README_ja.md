@@ -1,22 +1,16 @@
 # diffx
 
-> **🚀 構造化データの意味的差分 - フォーマットではなく本質に集中**
-
-[English README](README.md) | [日本語版 README](README_ja.md) | [中文版 README](README_zh.md)
-
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
-[![Crates.io CLI](https://img.shields.io/crates/v/diffx.svg?label=diffx-cli)](https://crates.io/crates/diffx)
-[![Docs.rs Core](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
-[![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
-[![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
-[![Documentation](https://img.shields.io/badge/📚%20Specs-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/specs/)
-[![API Reference](https://img.shields.io/badge/🔧%20API%20Reference-docs.rs-blue)](https://docs.rs/diffx-core)
+[![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-データの**構造**と**意味**を理解する次世代diffツール。テキストの変更ではなく、本質的な差分を抽出。JSON、YAML、TOML、XML、INI、CSVファイルに最適。
+構造化データ（JSON/YAML/TOML/XML/INI/CSV）の意味的差分ツール。キー順序や空白を無視し、本質的な変更のみを表示。
+
+## なぜ diffx？
+
+従来の `diff` は構造を理解しません：
 
 ```bash
-# 従来のdiffはフォーマットのノイズを表示（キー順序、ケツカンマなど）
 $ diff config_v1.json config_v2.json
 < {
 <   "name": "myapp",
@@ -26,312 +20,83 @@ $ diff config_v1.json config_v2.json
 >   "version": "1.1",
 >   "name": "myapp"
 > }
+```
 
-# diffxは意味的な変更のみを表示
+キーの順序が変わっただけで全行が差分として表示されます。
+
+`diffx` は意味的な変更だけを表示：
+
+```bash
 $ diffx config_v1.json config_v2.json
 ~ version: "1.0" -> "1.1"
 ```
 
-## ✨ 主な特徴
-
-- **🎯 意味的認識**: フォーマット、キー順序、空白、ケツカンマを無視
-- **🔧 多様なフォーマット**: JSON、YAML、TOML、XML、INI、CSV対応
-- **🤖 AI対応**: 自動化やAI分析に最適なクリーンなCLI出力
-- **⚡ 高速**: Rustで構築された最大限のパフォーマンス
-- **🔗 メタチェイン**: 差分レポートを比較して変更の進化を追跡
-
-## 📊 性能
-
-AMD Ryzen 5 PRO 4650Uでの実測ベンチマーク結果：
+## インストール
 
 ```bash
-# テストファイル: ネストした設定を含む約600バイトのJSON
-$ time diff large_test1.json large_test2.json  # 15行以上のノイズを表示
-$ time diffx large_test1.json large_test2.json # 3つの意味的変更を表示
-
-# 結果:
-従来のdiff: ~0.002秒（フォーマットノイズあり）
-diffx:      ~0.005秒（クリーンな意味的出力）
-```
-
-**AI時代にCLIが重要な理由**: AI ツールが開発ワークフローに不可欠になる中、構造化された機械可読な差分出力が重要になります。`diffx`はAIが理解し推論できるクリーンで解析可能な結果を提供し、自動コードレビュー、設定管理、インテリジェントなデプロイメントパイプラインに最適です。
-
-## diffxを使う理由
-
-従来の`diff`は見た目の変更をたくさん表示します。`diffx`は本当に変わった部分だけを教えてくれます。
-
-- **意味に注目**: キーの順序や空白、フォーマットを無視
-- **多様な形式**: JSON、YAML、TOML、XML、INI、CSVに対応  
-- **きれいな出力**: 人間にもスクリプトにもAIにも優しい
-
-## 仕様（Specification）
-
-### 対応フォーマット
-
-- JSON
-- YAML
-- TOML
-- XML
-- INI
-- CSV
-
-### 差分の種類
-
-- キーの追加・削除
-- 値の変更
-- 配列の挿入・削除・変更
-- ネスト構造の差分
-- 値の型変更
-
-### 出力形式
-
-`diffx`は、構造化データの差分を最も豊かに表現できる独自のCLI表示形式を推奨しますが、特定のユースケースや既存ツールとの連携のために、以下の代替出力形式もサポートします。
-
-- **推奨CLI表示 (デフォルト)**
-    *   構造的な差分（追加、変更、削除、型変更など）を人間が理解しやすいように、ユニバーサルデザインに配慮した色分けや記号、インデントを用いて明確に表示する独自形式です。
-    *   `+` (追加), `-` (削除), `~` (変更), `!` (型変更) の記号と、青、黄、シアン、マゼンタの色で差分を表現します。
-    *   **特徴**: データの意味的な変更に焦点を当て、キーの順序や空白の変更は無視します。これが `diffx` の核となる価値です。
-
-- **JSON形式**
-    *   機械可読な形式です。CI/CDや他のプログラムとの連携に利用します。
-    *   `diffx` の検出した差分がJSON配列として出力されます。
-
-- **YAML形式**
-    *   機械可読な形式です。JSONと同様にプログラムとの連携に利用します。
-    *   `diffx` の検出した差分がYAML配列として出力されます。
-
-
-## 🏗️ アーキテクチャ
-
-### システム概要
-
-```mermaid
-graph TB
-    subgraph Core["diffx-core"]
-        B[フォーマットパーサー]
-        C[意味的差分エンジン]
-        D[出力フォーマッター]
-        B --> C --> D
-    end
-
-    E[CLIツール] --> Core
-    F[NPMパッケージ] --> E
-    G[Pythonパッケージ] --> E
-
-    H[JSON] --> B
-    I[YAML] --> B
-    J[TOML] --> B
-    K[XML] --> B
-    L[INI] --> B
-    M[CSV] --> B
-
-    D --> N[CLI表示]
-    D --> O[JSON出力]
-    D --> P[YAML出力]
-```
-
-### プロジェクト構造
-
-```
-diffx/
-├── diffx-core/          # 差分抽出ライブラリ（Crate）
-│   ├── src/             # ライブラリソース
-│   └── tests/           # ユニットテスト
-├── diffx-cli/           # CLIラッパー
-│   ├── src/             # CLIソース
-│   └── tests/           # 統合テスト・fixtures
-├── docs/specs/          # 仕様書
-└── ...
-```
-
-### 技術スタック
-
-- **Rust**（高速・安全・クロスプラットフォーム）
-- `serde_json`, `serde_yml`, `toml`, `configparser`, `quick-xml`, `csv` パーサー
-- `clap`（CLI引数解析）
-- `colored`（CLI出力の色付け）
-
-## 🔗 メタチェイン
-
-差分レポートを比較して、変更の進化を時系列で追跡：
-
-```mermaid
-graph LR
-    A[config_v1.json] --> D1[diffx]
-    B[config_v2.json] --> D1
-    D1 --> R1[diff_report_v1.json]
-
-    B --> D2[diffx]
-    C[config_v3.json] --> D2
-    D2 --> R2[diff_report_v2.json]
-
-    R1 --> D3[diffx]
-    R2 --> D3
-    D3 --> M[メタ差分レポート]
-```
-
-```bash
-$ diffx config_v1.json config_v2.json --output json > report1.json
-$ diffx config_v2.json config_v3.json --output json > report2.json
-$ diffx report1.json report2.json  # 変更の変更を比較！
-```
-
-## 🚀 クイックスタート
-
-### インストール
-
-```bash
-# Rust（推奨 - ネイティブパフォーマンス）
+# CLIツールとして
 cargo install diffx
 
-# Node.jsエコシステム（⚡ 全プラットフォームバイナリ同梱でオフライン対応）
-npm install diffx-js
-
-# Pythonエコシステム（🆕 バイナリ埋め込みの完全自己完結型wheel）
-pip install diffx-python
-
-# またはGitHub Releasesから事前ビルド済みバイナリをダウンロード
+# ライブラリとして（Cargo.toml）
+[dependencies]
+diffx-core = "0.6"
 ```
 
-詳細な使い方は [CLI仕様書](docs/specs/cli.md) をご確認ください。
-
-### シェル補完
-
-Tab補完を有効にしてコマンド入力を快適に：
+## 使い方
 
 ```bash
-# Bash
-diffx --completions bash > ~/.local/share/bash-completion/completions/diffx
-
-# Zsh
-diffx --completions zsh > ~/.zfunc/_diffx
-
-# Fish
-diffx --completions fish > ~/.config/fish/completions/diffx.fish
-
-# PowerShell
-diffx --completions powershell >> $PROFILE
-```
-
-### マニュアルページ
-
-`man diffx` でマニュアルを参照できます。ビルド時に自動生成されます：
-
-```bash
-# ビルド後、man pageをシステムにインストール
-sudo cp target/release/build/diffx-*/out/man/diffx.1 /usr/local/share/man/man1/
-man diffx
-```
-
-### ドキュメント
-
-- **[CLI仕様書](docs/specs/cli.md)** - コマンドラインオプション、終了コード、出力形式
-- **[Core API仕様書](docs/specs/core.md)** - ライブラリAPI、型定義、アルゴリズム
-- **[実行例](diffx-cli/tests/cmd/)** - テスト検証済みの実際の入出力例
-
-### 基本的な使い方
-
-```bash
-# JSONファイルを比較
+# 基本
 diffx file1.json file2.json
 
-# 異なる出力形式で比較
-diffx config.yaml config_new.yaml --output json
-diffx data.toml data_updated.toml --output yaml
-
-# 高度なフィルタリングオプション
-diffx large.json large_v2.json --ignore-keys-regex "^timestamp$|^_.*"
-diffx users.json users_v2.json --array-id-key "id"
-diffx metrics.json metrics_v2.json --epsilon 0.001
-
-# 高需要な実用的オプション
-diffx config.yaml config_new.yaml --ignore-case          # 大文字小文字の違いを無視
-diffx api.json api_formatted.json --ignore-whitespace    # 空白の変更を無視
-diffx large.json large_v2.json --output json              # 自動化用のJSON出力
-diffx file1.json file2.json --quiet && echo "ファイルが同じ"  # スクリプト自動化
-diffx -r dir1/ dir2/ --brief                            # 高速ディレクトリ変更チェック
-
-# 大きなファイルの性能最適化
-diffx huge_dataset.json huge_dataset_v2.json
-# ディレクトリ比較（-r オプション必須）
-diffx -r config_dir1/ config_dir2/
-
-# 変更追跡のメタチェイニング
-diffx config_v1.json config_v2.json --output json > diff1.json
-diffx config_v2.json config_v3.json --output json > diff2.json
-diffx diff1.json diff2.json  # 変更の変更を比較！
+# 出力例
+~ version: "1.0" -> "1.1"
++ features[0]: "new-feature"
+- deprecated: "old-value"
 ```
 
-### 統合例
+## 対応フォーマット
 
-**CI/CDパイプライン：**
+JSON, YAML, TOML, XML, INI, CSV（拡張子で自動判定、`--format` で明示指定可）
 
-```yaml
-- name: 設定変更のチェック
-  run: |
-    diffx config/prod.yaml config/staging.yaml --output json > changes.json
-    # デプロイ検証のためにchanges.jsonを処理
-
-- name: 高速ファイル変更検知
-  run: |
-    if ! diffx config/current.json config/new.json --quiet; then
-      echo "設定が変更されました、デプロイを開始します"
-    fi
-
-- name: クリーンな差分のための無視オプション付き比較
-  run: |
-    diffx api_old.json api_new.json --ignore-case --ignore-whitespace --output json > api_changes.json
-    # フォーマットを無視し、意味的変更に集中
-
-- name: 大きなデータセットの効率的比較
-  run: |
-    diffx large_prod_data.json large_staging_data.json --output json > data_changes.json
-    # CIでの大きなファイルの最適化処理
-```
-
-**Gitフック：**
+## 主なオプション
 
 ```bash
-#!/bin/bash
-# pre-commitフック - 前回コミットと比較
-git show HEAD~1:package.json > /tmp/package_old.json 2>/dev/null || exit 0
-if diffx /tmp/package_old.json package.json --output json | jq -e '.[] | select(.Added)' > /dev/null; then
-  echo "新しい依存関係が検出されました、セキュリティ監査を実行中..."
+--output json|yaml       # 機械可読な出力
+--quiet                  # 差分有無を終了コードのみで返す（0:同じ, 1:差分あり）
+--ignore-keys-regex RE   # 正規表現にマッチするキーを無視
+--array-id-key KEY       # 配列要素をKEYで識別して比較
+--epsilon N              # 浮動小数点の許容誤差
+--ignore-case            # 大文字小文字を無視
+--ignore-whitespace      # 空白の違いを無視
+-r, --recursive          # ディレクトリを再帰比較
+```
+
+## 出力記号
+
+- `+` 追加
+- `-` 削除
+- `~` 変更
+- `!` 型変更
+
+## CI/CDでの活用
+
+```bash
+# 設定ファイルの変更検知
+if ! diffx config/prod.json config/staging.json --quiet; then
+  echo "設定が変更されています"
+  diffx config/prod.json config/staging.json --output json > changes.json
 fi
+
+# タイムスタンプやメタデータを無視して比較
+diffx api_v1.json api_v2.json --ignore-keys-regex "^(timestamp|updated_at)$"
 ```
 
-## 🌍 多言語サポート
+## ドキュメント
 
-diffxは複数のエコシステムで利用可能：
+- [CLI仕様書](docs/specs/cli.md)
+- [Core API仕様書](docs/specs/core.md)
+- [実行例](diffx-cli/tests/cmd/)
 
-```bash
-# Rust（ネイティブCLI）
-cargo install diffx
+## ライセンス
 
-# Node.jsラッパー
-npm install diffx-js
-
-# Pythonラッパー
-pip install diffx-python
-```
-
-すべてのパッケージは同じ意味的差分機能を提供します：
-- **Rust**: ソースベースのコンパイル
-- **npm**: 全プラットフォームバイナリ同梱のユニバーサルパッケージ（オフライン対応）
-- **Python**: バイナリ埋め込みの自己完結型wheel
-
-## 🔮 将来の計画
-
-- **インタラクティブTUI (`diffx-tui`)**: diffxの機能を示すパワフルなビューアーで、サイドバイサイドのデータ表示
-- **AIエージェント統合**: 自動差分要約と説明
-- **Web UI版** (`diffx-web`)
-- **VSCode拡張** (`diffx-vscode`)
-- **高度なCI/CDテンプレート**: 一般的なユースケース向けの事前構築済みワークフロー
-
-## 🤝 コントリビューション
-
-コントリビューションを歓迎します！詳細は [CONTRIBUTING.md](CONTRIBUTING.md) をご確認ください。
-
-## 📄 ライセンス
-
-MIT License - 詳細は [LICENSE](LICENSE) をご確認ください。
+MIT
