@@ -79,10 +79,7 @@ fn exit_1_with_quiet_option() {
 
 #[test]
 fn exit_2_missing_arguments() {
-    diffx()
-        .assert()
-        .failure()
-        .code(2);
+    diffx().assert().failure().code(2);
 }
 
 #[test]

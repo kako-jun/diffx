@@ -1,13 +1,17 @@
 // Recursive diff functions
 
-use crate::{DiffResult, DiffOptions, value_type_name};
+use crate::{value_type_name, DiffOptions, DiffResult};
 use serde_json::Value;
 
 // Import diff_objects and diff_arrays from sibling modules
-use super::{diff_objects, diff_arrays};
+use super::{diff_arrays, diff_objects};
 
 // Helper function to add result with path filtering
-pub(crate) fn add_diff_result(result: DiffResult, results: &mut Vec<DiffResult>, options: &DiffOptions) {
+pub(crate) fn add_diff_result(
+    result: DiffResult,
+    results: &mut Vec<DiffResult>,
+    options: &DiffOptions,
+) {
     // Apply path filter if specified
     if let Some(filter) = &options.path_filter {
         let path = match &result {

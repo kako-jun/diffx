@@ -76,8 +76,16 @@ fn option_epsilon_applies_to_integers() {
 
 #[test]
 fn option_ignore_keys_regex_simple() {
-    std::fs::write("/tmp/ignore1.json", r#"{"name": "Alice", "timestamp": "2024-01-01"}"#).unwrap();
-    std::fs::write("/tmp/ignore2.json", r#"{"name": "Alice", "timestamp": "2024-12-31"}"#).unwrap();
+    std::fs::write(
+        "/tmp/ignore1.json",
+        r#"{"name": "Alice", "timestamp": "2024-01-01"}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        "/tmp/ignore2.json",
+        r#"{"name": "Alice", "timestamp": "2024-12-31"}"#,
+    )
+    .unwrap();
 
     diffx()
         .arg("--ignore-keys-regex")
@@ -92,8 +100,16 @@ fn option_ignore_keys_regex_simple() {
 #[test]
 fn option_ignore_keys_regex_nested() {
     // Spec: recursively applied to nested objects
-    std::fs::write("/tmp/nested1.json", r#"{"data": {"timestamp": "old", "value": 1}}"#).unwrap();
-    std::fs::write("/tmp/nested2.json", r#"{"data": {"timestamp": "new", "value": 1}}"#).unwrap();
+    std::fs::write(
+        "/tmp/nested1.json",
+        r#"{"data": {"timestamp": "old", "value": 1}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        "/tmp/nested2.json",
+        r#"{"data": {"timestamp": "new", "value": 1}}"#,
+    )
+    .unwrap();
 
     diffx()
         .arg("--ignore-keys-regex")
@@ -107,8 +123,16 @@ fn option_ignore_keys_regex_nested() {
 
 #[test]
 fn option_ignore_keys_regex_multiple_patterns() {
-    std::fs::write("/tmp/multi1.json", r#"{"name": "A", "created_at": "x", "updated_at": "y"}"#).unwrap();
-    std::fs::write("/tmp/multi2.json", r#"{"name": "A", "created_at": "a", "updated_at": "b"}"#).unwrap();
+    std::fs::write(
+        "/tmp/multi1.json",
+        r#"{"name": "A", "created_at": "x", "updated_at": "y"}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        "/tmp/multi2.json",
+        r#"{"name": "A", "created_at": "a", "updated_at": "b"}"#,
+    )
+    .unwrap();
 
     diffx()
         .arg("--ignore-keys-regex")
@@ -127,8 +151,16 @@ fn option_ignore_keys_regex_multiple_patterns() {
 #[test]
 fn option_array_id_key_reorder_no_diff() {
     // Same elements in different order should have no diff
-    std::fs::write("/tmp/arr1.json", r#"[{"id": 1, "name": "A"}, {"id": 2, "name": "B"}]"#).unwrap();
-    std::fs::write("/tmp/arr2.json", r#"[{"id": 2, "name": "B"}, {"id": 1, "name": "A"}]"#).unwrap();
+    std::fs::write(
+        "/tmp/arr1.json",
+        r#"[{"id": 1, "name": "A"}, {"id": 2, "name": "B"}]"#,
+    )
+    .unwrap();
+    std::fs::write(
+        "/tmp/arr2.json",
+        r#"[{"id": 2, "name": "B"}, {"id": 1, "name": "A"}]"#,
+    )
+    .unwrap();
 
     diffx()
         .arg("--array-id-key")
@@ -159,8 +191,16 @@ fn option_array_id_key_with_changes() {
 #[test]
 fn option_array_id_key_fallback_to_index() {
     // Elements without ID fall back to index comparison
-    std::fs::write("/tmp/arr_noid1.json", r#"[{"id": 1, "x": 1}, {"name": "NoID"}]"#).unwrap();
-    std::fs::write("/tmp/arr_noid2.json", r#"[{"id": 1, "x": 1}, {"name": "Changed"}]"#).unwrap();
+    std::fs::write(
+        "/tmp/arr_noid1.json",
+        r#"[{"id": 1, "x": 1}, {"name": "NoID"}]"#,
+    )
+    .unwrap();
+    std::fs::write(
+        "/tmp/arr_noid2.json",
+        r#"[{"id": 1, "x": 1}, {"name": "Changed"}]"#,
+    )
+    .unwrap();
 
     diffx()
         .arg("--array-id-key")
@@ -269,8 +309,16 @@ fn option_ignore_case_without_flag() {
 
 #[test]
 fn option_path_filter() {
-    std::fs::write("/tmp/path1.json", r#"{"database": {"host": "a"}, "cache": {"ttl": 1}}"#).unwrap();
-    std::fs::write("/tmp/path2.json", r#"{"database": {"host": "b"}, "cache": {"ttl": 2}}"#).unwrap();
+    std::fs::write(
+        "/tmp/path1.json",
+        r#"{"database": {"host": "a"}, "cache": {"ttl": 1}}"#,
+    )
+    .unwrap();
+    std::fs::write(
+        "/tmp/path2.json",
+        r#"{"database": {"host": "b"}, "cache": {"ttl": 2}}"#,
+    )
+    .unwrap();
 
     let output = diffx()
         .arg("--path")
@@ -281,8 +329,11 @@ fn option_path_filter() {
         .unwrap();
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("database") || stdout.contains("host"),
-            "Should show database changes: {}", stdout);
+    assert!(
+        stdout.contains("database") || stdout.contains("host"),
+        "Should show database changes: {}",
+        stdout
+    );
     // cache changes should be filtered out
 }
 

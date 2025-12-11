@@ -1,12 +1,12 @@
 // Module declarations
-mod types;
-mod parser;
 mod diff;
 mod io;
+mod parser;
+mod types;
 mod utils;
 
 // Re-export public APIs
-pub use types::*;
+pub use diff::{diff, diff_paths};
 pub use parser::*;
-pub use diff::{diff_paths, diff};
+pub use types::*;
 pub use utils::*;

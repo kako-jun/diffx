@@ -1,8 +1,8 @@
 // Object diff functions
 
-use crate::{DiffResult, DiffOptions};
-use serde_json::Value;
 use super::{add_diff_result, diff_recursive};
+use crate::{DiffOptions, DiffResult};
+use serde_json::Value;
 
 pub(crate) fn diff_objects(
     old_obj: &serde_json::Map<String, Value>,

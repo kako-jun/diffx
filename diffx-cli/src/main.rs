@@ -243,11 +243,7 @@ fn run() -> Result<()> {
         if results.is_empty() {
             // Brief mode: no output when files are identical (unless verbose)
         } else {
-            println!(
-                "Files {} and {} differ",
-                input1.display(),
-                input2.display()
-            );
+            println!("Files {} and {} differ", input1.display(), input2.display());
         }
         std::process::exit(if results.is_empty() { 0 } else { 1 });
     }

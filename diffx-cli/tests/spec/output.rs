@@ -87,8 +87,11 @@ fn output_json_valid_syntax() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Should be valid JSON
-    assert!(serde_json::from_str::<serde_json::Value>(&stdout).is_ok(),
-            "Output should be valid JSON: {}", stdout);
+    assert!(
+        serde_json::from_str::<serde_json::Value>(&stdout).is_ok(),
+        "Output should be valid JSON: {}",
+        stdout
+    );
 }
 
 #[test]
@@ -103,8 +106,11 @@ fn output_json_no_diff() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Empty array for no differences
-    assert!(stdout.trim() == "[]" || stdout.trim().is_empty(),
-            "No diff should output empty array: {}", stdout);
+    assert!(
+        stdout.trim() == "[]" || stdout.trim().is_empty(),
+        "No diff should output empty array: {}",
+        stdout
+    );
 }
 
 // =============================================================================
@@ -139,8 +145,11 @@ fn output_no_color() {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Should not contain ANSI escape sequences
-    assert!(!stdout.contains("\x1b["),
-            "Output should not contain ANSI codes: {}", stdout);
+    assert!(
+        !stdout.contains("\x1b["),
+        "Output should not contain ANSI codes: {}",
+        stdout
+    );
 }
 
 // =============================================================================

@@ -1,7 +1,7 @@
 // Core diff functions: diff_paths, diff, diff_files, diff_directories
 
+use crate::{detect_format_from_path, parse_content_by_format, DiffOptions, DiffResult};
 use anyhow::{anyhow, Result};
-use crate::{DiffResult, DiffOptions, detect_format_from_path, parse_content_by_format};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
@@ -24,9 +24,7 @@ pub fn diff_paths(
     let path1 = Path::new(old_path);
     let path2 = Path::new(new_path);
 
-    let recursive = options
-        .and_then(|o| o.recursive)
-        .unwrap_or(false);
+    let recursive = options.and_then(|o| o.recursive).unwrap_or(false);
 
     match (path1.is_dir(), path2.is_dir()) {
         (true, true) => {

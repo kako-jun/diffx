@@ -1,9 +1,9 @@
 // Array diff functions
 
-use crate::{DiffResult, DiffOptions};
+use super::diff_recursive;
+use crate::{DiffOptions, DiffResult};
 use serde_json::Value;
 use std::collections::HashMap;
-use super::diff_recursive;
 
 pub(crate) fn diff_arrays(
     old_arr: &[Value],

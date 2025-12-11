@@ -1,6 +1,4 @@
 #[test]
 fn cli_tests() {
-    trycmd::TestCases::new()
-        .case("tests/cmd/*.md")
-        .run();
+    trycmd::TestCases::new().case("tests/cmd/*.md").run();
 }

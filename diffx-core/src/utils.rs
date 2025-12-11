@@ -2,10 +2,10 @@
 // These functions are public only for CLI and language bindings.
 // External users should use the main diff() function.
 
+use crate::{DiffOptions, DiffResult, OutputFormat};
 use anyhow::{anyhow, Result};
 use serde::Serialize;
 use serde_json::Value;
-use crate::{DiffResult, DiffOptions, OutputFormat};
 
 /// Get type name of a JSON value - FOR INTERNAL USE ONLY
 pub fn value_type_name(value: &Value) -> &str {
