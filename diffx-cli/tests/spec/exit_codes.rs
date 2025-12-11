@@ -16,7 +16,7 @@ fn diffx() -> Command {
 }
 
 fn fixtures(name: &str) -> String {
-    format!("tests/fixtures/{}", name)
+    format!("tests/fixtures/{name}")
 }
 
 // =============================================================================

@@ -38,14 +38,10 @@ pub fn diff_paths(
         }
         (false, false) => diff_files(path1, path2, options),
         (true, false) => Err(anyhow!(
-            "Cannot compare directory '{}' with file '{}'",
-            old_path,
-            new_path
+            "Cannot compare directory '{old_path}' with file '{new_path}'"
         )),
         (false, true) => Err(anyhow!(
-            "Cannot compare file '{}' with directory '{}'",
-            old_path,
-            new_path
+            "Cannot compare file '{old_path}' with directory '{new_path}'"
         )),
     }
 }

@@ -16,7 +16,7 @@ fn diffx() -> Command {
 }
 
 fn fixtures(name: &str) -> String {
-    format!("tests/fixtures/{}", name)
+    format!("tests/fixtures/{name}")
 }
 
 // =============================================================================
@@ -331,8 +331,7 @@ fn option_path_filter() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(
         stdout.contains("database") || stdout.contains("host"),
-        "Should show database changes: {}",
-        stdout
+        "Should show database changes: {stdout}"
     );
     // cache changes should be filtered out
 }

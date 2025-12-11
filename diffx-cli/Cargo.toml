@@ -39,6 +39,7 @@ assert_cmd = { workspace = true }
 predicates = { workspace = true }
 tempfile = { workspace = true }
 trycmd = "0.15"
+cargo-husky = { workspace = true }
 
 # Specification-based tests
 [[test]]

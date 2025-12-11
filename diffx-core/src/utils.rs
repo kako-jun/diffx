@@ -23,9 +23,9 @@ pub fn value_type_name(value: &Value) -> &str {
 pub fn format_output<T: Serialize>(results: &[T], format: OutputFormat) -> Result<String> {
     match format {
         OutputFormat::Json => serde_json::to_string_pretty(results)
-            .map_err(|e| anyhow!("JSON serialization error: {}", e)),
+            .map_err(|e| anyhow!("JSON serialization error: {e}")),
         OutputFormat::Yaml => {
-            serde_yaml::to_string(results).map_err(|e| anyhow!("YAML serialization error: {}", e))
+            serde_yaml::to_string(results).map_err(|e| anyhow!("YAML serialization error: {e}"))
         }
         OutputFormat::Diffx => {
             let mut output = String::new();
@@ -47,7 +47,7 @@ pub fn format_diff_output(
 ) -> Result<String> {
     match format {
         OutputFormat::Json => serde_json::to_string_pretty(results)
-            .map_err(|e| anyhow!("JSON serialization error: {}", e)),
+            .map_err(|e| anyhow!("JSON serialization error: {e}")),
         OutputFormat::Yaml => {
             let mut output = String::new();
             for result in results {

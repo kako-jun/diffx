@@ -15,7 +15,7 @@ fn diffx() -> Command {
 }
 
 fn fixtures(name: &str) -> String {
-    format!("tests/fixtures/{}", name)
+    format!("tests/fixtures/{name}")
 }
 
 // =============================================================================
@@ -89,8 +89,7 @@ fn output_json_valid_syntax() {
     // Should be valid JSON
     assert!(
         serde_json::from_str::<serde_json::Value>(&stdout).is_ok(),
-        "Output should be valid JSON: {}",
-        stdout
+        "Output should be valid JSON: {stdout}"
     );
 }
 
@@ -108,8 +107,7 @@ fn output_json_no_diff() {
     // Empty array for no differences
     assert!(
         stdout.trim() == "[]" || stdout.trim().is_empty(),
-        "No diff should output empty array: {}",
-        stdout
+        "No diff should output empty array: {stdout}"
     );
 }
 
@@ -147,8 +145,7 @@ fn output_no_color() {
     // Should not contain ANSI escape sequences
     assert!(
         !stdout.contains("\x1b["),
-        "Output should not contain ANSI codes: {}",
-        stdout
+        "Output should not contain ANSI codes: {stdout}"
     );
 }
 

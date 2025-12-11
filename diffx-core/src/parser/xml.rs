@@ -126,7 +126,7 @@ pub fn parse_xml(content: &str) -> Result<Value> {
                 }
             }
             Ok(Event::Eof) => break,
-            Err(e) => return Err(anyhow!("XML parsing error: {}", e)),
+            Err(e) => return Err(anyhow!("XML parsing error: {e}")),
             _ => {}
         }
     }

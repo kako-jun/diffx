@@ -52,6 +52,7 @@ tempfile = "3.0"
 assert_cmd = "2.0"
 predicates = "3.1"
 criterion = { version = "0.5", features = ["html_reports"] }
+cargo-husky = { version = "1.5", default-features = false, features = ["precommit-hook", "run-cargo-fmt", "run-cargo-clippy"] }
 pyo3 = { version = "0.22", features = ["extension-module"] }
 napi = { version = "2.2", default-features = false, features = ["napi8", "serde-json"] }
 napi-derive = "2.2"

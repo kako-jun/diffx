@@ -11,14 +11,13 @@
 //! | CSV | .csv |
 
 use assert_cmd::Command;
-use predicates::prelude::*;
 
 fn diffx() -> Command {
     Command::cargo_bin("diffx").unwrap()
 }
 
 fn fixtures(name: &str) -> String {
-    format!("tests/fixtures/{}", name)
+    format!("tests/fixtures/{name}")
 }
 
 // =============================================================================

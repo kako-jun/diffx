@@ -90,7 +90,7 @@ impl OutputFormat {
             "diffx" => Ok(Self::Diffx),
             "json" => Ok(Self::Json),
             "yaml" | "yml" => Ok(Self::Yaml),
-            _ => Err(anyhow!("Invalid output format: {}", s)),
+            _ => Err(anyhow!("Invalid output format: {s}")),
         }
     }
 }
