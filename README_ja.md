@@ -227,6 +227,7 @@ man diffx
 
 - **[CLI仕様書](docs/specs/cli.md)** - コマンドラインオプション、終了コード、出力形式
 - **[Core API仕様書](docs/specs/core.md)** - ライブラリAPI、型定義、アルゴリズム
+- **[実行例](diffx-cli/tests/cmd/)** - テスト検証済みの実際の入出力例
 
 ### 基本的な使い方
 
