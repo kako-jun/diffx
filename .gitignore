@@ -3,7 +3,6 @@
 **/target/
 **/*.rs.bk
 *.pdb
-Cargo.lock
 
 # === IDEs ===
 .idea/
