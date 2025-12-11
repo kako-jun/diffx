@@ -93,11 +93,20 @@ fi
 diffx api_v1.json api_v2.json --ignore-keys-regex "^(timestamp|updated_at)$"
 ```
 
+## 実行例
+
+[diffx-cli/tests/cmd/](diffx-cli/tests/cmd/) に詳細な例があります：
+
+- [基本的な比較](diffx-cli/tests/cmd/basic.md)
+- [対応フォーマット](diffx-cli/tests/cmd/formats.md)
+- [オプション](diffx-cli/tests/cmd/options.md)
+- [出力形式](diffx-cli/tests/cmd/output.md)
+- [ディレクトリ比較](diffx-cli/tests/cmd/directory.md)
+
 ## ドキュメント
 
 - [CLI仕様書](docs/specs/cli.md)
 - [Core API仕様書](docs/specs/core.md)
-- [実行例](diffx-cli/tests/cmd/)
 
 ## ライセンス
 

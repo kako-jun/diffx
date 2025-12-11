@@ -93,11 +93,20 @@ fi
 diffx api_v1.json api_v2.json --ignore-keys-regex "^(timestamp|updated_at)$"
 ```
 
+## Examples
+
+See [diffx-cli/tests/cmd/](diffx-cli/tests/cmd/) for executable examples:
+
+- [Basic comparison](diffx-cli/tests/cmd/basic.md)
+- [Supported formats](diffx-cli/tests/cmd/formats.md)
+- [Options](diffx-cli/tests/cmd/options.md)
+- [Output formats](diffx-cli/tests/cmd/output.md)
+- [Directory comparison](diffx-cli/tests/cmd/directory.md)
+
 ## Documentation
 
 - [CLI Specification](docs/specs/cli.md)
 - [Core API Specification](docs/specs/core.md)
-- [Examples](diffx-cli/tests/cmd/)
 
 ## License
 
