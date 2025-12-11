@@ -100,6 +100,10 @@ diffx - file.json < input            # stdin と file を比較
 - `~` 変更（シアン）: `~ key: old -> new`
 - `!` 型変更（マゼンタ）: `! key: old (OldType) -> new (NewType)`
 
+**インデント**:
+- ネストレベルに応じて2スペースずつインデント
+- 例: `root.nested.key` の変更は `    ~ key: ...` と表示（4スペース）
+
 **色付けについて**:
 - TTYに出力時のみ色付け
 - パイプやファイルリダイレクト時は色なし

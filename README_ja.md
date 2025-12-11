@@ -9,7 +9,7 @@
 [![Docs.rs Core](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![npm](https://img.shields.io/npm/v/diffx-js.svg?label=diffx-js)](https://www.npmjs.com/package/diffx-js)
 [![PyPI](https://img.shields.io/pypi/v/diffx-python.svg?label=diffx-python)](https://pypi.org/project/diffx-python/)
-[![Documentation](https://img.shields.io/badge/📚%20User%20Guide-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/index_ja.md)
+[![Documentation](https://img.shields.io/badge/📚%20Specs-Documentation-green)](https://github.com/kako-jun/diffx/tree/main/docs/specs/)
 [![API Reference](https://img.shields.io/badge/🔧%20API%20Reference-docs.rs-blue)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -134,14 +134,13 @@ graph TB
 
 ```
 diffx/
-├── diffx-core/      # 差分抽出ライブラリ（Crate）
-├── diffx-cli/       # CLIラッパー
-├── tests/           # すべてのテスト関連ファイル
-│   ├── fixtures/    # テスト用入力データ
-│   ├── integration/ # CLI統合テスト
-│   ├── unit/        # コアライブラリユニットテスト
-│   └── output/      # テスト中間ファイル
-├── docs/            # ドキュメントと仕様書
+├── diffx-core/          # 差分抽出ライブラリ（Crate）
+│   ├── src/             # ライブラリソース
+│   └── tests/           # ユニットテスト
+├── diffx-cli/           # CLIラッパー
+│   ├── src/             # CLIソース
+│   └── tests/           # 統合テスト・fixtures
+├── docs/specs/          # 仕様書
 └── ...
 ```
 
@@ -194,7 +193,7 @@ pip install diffx-python
 # またはGitHub Releasesから事前ビルド済みバイナリをダウンロード
 ```
 
-詳細な使い方とサンプルは [ドキュメント](docs/index_ja.md) をご確認ください。
+詳細な使い方は [CLI仕様書](docs/specs/cli.md) をご確認ください。
 
 ### シェル補完
 
@@ -224,14 +223,10 @@ sudo cp target/release/build/diffx-*/out/man/diffx.1 /usr/local/share/man/man1/
 man diffx
 ```
 
-### クイックドキュメントリンク
+### ドキュメント
 
-- **[実行例（テスト検証済み）](docs/examples/)** - 実際の入出力例
-- **[はじめに](docs/user-guide/getting-started_ja.md)** - 基本を学ぶ
-- **[インストールガイド](docs/user-guide/installation_ja.md)** - プラットフォーム別セットアップ
-- **[CLIリファレンス](docs/reference/cli-reference_ja.md)** - 完全なコマンドリファレンス
-- **[実用例](docs/user-guide/examples_ja.md)** - 業界別使用例
-- **[統合ガイド](docs/guides/integrations_ja.md)** - CI/CD と自動化
+- **[CLI仕様書](docs/specs/cli.md)** - コマンドラインオプション、終了コード、出力形式
+- **[Core API仕様書](docs/specs/core.md)** - ライブラリAPI、型定義、アルゴリズム
 
 ### 基本的な使い方
 
@@ -253,12 +248,12 @@ diffx config.yaml config_new.yaml --ignore-case          # 大文字小文字の
 diffx api.json api_formatted.json --ignore-whitespace    # 空白の変更を無視
 diffx large.json large_v2.json --output json              # 自動化用のJSON出力
 diffx file1.json file2.json --quiet && echo "ファイルが同じ"  # スクリプト自動化
-diffx dir1/ dir2/ --brief                              # 高速ディレクトリ変更チェック（自動再帰処理）
+diffx -r dir1/ dir2/ --brief                            # 高速ディレクトリ変更チェック
 
 # 大きなファイルの性能最適化
 diffx huge_dataset.json huge_dataset_v2.json
-# ディレクトリ比較（自動再帰検出）
-diffx config_dir1/ config_dir2/
+# ディレクトリ比較（-r オプション必須）
+diffx -r config_dir1/ config_dir2/
 
 # 変更追跡のメタチェイニング
 diffx config_v1.json config_v2.json --output json > diff1.json
@@ -297,8 +292,9 @@ diffx diff1.json diff2.json  # 変更の変更を比較！
 
 ```bash
 #!/bin/bash
-# pre-commitフック
-if diffx package.json HEAD~1:package.json --output json | jq -e '.[] | select(.Added)' > /dev/null; then
+# pre-commitフック - 前回コミットと比較
+git show HEAD~1:package.json > /tmp/package_old.json 2>/dev/null || exit 0
+if diffx /tmp/package_old.json package.json --output json | jq -e '.[] | select(.Added)' > /dev/null; then
   echo "新しい依存関係が検出されました、セキュリティ監査を実行中..."
 fi
 ```
