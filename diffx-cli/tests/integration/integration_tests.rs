@@ -184,17 +184,13 @@ mod integration_tests {
 
     #[test]
     fn test_directory_comparison_integration() {
-        // Use absolute paths or paths relative to project root
+        // Use absolute paths relative to diffx-cli crate
         let dir1 = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
             .join("tests/fixtures/dir1");
         let dir2 = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
             .join("tests/fixtures/dir2");
 
-        let output = run_diffx_command(&[dir1.to_str().unwrap(), dir2.to_str().unwrap()]);
+        let output = run_diffx_command(&["-r", dir1.to_str().unwrap(), dir2.to_str().unwrap()]);
 
         // Exit code 1 when differences found
         assert_eq!(output.status.code(), Some(1));

@@ -10,8 +10,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_basic_toml_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.toml")
-        .arg("../tests/fixtures/file2.toml");
+    cmd.arg("tests/fixtures/file1.toml")
+        .arg("tests/fixtures/file2.toml");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ age: 30 -> 31"))
@@ -25,8 +25,8 @@ fn test_basic_toml_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_toml_explicit() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.toml")
-        .arg("../tests/fixtures/file2.toml")
+    cmd.arg("tests/fixtures/file1.toml")
+        .arg("tests/fixtures/file2.toml")
         .arg("--format")
         .arg("toml");
     cmd.assert()

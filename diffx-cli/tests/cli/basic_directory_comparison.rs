@@ -1,5 +1,6 @@
 #[allow(unused_imports)]
 use assert_cmd::prelude::*;
+use predicates::prelude::*;
 use std::process::Command;
 
 // Helper function to get the diffx command
@@ -9,28 +10,33 @@ fn diffx_cmd() -> Command {
 
 #[test]
 fn test_directory_comparison() -> Result<(), Box<dyn std::error::Error>> {
+    // Directory comparison requires -r flag
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2");
+    cmd.arg("-r")
+        .arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
     cmd.assert().code(1);
     Ok(())
 }
 
 #[test]
-fn test_directory_comparison_verbose_non_recursive() -> Result<(), Box<dyn std::error::Error>> {
+fn test_directory_comparison_without_recursive_flag() -> Result<(), Box<dyn std::error::Error>> {
+    // Without -r, should error
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2")
-        .arg("--verbose");
-    cmd.assert().code(1);
+    cmd.arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
+    cmd.assert()
+        .code(2)
+        .stderr(predicates::str::contains("Use --recursive"));
     Ok(())
 }
 
 #[test]
 fn test_directory_comparison_verbose_recursive() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2")
+    cmd.arg("-r")
+        .arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2")
         .arg("--verbose");
     cmd.assert().code(1);
     Ok(())
@@ -39,8 +45,9 @@ fn test_directory_comparison_verbose_recursive() -> Result<(), Box<dyn std::erro
 #[test]
 fn test_directory_with_common_subdirectories() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2");
+    cmd.arg("-r")
+        .arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("b.json"))

@@ -75,6 +75,10 @@ struct Args {
     #[arg(short, long)]
     output: Option<String>,
 
+    /// Compare directories recursively
+    #[arg(short, long)]
+    recursive: bool,
+
     /// Filter by path (only show differences in paths containing this string)
     #[arg(long)]
     path: Option<String>,
@@ -114,22 +118,6 @@ struct Args {
     /// Disable colored output
     #[arg(long)]
     no_color: bool,
-
-    /// Enable memory optimization for large files
-    #[arg(long)]
-    memory_optimization: bool,
-
-    /// Batch size for memory optimization
-    #[arg(long)]
-    batch_size: Option<usize>,
-
-    /// Show unchanged values as well
-    #[arg(long)]
-    show_unchanged: bool,
-
-    /// Show type information in output
-    #[arg(long)]
-    show_types: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -191,10 +179,6 @@ fn run() -> Result<()> {
 
     // Print verbose configuration information to stderr
     if args.verbose {
-        // Optimization settings
-        eprintln!("Optimization enabled: {}", args.memory_optimization);
-        eprintln!("Batch size: {}", args.batch_size.unwrap_or(1000));
-
         // Input file information
         if let Ok(metadata1) = fs::metadata(input1) {
             if let Ok(metadata2) = fs::metadata(input2) {
@@ -309,14 +293,6 @@ fn run() -> Result<()> {
         let total_time = start_time.elapsed();
         eprintln!("Performance summary:");
         eprintln!("  Total processing time: {total_time:.3?}");
-        eprintln!(
-            "  Memory optimization: {}",
-            if args.memory_optimization {
-                "enabled"
-            } else {
-                "disabled"
-            }
-        );
     }
 
     // Exit with appropriate code (0 = no differences, 1 = differences found)
@@ -350,11 +326,8 @@ fn build_diff_options(args: &Args) -> Result<DiffOptions> {
         array_id_key: args.array_id_key.clone(),
         ignore_keys_regex,
         path_filter: args.path.clone(),
+        recursive: Some(args.recursive),
         output_format,
-        show_unchanged: Some(args.show_unchanged),
-        show_types: Some(args.show_types),
-        use_memory_optimization: Some(args.memory_optimization),
-        batch_size: args.batch_size,
         diffx_options,
     })
 }
@@ -634,11 +607,8 @@ fn build_diff_options_for_values(args: &Args) -> Result<DiffOptions> {
         array_id_key: args.array_id_key.clone(),
         ignore_keys_regex,
         path_filter: args.path.clone(),
+        recursive: Some(args.recursive),
         output_format,
-        show_unchanged: Some(args.show_unchanged),
-        show_types: Some(args.show_types),
-        use_memory_optimization: Some(args.memory_optimization),
-        batch_size: args.batch_size,
         diffx_options,
     })
 }

@@ -12,8 +12,8 @@ fn diffx_cmd() -> Command {
 fn test_basic_json_example_from_docs() -> Result<(), Box<dyn std::error::Error>> {
     // This should match examples shown in documentation
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json");
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ age:"))
@@ -26,8 +26,8 @@ fn test_basic_json_example_from_docs() -> Result<(), Box<dyn std::error::Error>>
 fn test_json_output_example_from_docs() -> Result<(), Box<dyn std::error::Error>> {
     // This should match JSON output examples in documentation
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--output")
         .arg("json");
     cmd.assert()
@@ -41,8 +41,8 @@ fn test_json_output_example_from_docs() -> Result<(), Box<dyn std::error::Error>
 fn test_ignore_keys_example_from_docs() -> Result<(), Box<dyn std::error::Error>> {
     // This should match ignore keys examples in documentation
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/security_config.json")
-        .arg("../tests/fixtures/security_config_new.json")
+    cmd.arg("tests/fixtures/security_config.json")
+        .arg("tests/fixtures/security_config_new.json")
         .arg("--ignore-keys-regex")
         .arg("^(password|secret_.*)$");
     cmd.assert()

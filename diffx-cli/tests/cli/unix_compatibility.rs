@@ -12,8 +12,8 @@ fn diffx_cmd() -> Command {
 fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error>> {
     // Test diff -q equivalent: quiet mode exit codes only
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file1.json") // Same file
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file1.json") // Same file
         .arg("--quiet");
     cmd.assert()
         .code(0) // No differences
@@ -21,8 +21,8 @@ fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error
 
     // Test with different files
     let mut cmd2 = diffx_cmd();
-    cmd2.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd2.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--quiet");
     cmd2.assert()
         .code(1) // Differences found
@@ -34,13 +34,13 @@ fn test_unix_pattern_diff_q_equivalent() -> Result<(), Box<dyn std::error::Error
 fn test_unix_pattern_diff_brief_equivalent() -> Result<(), Box<dyn std::error::Error>> {
     // Test diff --brief equivalent: filenames only
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--brief");
     cmd.assert()
         .code(1) // Differences found
         .stdout(predicates::str::contains(
-            "Files ../tests/fixtures/file1.json and ../tests/fixtures/file2.json differ",
+            "Files tests/fixtures/file1.json and tests/fixtures/file2.json differ",
         ))
         .stdout(predicates::str::contains("age").not()) // Should not show details
         .stdout(predicates::str::contains("city").not());
@@ -51,8 +51,8 @@ fn test_unix_pattern_diff_brief_equivalent() -> Result<(), Box<dyn std::error::E
 fn test_unix_pattern_diff_i_equivalent() -> Result<(), Box<dyn std::error::Error>> {
     // Test diff -i equivalent: ignore case
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/case_test1.json")
-        .arg("../tests/fixtures/case_test2.json")
+    cmd.arg("tests/fixtures/case_test1.json")
+        .arg("tests/fixtures/case_test2.json")
         .arg("--ignore-case");
     cmd.assert()
         .code(0) // No differences when ignoring case
@@ -64,8 +64,8 @@ fn test_unix_pattern_diff_i_equivalent() -> Result<(), Box<dyn std::error::Error
 fn test_unix_pattern_diff_w_equivalent() -> Result<(), Box<dyn std::error::Error>> {
     // Test diff -w equivalent: ignore whitespace
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/whitespace_test1.json")
-        .arg("../tests/fixtures/whitespace_test2.json")
+    cmd.arg("tests/fixtures/whitespace_test1.json")
+        .arg("tests/fixtures/whitespace_test2.json")
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(0) // No differences when ignoring whitespace
@@ -77,8 +77,8 @@ fn test_unix_pattern_diff_w_equivalent() -> Result<(), Box<dyn std::error::Error
 fn test_unix_combined_pattern_qiw() -> Result<(), Box<dyn std::error::Error>> {
     // Test combined pattern: diff -qiw equivalent
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/case_test1.json")
-        .arg("../tests/fixtures/whitespace_test2.json")
+    cmd.arg("tests/fixtures/case_test1.json")
+        .arg("tests/fixtures/whitespace_test2.json")
         .arg("--quiet")
         .arg("--ignore-case")
         .arg("--ignore-whitespace");
@@ -90,10 +90,11 @@ fn test_unix_combined_pattern_qiw() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_unix_directory_brief_pattern() -> Result<(), Box<dyn std::error::Error>> {
-    // Test --brief with directory comparison
+    // Test --brief with directory comparison (requires -r)
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2")
+    cmd.arg("-r")
+        .arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2")
         .arg("--brief");
     cmd.assert().code(1); // Differences found
     Ok(())
@@ -101,27 +102,32 @@ fn test_unix_directory_brief_pattern() -> Result<(), Box<dyn std::error::Error>>
 
 #[test]
 fn test_directory_comparison_without_recursive() -> Result<(), Box<dyn std::error::Error>> {
+    // Without -r, directory comparison should error
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2");
-    cmd.assert().code(1);
+    cmd.arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
+    cmd.assert()
+        .code(2)
+        .stderr(predicates::str::contains("Use --recursive"));
     Ok(())
 }
 
 #[test]
 fn test_directory_comparison_with_recursive() -> Result<(), Box<dyn std::error::Error>> {
+    // With -r, directory comparison should work
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2");
-    cmd.assert().code(1);
+    cmd.arg("-r")
+        .arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
+    cmd.assert().code(1); // Differences found
     Ok(())
 }
 
 #[test]
 fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/file1.json");
+    cmd.arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/file1.json");
     cmd.assert().code(2).stderr(
         predicates::str::contains("Cannot compare directory")
             .and(predicates::str::contains("with file")),
@@ -131,18 +137,25 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_recursive_compares_nested_files() -> Result<(), Box<dyn std::error::Error>> {
+    // With -r, nested files are compared
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2");
-    cmd.assert().code(1);
+    cmd.arg("-r")
+        .arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
+    cmd.assert()
+        .code(1)
+        .stdout(predicates::str::contains("subdir")); // Should include nested dir
     Ok(())
 }
 
 #[test]
 fn test_non_recursive_does_not_compare_nested_files() -> Result<(), Box<dyn std::error::Error>> {
+    // Without -r, should error (not silently skip nested)
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/dir2");
-    cmd.assert().code(1);
+    cmd.arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/dir2");
+    cmd.assert()
+        .code(2)
+        .stderr(predicates::str::contains("Use --recursive"));
     Ok(())
 }

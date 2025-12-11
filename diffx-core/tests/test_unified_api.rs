@@ -218,21 +218,6 @@ fn test_diff_with_output_format() {
 }
 
 #[test]
-fn test_diff_with_memory_optimization() {
-    let old = json!({"data": [1, 2, 3]});
-    let new = json!({"data": [1, 2, 4]});
-
-    let options = DiffOptions {
-        use_memory_optimization: Some(true),
-        batch_size: Some(100),
-        ..Default::default()
-    };
-
-    let results = diff(&old, &new, Some(&options)).unwrap();
-    assert_eq!(results.len(), 1);
-}
-
-#[test]
 fn test_diff_with_diffx_specific_options() {
     let old = json!({"text": "Hello World"});
     let new = json!({"text": "HELLO WORLD"});
@@ -385,26 +370,6 @@ fn test_diff_large_dataset() {
 }
 
 // ============================================================================
-// ERROR HANDLING TESTS
-// ============================================================================
-
-#[test]
-fn test_diff_memory_limit_exceeded() {
-    // This test simulates memory limit check
-    let options = DiffOptions {
-        use_memory_optimization: Some(true),
-        ..Default::default()
-    };
-
-    // Create reasonably sized data that won't actually exceed limits
-    let old = json!({"data": "small"});
-    let new = json!({"data": "small_modified"});
-
-    let results = diff(&old, &new, Some(&options));
-    assert!(results.is_ok());
-}
-
-// ============================================================================
 // OUTPUT FORMAT TESTS
 // ============================================================================
 
@@ -501,25 +466,6 @@ fn test_value_type_name() {
     assert_eq!(value_type_name(&json!("test")), "String");
     assert_eq!(value_type_name(&json!([])), "Array");
     assert_eq!(value_type_name(&json!({})), "Object");
-}
-
-#[test]
-fn test_estimate_memory_usage() {
-    assert_eq!(estimate_memory_usage(&json!(null)), 0);
-    assert_eq!(estimate_memory_usage(&json!(true)), 1);
-    assert_eq!(estimate_memory_usage(&json!(123)), 8);
-    assert!(estimate_memory_usage(&json!("test")) >= 4);
-    assert!(estimate_memory_usage(&json!([])) >= 24);
-    assert!(estimate_memory_usage(&json!({})) >= 24);
-}
-
-#[test]
-fn test_would_exceed_memory_limit() {
-    let small = json!({"test": "value"});
-    let _large = json!({"data": vec!["x"; 1000000]});
-
-    assert!(!would_exceed_memory_limit(&small, &small));
-    // Note: This test depends on the actual memory calculation
 }
 
 // ============================================================================

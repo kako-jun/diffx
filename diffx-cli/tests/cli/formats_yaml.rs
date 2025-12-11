@@ -10,8 +10,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_basic_yaml_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.yaml")
-        .arg("../tests/fixtures/file2.yaml");
+    cmd.arg("tests/fixtures/file1.yaml")
+        .arg("tests/fixtures/file2.yaml");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ age: 30 -> 31"))
@@ -25,8 +25,8 @@ fn test_basic_yaml_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_yaml_explicit() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.yaml")
-        .arg("../tests/fixtures/file2.yaml")
+    cmd.arg("tests/fixtures/file1.yaml")
+        .arg("tests/fixtures/file2.yaml")
         .arg("--format")
         .arg("yaml");
     cmd.assert()

@@ -14,8 +14,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_diffx_format_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_v1.json")
-        .arg("../tests/fixtures/config_v2.json")
+    cmd.arg("tests/fixtures/config_v1.json")
+        .arg("tests/fixtures/config_v2.json")
         .arg("--output")
         .arg("diffx");
 

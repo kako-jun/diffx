@@ -111,14 +111,11 @@ pub struct DiffOptions {
     pub ignore_keys_regex: Option<Regex>,
     pub path_filter: Option<String>,
 
+    // Directory comparison
+    pub recursive: Option<bool>,
+
     // Output control
     pub output_format: Option<OutputFormat>,
-    pub show_unchanged: Option<bool>,
-    pub show_types: Option<bool>,
-
-    // Memory optimization
-    pub use_memory_optimization: Option<bool>,
-    pub batch_size: Option<usize>,
 
     // diffx-specific options
     pub diffx_options: Option<DiffxSpecificOptions>,

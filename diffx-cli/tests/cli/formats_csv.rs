@@ -11,8 +11,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_basic_csv_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.csv")
-        .arg("../tests/fixtures/file2.csv");
+    cmd.arg("tests/fixtures/file1.csv")
+        .arg("tests/fixtures/file2.csv");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
@@ -29,8 +29,8 @@ fn test_basic_csv_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_csv_explicit() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.csv")
-        .arg("../tests/fixtures/file2.csv")
+    cmd.arg("tests/fixtures/file1.csv")
+        .arg("tests/fixtures/file2.csv")
         .arg("--format")
         .arg("csv");
     cmd.assert()

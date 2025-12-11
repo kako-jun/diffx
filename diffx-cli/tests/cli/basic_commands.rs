@@ -32,8 +32,8 @@ fn test_help_command() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json");
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ age: 30 -> 31"))
@@ -51,7 +51,7 @@ fn test_specify_input_format() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
     let mut child = cmd
         .arg("-")
-        .arg("../tests/fixtures/file2.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--format")
         .arg("json")
         .stdin(std::process::Stdio::piped())
@@ -93,7 +93,7 @@ fn test_format_specification_with_stdin() -> Result<(), Box<dyn std::error::Erro
     let mut cmd = diffx_cmd();
     let mut child = cmd
         .arg("-")
-        .arg("../tests/fixtures/file2.ini")
+        .arg("tests/fixtures/file2.ini")
         .arg("--format")
         .arg("ini")
         .stdin(std::process::Stdio::piped())

@@ -34,8 +34,8 @@ fn test_very_large_input() -> Result<(), Box<dyn std::error::Error>> {
     // This test would typically involve creating large test data
     // For now, we'll just test that the command doesn't crash with normal sized data
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_v1.json")
-        .arg("../tests/fixtures/config_v2.json")
+    cmd.arg("tests/fixtures/config_v1.json")
+        .arg("tests/fixtures/config_v2.json")
         .arg("--verbose");
     cmd.assert()
         .stderr(predicates::str::contains("Performance summary:"));
@@ -53,7 +53,7 @@ fn test_malformed_json() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(&malformed_path, r#"{"invalid": json content"#)?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg(&malformed_path).arg("../tests/fixtures/file1.json");
+    cmd.arg(&malformed_path).arg("tests/fixtures/file1.json");
     cmd.assert()
         .code(2) // Error exit code
         .stderr(predicates::str::contains("parse").or(predicates::str::contains("invalid")));

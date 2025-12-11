@@ -10,8 +10,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_json_output_format() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--output")
         .arg("json");
     cmd.assert()
@@ -30,8 +30,8 @@ fn test_json_output_format() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_yaml_output_format() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--output")
         .arg("yaml");
     cmd.assert()

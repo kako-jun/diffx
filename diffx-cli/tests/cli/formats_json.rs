@@ -10,8 +10,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json");
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ age: 30 -> 31"))
@@ -25,8 +25,8 @@ fn test_basic_json_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_complex_nested_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_v1.json")
-        .arg("../tests/fixtures/config_v2.json");
+    cmd.arg("tests/fixtures/config_v1.json")
+        .arg("tests/fixtures/config_v2.json");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains("~ app.version:"))
@@ -37,8 +37,8 @@ fn test_complex_nested_json() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_json_array_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/users1.json")
-        .arg("../tests/fixtures/users2.json");
+    cmd.arg("tests/fixtures/users1.json")
+        .arg("tests/fixtures/users2.json");
     cmd.assert().code(1).stdout(predicates::str::contains("["));
     Ok(())
 }
@@ -47,8 +47,8 @@ fn test_json_array_comparison() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_json_explicit() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--format")
         .arg("json");
     cmd.assert()
@@ -60,8 +60,8 @@ fn test_format_json_explicit() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_json_short_flag() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("-f")
         .arg("json");
     cmd.assert()
@@ -73,8 +73,8 @@ fn test_format_json_short_flag() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_json_invalid_file() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.toml")
-        .arg("../tests/fixtures/file2.toml")
+    cmd.arg("tests/fixtures/file1.toml")
+        .arg("tests/fixtures/file2.toml")
         .arg("--format")
         .arg("json");
     // Should handle format mismatch gracefully
@@ -106,8 +106,8 @@ fn test_json_empty_objects() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_json_deeply_nested() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_v1.json")
-        .arg("../tests/fixtures/config_v3.json")
+    cmd.arg("tests/fixtures/config_v1.json")
+        .arg("tests/fixtures/config_v3.json")
         .arg("--format")
         .arg("json");
     cmd.assert().code(1).stdout(predicates::str::contains("~"));

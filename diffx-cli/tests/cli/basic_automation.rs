@@ -12,8 +12,8 @@ fn diffx_cmd() -> Command {
 fn test_cicd_deployment_validation_pattern() -> Result<(), Box<dyn std::error::Error>> {
     // Test deployment validation pattern from documentation
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_dev.json")
-        .arg("../tests/fixtures/config_prod.json")
+    cmd.arg("tests/fixtures/config_dev.json")
+        .arg("tests/fixtures/config_prod.json")
         .arg("--ignore-case")
         .arg("--ignore-whitespace")
         .arg("--ignore-keys-regex")
@@ -30,8 +30,8 @@ fn test_cicd_deployment_validation_pattern() -> Result<(), Box<dyn std::error::E
 fn test_cicd_config_drift_monitoring() -> Result<(), Box<dyn std::error::Error>> {
     // Test configuration drift monitoring pattern
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--ignore-keys-regex")
         .arg("^(hostname|instance_id|last_.*|timestamp)")
         .arg("--ignore-case")

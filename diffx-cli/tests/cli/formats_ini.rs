@@ -10,8 +10,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.ini")
-        .arg("../tests/fixtures/file2.ini");
+    cmd.arg("tests/fixtures/file1.ini")
+        .arg("tests/fixtures/file2.ini");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
@@ -24,8 +24,8 @@ fn test_basic_ini_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_ini_explicit() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.ini")
-        .arg("../tests/fixtures/file2.ini")
+    cmd.arg("tests/fixtures/file1.ini")
+        .arg("tests/fixtures/file2.ini")
         .arg("--format")
         .arg("ini");
     cmd.assert()

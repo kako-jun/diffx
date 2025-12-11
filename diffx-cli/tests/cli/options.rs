@@ -11,8 +11,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--ignore-keys-regex")
         .arg("^age$");
     cmd.assert()
@@ -28,8 +28,8 @@ fn test_ignore_keys_regex() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_ignore_keys_regex_multiple_patterns() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--ignore-keys-regex")
         .arg("^(age|city)$");
     cmd.assert()
@@ -43,8 +43,8 @@ fn test_ignore_keys_regex_multiple_patterns() -> Result<(), Box<dyn std::error::
 #[test]
 fn test_ignore_keys_regex_wildcard() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/users1.json")
-        .arg("../tests/fixtures/users2.json")
+    cmd.arg("tests/fixtures/users1.json")
+        .arg("tests/fixtures/users2.json")
         .arg("--ignore-keys-regex")
         .arg(".*e$"); // Matches keys ending with 'e' like 'name', 'age'
     cmd.assert()
@@ -81,8 +81,8 @@ fn test_ignore_keys_regex_case_sensitive() -> Result<(), Box<dyn std::error::Err
 #[test]
 fn test_ignore_keys_regex_nested_keys() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_dev.json")
-        .arg("../tests/fixtures/config_prod.json")
+    cmd.arg("tests/fixtures/config_dev.json")
+        .arg("tests/fixtures/config_prod.json")
         .arg("--ignore-keys-regex")
         .arg("debug|environment");
     cmd.assert()
@@ -96,8 +96,8 @@ fn test_ignore_keys_regex_nested_keys() -> Result<(), Box<dyn std::error::Error>
 #[test]
 fn test_ignore_keys_regex_invalid_pattern() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--ignore-keys-regex")
         .arg("[invalid"); // Invalid regex
     let result = cmd.output()?;
@@ -109,8 +109,8 @@ fn test_ignore_keys_regex_invalid_pattern() -> Result<(), Box<dyn std::error::Er
 #[test]
 fn test_epsilon_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/data1.json")
-        .arg("../tests/fixtures/data2.json")
+    cmd.arg("tests/fixtures/data1.json")
+        .arg("tests/fixtures/data2.json")
         .arg("--epsilon")
         .arg("0.00001");
     cmd.assert().success().stdout(predicates::str::is_empty()); // No differences expected within epsilon (empty output)
@@ -227,8 +227,8 @@ fn test_epsilon_very_large_numbers() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_epsilon_invalid_value() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--epsilon")
         .arg("invalid");
     let result = cmd.output()?;
@@ -240,8 +240,8 @@ fn test_epsilon_invalid_value() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_epsilon_negative_value() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--epsilon")
         .arg("-0.1");
     let _result = cmd.output()?;
@@ -253,8 +253,8 @@ fn test_epsilon_negative_value() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_array_id_key() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/users1.json")
-        .arg("../tests/fixtures/users2.json")
+    cmd.arg("tests/fixtures/users1.json")
+        .arg("tests/fixtures/users2.json")
         .arg("--array-id-key")
         .arg("id");
     cmd.assert()
@@ -383,8 +383,8 @@ fn test_array_id_key_nested_arrays() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_path_filtering_application() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_dev.json")
-        .arg("../tests/fixtures/config_prod.json")
+    cmd.arg("tests/fixtures/config_dev.json")
+        .arg("tests/fixtures/config_prod.json")
         .arg("--path")
         .arg("application");
     cmd.assert()
@@ -403,8 +403,8 @@ fn test_path_filtering_application() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_path_filtering_services() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_dev.json")
-        .arg("../tests/fixtures/config_prod.json")
+    cmd.arg("tests/fixtures/config_dev.json")
+        .arg("tests/fixtures/config_prod.json")
         .arg("--path")
         .arg("services");
     cmd.assert()
@@ -420,8 +420,8 @@ fn test_path_filtering_services() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_path_filtering_database() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/config_dev.json")
-        .arg("../tests/fixtures/config_prod.json")
+    cmd.arg("tests/fixtures/config_dev.json")
+        .arg("tests/fixtures/config_prod.json")
         .arg("--path")
         .arg("database");
     cmd.assert()
@@ -442,8 +442,8 @@ fn test_path_filtering_database() -> Result<(), Box<dyn std::error::Error>> {
 fn test_ignore_case_option() -> Result<(), Box<dyn std::error::Error>> {
     // Test ignore-case option - should not show differences for case-only changes
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/case_test1.json")
-        .arg("../tests/fixtures/case_test2.json")
+    cmd.arg("tests/fixtures/case_test1.json")
+        .arg("tests/fixtures/case_test2.json")
         .arg("--ignore-case");
     cmd.assert()
         .code(0) // No differences when ignoring case
@@ -456,8 +456,8 @@ fn test_ignore_case_option_shows_differences_without_flag() -> Result<(), Box<dy
 {
     // Test that case differences are shown without the ignore-case flag
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/case_test1.json")
-        .arg("../tests/fixtures/case_test2.json");
+    cmd.arg("tests/fixtures/case_test1.json")
+        .arg("tests/fixtures/case_test2.json");
     cmd.assert()
         .code(1) // Differences found
         .stdout(predicates::str::contains(
@@ -471,8 +471,8 @@ fn test_ignore_case_option_shows_differences_without_flag() -> Result<(), Box<dy
 fn test_ignore_whitespace_option() -> Result<(), Box<dyn std::error::Error>> {
     // Test ignore-whitespace option - should not show differences for whitespace-only changes
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/whitespace_test1.json")
-        .arg("../tests/fixtures/whitespace_test2.json")
+    cmd.arg("tests/fixtures/whitespace_test1.json")
+        .arg("tests/fixtures/whitespace_test2.json")
         .arg("--ignore-whitespace");
     cmd.assert()
         .code(0) // No differences when ignoring whitespace
@@ -485,8 +485,8 @@ fn test_ignore_whitespace_option_shows_differences_without_flag(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Test that whitespace differences are shown without the ignore-whitespace flag
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/whitespace_test1.json")
-        .arg("../tests/fixtures/whitespace_test2.json");
+    cmd.arg("tests/fixtures/whitespace_test1.json")
+        .arg("tests/fixtures/whitespace_test2.json");
     cmd.assert()
         .code(1) // Differences found
         .stdout(predicates::str::contains(
@@ -502,8 +502,8 @@ fn test_ignore_whitespace_option_shows_differences_without_flag(
 fn test_combined_ignore_options() -> Result<(), Box<dyn std::error::Error>> {
     // Test combining ignore-case and ignore-whitespace options
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/case_test1.json")
-        .arg("../tests/fixtures/whitespace_test2.json") // Mix case and whitespace differences
+    cmd.arg("tests/fixtures/case_test1.json")
+        .arg("tests/fixtures/whitespace_test2.json") // Mix case and whitespace differences
         .arg("--ignore-case")
         .arg("--ignore-whitespace");
     cmd.assert()
@@ -517,8 +517,8 @@ fn test_combined_ignore_options() -> Result<(), Box<dyn std::error::Error>> {
 fn test_quiet_option_no_differences() -> Result<(), Box<dyn std::error::Error>> {
     // Test quiet option with identical files - should output nothing and exit 0
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file1.json") // Same file
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file1.json") // Same file
         .arg("--quiet");
     cmd.assert()
         .code(0) // No differences
@@ -530,8 +530,8 @@ fn test_quiet_option_no_differences() -> Result<(), Box<dyn std::error::Error>> 
 fn test_quiet_option_with_differences() -> Result<(), Box<dyn std::error::Error>> {
     // Test quiet option with different files - should output nothing and exit 1
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--quiet");
     cmd.assert()
         .code(1) // Differences found
@@ -543,13 +543,13 @@ fn test_quiet_option_with_differences() -> Result<(), Box<dyn std::error::Error>
 fn test_brief_option() -> Result<(), Box<dyn std::error::Error>> {
     // Test brief option - should only show filenames, not differences
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--brief");
     cmd.assert()
         .code(1) // Differences found
         .stdout(predicates::str::contains(
-            "Files ../tests/fixtures/file1.json and ../tests/fixtures/file2.json differ",
+            "Files tests/fixtures/file1.json and tests/fixtures/file2.json differ",
         ))
         .stdout(predicates::str::contains("age").not()) // Should not show actual differences
         .stdout(predicates::str::contains("city").not());
@@ -560,8 +560,8 @@ fn test_brief_option() -> Result<(), Box<dyn std::error::Error>> {
 fn test_brief_option_no_differences() -> Result<(), Box<dyn std::error::Error>> {
     // Test brief option with identical files - should output nothing
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file1.json") // Same file
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file1.json") // Same file
         .arg("--brief");
     cmd.assert()
         .code(0) // No differences
@@ -572,13 +572,11 @@ fn test_brief_option_no_differences() -> Result<(), Box<dyn std::error::Error>> 
 #[test]
 fn test_verbose_basic_output() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--verbose");
     cmd.assert()
         .code(1)
-        .stderr(predicates::str::contains("Optimization enabled:"))
-        .stderr(predicates::str::contains("Batch size:"))
         .stderr(predicates::str::contains("Input file information:"))
         .stderr(predicates::str::contains("Parse time:"))
         .stderr(predicates::str::contains("Diff computation time:"))
@@ -593,8 +591,8 @@ fn test_format_option() -> Result<(), Box<dyn std::error::Error>> {
     // Test --format option with various formats
     for format in ["json", "yaml", "toml", "ini", "xml", "csv"] {
         let mut cmd = diffx_cmd();
-        cmd.arg("../tests/fixtures/file1.json")
-            .arg("../tests/fixtures/file2.json")
+        cmd.arg("tests/fixtures/file1.json")
+            .arg("tests/fixtures/file2.json")
             .arg("--format")
             .arg(format);
 
@@ -616,8 +614,8 @@ fn test_output_format_option() -> Result<(), Box<dyn std::error::Error>> {
     // Test --output option with various output formats
     for output_format in ["cli", "json", "yaml", "unified"] {
         let mut cmd = diffx_cmd();
-        cmd.arg("../tests/fixtures/file1.json")
-            .arg("../tests/fixtures/file2.json")
+        cmd.arg("tests/fixtures/file1.json")
+            .arg("tests/fixtures/file2.json")
             .arg("--output")
             .arg(output_format);
 

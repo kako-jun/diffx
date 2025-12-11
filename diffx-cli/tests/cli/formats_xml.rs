@@ -10,8 +10,8 @@ fn diffx_cmd() -> Command {
 #[test]
 fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.xml")
-        .arg("../tests/fixtures/file2.xml");
+    cmd.arg("tests/fixtures/file1.xml")
+        .arg("tests/fixtures/file2.xml");
     cmd.assert()
         .code(1)
         .stdout(predicates::str::contains(
@@ -24,8 +24,8 @@ fn test_basic_xml_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_format_xml_explicit() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.xml")
-        .arg("../tests/fixtures/file2.xml")
+    cmd.arg("tests/fixtures/file1.xml")
+        .arg("tests/fixtures/file2.xml")
         .arg("--format")
         .arg("xml");
     cmd.assert()

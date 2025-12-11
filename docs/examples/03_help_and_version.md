@@ -27,6 +27,8 @@ Options:
           Input file format (auto-detected if not specified) [possible values: json, yaml, csv, toml, ini, xml]
   -o, --output <OUTPUT>
           Output format
+  -r, --recursive
+          Compare directories recursively
       --path <PATH>
           Filter by path (only show differences in paths containing this string)
       --ignore-keys-regex <IGNORE_KEYS_REGEX>
@@ -47,14 +49,6 @@ Options:
           Show verbose processing information
       --no-color
           Disable colored output
-      --memory-optimization
-          Enable memory optimization for large files
-      --batch-size <BATCH_SIZE>
-          Batch size for memory optimization
-      --show-unchanged
-          Show unchanged values as well
-      --show-types
-          Show type information in output
   -h, --help
           Print help
   -V, --version

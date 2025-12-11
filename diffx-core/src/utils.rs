@@ -19,32 +19,6 @@ pub fn value_type_name(value: &Value) -> &str {
     }
 }
 
-/// Estimate memory usage of a JSON value - FOR INTERNAL USE ONLY
-pub fn estimate_memory_usage(value: &Value) -> usize {
-    match value {
-        Value::Null => 0,
-        Value::Bool(_) => 1,
-        Value::Number(_) => 8,
-        Value::String(s) => s.len(),
-        Value::Array(arr) => arr.iter().map(estimate_memory_usage).sum::<usize>() + 24,
-        Value::Object(obj) => {
-            obj.iter()
-                .map(|(k, v)| k.len() + estimate_memory_usage(v))
-                .sum::<usize>()
-                + 24
-        }
-    }
-}
-
-/// Check if values would exceed memory limit - FOR INTERNAL USE ONLY
-pub fn would_exceed_memory_limit(v1: &Value, v2: &Value) -> bool {
-    const MAX_MEMORY_MB: usize = 100;
-    const BYTES_PER_MB: usize = 1024 * 1024;
-
-    let total_size = estimate_memory_usage(v1) + estimate_memory_usage(v2);
-    total_size > MAX_MEMORY_MB * BYTES_PER_MB
-}
-
 /// Format output to string - FOR INTERNAL USE ONLY
 pub fn format_output<T: Serialize>(results: &[T], format: OutputFormat) -> Result<String> {
     match format {

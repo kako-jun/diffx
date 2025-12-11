@@ -15,8 +15,8 @@ fn test_meta_chaining() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 1: Generate diff_report_v1.json
     let mut cmd1 = diffx_cmd();
-    cmd1.arg("../tests/fixtures/config_v1.json")
-        .arg("../tests/fixtures/config_v2.json")
+    cmd1.arg("tests/fixtures/config_v1.json")
+        .arg("tests/fixtures/config_v2.json")
         .arg("--output")
         .arg("json");
     let output1 = cmd1.output()?.stdout;
@@ -24,8 +24,8 @@ fn test_meta_chaining() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 2: Generate diff_report_v2.json
     let mut cmd2 = diffx_cmd();
-    cmd2.arg("../tests/fixtures/config_v2.json")
-        .arg("../tests/fixtures/config_v3.json")
+    cmd2.arg("tests/fixtures/config_v2.json")
+        .arg("tests/fixtures/config_v3.json")
         .arg("--output")
         .arg("json");
     let output2 = cmd2.output()?.stdout;
@@ -70,12 +70,12 @@ fn test_combined_array_id_and_epsilon() -> Result<(), Box<dyn std::error::Error>
   ]
 }"#;
 
-    std::fs::write("../tests/fixtures/array_epsilon1.json", test_data1)?;
-    std::fs::write("../tests/fixtures/array_epsilon2.json", test_data2)?;
+    std::fs::write("tests/fixtures/array_epsilon1.json", test_data1)?;
+    std::fs::write("tests/fixtures/array_epsilon2.json", test_data2)?;
 
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/array_epsilon1.json")
-        .arg("../tests/fixtures/array_epsilon2.json")
+    cmd.arg("tests/fixtures/array_epsilon1.json")
+        .arg("tests/fixtures/array_epsilon2.json")
         .arg("--array-id-key")
         .arg("id")
         .arg("--epsilon")
@@ -88,7 +88,7 @@ fn test_combined_array_id_and_epsilon() -> Result<(), Box<dyn std::error::Error>
         .stdout(predicates::str::contains("value").not()); // Values should be ignored due to epsilon
 
     // Clean up
-    std::fs::remove_file("../tests/fixtures/array_epsilon1.json")?;
-    std::fs::remove_file("../tests/fixtures/array_epsilon2.json")?;
+    std::fs::remove_file("tests/fixtures/array_epsilon1.json")?;
+    std::fs::remove_file("tests/fixtures/array_epsilon2.json")?;
     Ok(())
 }

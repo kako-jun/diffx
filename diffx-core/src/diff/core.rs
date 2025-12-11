@@ -1,7 +1,7 @@
 // Core diff functions: diff_paths, diff, diff_files, diff_directories
 
 use anyhow::{anyhow, Result};
-use crate::{DiffResult, DiffOptions, detect_format_from_path, parse_content_by_format, would_exceed_memory_limit};
+use crate::{DiffResult, DiffOptions, detect_format_from_path, parse_content_by_format};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
@@ -12,9 +12,9 @@ use crate::io::get_all_files_recursive;
 
 /// Unified diff function for diffx (path-based entry point)
 ///
-/// This is the main entry point that handles both files and directories automatically.
+/// This is the main entry point that handles both files and directories.
 /// - File vs File: Regular file comparison
-/// - Directory vs Directory: Recursive directory comparison
+/// - Directory vs Directory: Requires --recursive flag, otherwise error
 /// - File vs Directory: Returns error
 pub fn diff_paths(
     old_path: &str,
@@ -24,8 +24,20 @@ pub fn diff_paths(
     let path1 = Path::new(old_path);
     let path2 = Path::new(new_path);
 
+    let recursive = options
+        .and_then(|o| o.recursive)
+        .unwrap_or(false);
+
     match (path1.is_dir(), path2.is_dir()) {
-        (true, true) => diff_directories(path1, path2, options),
+        (true, true) => {
+            if recursive {
+                diff_directories(path1, path2, options)
+            } else {
+                Err(anyhow!(
+                    "Both paths are directories. Use --recursive (-r) to compare directories."
+                ))
+            }
+        }
         (false, false) => diff_files(path1, path2, options),
         (true, false) => Err(anyhow!(
             "Cannot compare directory '{}' with file '{}'",
@@ -48,35 +60,9 @@ pub fn diff(old: &Value, new: &Value, options: Option<&DiffOptions>) -> Result<V
     let default_options = DiffOptions::default();
     let opts = options.unwrap_or(&default_options);
 
-    // Apply memory optimization if requested
-    if opts.use_memory_optimization.unwrap_or(false) {
-        diff_optimized_implementation(old, new, opts)
-    } else {
-        diff_standard_implementation(old, new, opts)
-    }
-}
-
-fn diff_standard_implementation(
-    old: &Value,
-    new: &Value,
-    options: &DiffOptions,
-) -> Result<Vec<DiffResult>> {
     let mut results = Vec::new();
-    diff_recursive(old, new, "", &mut results, options);
+    diff_recursive(old, new, "", &mut results, opts);
     Ok(results)
-}
-
-fn diff_optimized_implementation(
-    old: &Value,
-    new: &Value,
-    options: &DiffOptions,
-) -> Result<Vec<DiffResult>> {
-    // Check memory limits
-    if would_exceed_memory_limit(old, new) {
-        return Err(anyhow!("Input too large for memory optimization"));
-    }
-
-    diff_standard_implementation(old, new, options)
 }
 
 fn diff_files(

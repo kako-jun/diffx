@@ -23,8 +23,8 @@ fn test_nonexistent_files_error() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/dir1")
-        .arg("../tests/fixtures/file1.json");
+    cmd.arg("tests/fixtures/dir1")
+        .arg("tests/fixtures/file1.json");
     cmd.assert().code(2).stderr(
         predicates::str::contains("Cannot compare directory")
             .and(predicates::str::contains("with file")),
@@ -35,8 +35,8 @@ fn test_directory_vs_file_error() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn test_invalid_format_specification() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--format")
         .arg("invalid_format");
     cmd.assert()
@@ -48,8 +48,8 @@ fn test_invalid_format_specification() -> Result<(), Box<dyn std::error::Error>>
 #[test]
 fn test_invalid_output_format() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = diffx_cmd();
-    cmd.arg("../tests/fixtures/file1.json")
-        .arg("../tests/fixtures/file2.json")
+    cmd.arg("tests/fixtures/file1.json")
+        .arg("tests/fixtures/file2.json")
         .arg("--output")
         .arg("invalid_output");
     cmd.assert()
