@@ -1,5 +1,7 @@
 # diffx
 
+[日本語](README.ja.md)
+
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
