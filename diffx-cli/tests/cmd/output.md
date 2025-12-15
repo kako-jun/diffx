@@ -73,10 +73,3 @@ $ diffx --quiet tests/fixtures/file1.json tests/fixtures/file2.json
 
 ```
 
-## Version
-
-```console
-$ diffx --version
-diffx 0.6.0
-
-```
