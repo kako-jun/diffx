@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
+[![docs.rs](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Semantic diff tool for structured data (JSON/YAML/TOML/XML/INI/CSV). Ignores key ordering and whitespace, shows only meaningful changes.

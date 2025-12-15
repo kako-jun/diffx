@@ -4,6 +4,7 @@
 
 [![CI](https://github.com/kako-jun/diffx/actions/workflows/ci.yml/badge.svg)](https://github.com/kako-jun/diffx/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/diffx.svg)](https://crates.io/crates/diffx)
+[![docs.rs](https://docs.rs/diffx-core/badge.svg)](https://docs.rs/diffx-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 構造化データ（JSON/YAML/TOML/XML/INI/CSV）の意味的差分ツール。キー順序や空白を無視し、本質的な変更のみを表示。
