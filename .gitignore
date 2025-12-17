@@ -94,3 +94,4 @@ tmp-*/
 # === Old/deprecated files ===
 _*
 .serena/
+.mcp.json
