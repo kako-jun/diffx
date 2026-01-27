@@ -6,7 +6,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.6.1"
+version = "0.7.0"
 edition = "2021"
 authors = ["kako-jun"]
 license = "MIT"
@@ -32,7 +32,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [workspace.dependencies]
-diffx-core = { version = "0.6.1", path = "diffx-core" }
+diffx-core = { version = "0.7.0", path = "diffx-core" }
 anyhow = "1.0"
 clap = { version = "4.0", features = ["derive", "cargo"] }
 colored = "3.0"
