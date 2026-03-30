@@ -95,3 +95,4 @@ tmp-*/
 _*
 .serena/
 .mcp.json
+Cargo.lock
