@@ -231,7 +231,9 @@ fn output_verbose() {
         .failure()
         .code(1)
         .stderr(predicate::str::contains("Input file information"))
-        .stderr(predicate::str::contains("bytes"));
+        .stderr(predicate::str::contains("bytes"))
+        .stderr(predicate::str::contains("Total differences found:"))
+        .stderr(predicate::str::contains("Performance summary:"));
 }
 
 #[test]
@@ -243,7 +245,35 @@ fn output_verbose_short_form() {
         .assert()
         .failure()
         .code(1)
-        .stderr(predicate::str::contains("Input"));
+        .stderr(predicate::str::contains("Input file information"))
+        .stderr(predicate::str::contains("bytes"));
+}
+
+#[test]
+fn output_verbose_no_diff() {
+    diffx()
+        .arg("--verbose")
+        .arg(fixtures("file1.json"))
+        .arg(fixtures("file1.json"))
+        .assert()
+        .success()
+        .code(0)
+        .stderr(predicate::str::contains("Total differences found: 0"))
+        .stderr(predicate::str::contains("Performance summary:"));
+}
+
+#[test]
+fn output_verbose_stderr_timing() {
+    diffx()
+        .arg("-v")
+        .arg(fixtures("file1.json"))
+        .arg(fixtures("file2.json"))
+        .assert()
+        .failure()
+        .code(1)
+        .stderr(predicate::str::contains("Parse time:"))
+        .stderr(predicate::str::contains("Diff computation time:"))
+        .stderr(predicate::str::contains("Total processing time:"));
 }
 
 // =============================================================================
